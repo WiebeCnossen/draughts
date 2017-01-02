@@ -1,0 +1,6 @@
+[package]
+name = "draughts"
+version = "0.1.0"
+authors = ["Wiebe Cnossen <wiebe.cnossen@gmail.com>"]
+
+[dependencies]
