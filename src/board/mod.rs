@@ -1,3 +1,4 @@
+pub mod coded;
 mod coords;
 mod piece;
-mod position;
+pub mod position;
