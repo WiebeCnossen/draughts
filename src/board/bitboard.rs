@@ -4,13 +4,11 @@ use board::position::{Position, Game};
 use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
 
 pub struct BitboardPosition {
-  white_to_move: bool,
   pieces: [u64; 4]
 }
 
 impl PartialEq for BitboardPosition {
   fn eq(&self, other: &BitboardPosition) -> bool {
-    self.white_to_move == other.white_to_move &&
     self.pieces == other.pieces
   }
 }
@@ -19,11 +17,11 @@ impl Eq for BitboardPosition {}
 
 impl Hash for BitboardPosition {
   fn hash<H: Hasher>(&self, state: &mut H) {
-    self.white_to_move.hash(state);
     self.pieces.hash(state);
   }
 }
 
+const SIDE_BIT : u64 = 1 << 50;
 const BITS : [u64; 50] = [
   1 << 0, 1 << 1, 1 << 2, 1 << 3, 1 << 4,
   1 << 5, 1 << 6, 1 << 7, 1 << 8, 1 << 9,
@@ -47,7 +45,7 @@ fn clear(mask: u64, bit: usize) -> u64 {
 
 impl Position for BitboardPosition {
   fn white_to_move(&self) -> bool {
-    self.white_to_move
+    self.pieces[0] & SIDE_BIT == 0
   }
 
   fn piece_at(&self, field: usize) -> u8 {
@@ -61,16 +59,17 @@ impl Position for BitboardPosition {
 
 impl Game for BitboardPosition {
   fn create() -> BitboardPosition {
-    BitboardPosition { white_to_move: true, pieces: [0; 4] }
+    BitboardPosition { pieces: [0; 4] }
   }
 
   fn toggle_side(&self) -> BitboardPosition {
-    BitboardPosition { white_to_move: !self.white_to_move, pieces: self.pieces }
+    BitboardPosition {
+      pieces: [self.pieces[0] ^ SIDE_BIT, self.pieces[1], self.pieces[2], self.pieces[3]]
+    }
   }
 
   fn put_piece(&self, field: usize, piece: u8) -> BitboardPosition {
     BitboardPosition {
-      white_to_move: self.white_to_move,
       pieces: [
         if piece == WHITE_MAN { set(self.pieces[0], field) } else { clear(self.pieces[0], field) },
         if piece == WHITE_KING { set(self.pieces[1], field) } else { clear(self.pieces[1], field) },
