@@ -6,7 +6,7 @@ use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING};
 use board::position::Position;
 use board::position::Game;
 use board::Move;
-use board::Move::{Shift};
+use board::Move::{Shift,Take1,Take2,Take3,Take4,Take5,Take6,Take7,Take8};
 
 use board::coded::CodedPosition;
 
@@ -163,20 +163,46 @@ fn black_steps_center() {
   }
 }
 
-fn short_jumps(field: usize) -> Vec<usize> {
+fn num_taken(mv: &Move) -> usize {
+  match *mv {
+    Shift(..) => 0,
+    Take1(..) => 1,
+    Take2(..) => 2,
+    Take3(..) => 3,
+    Take4(..) => 4,
+    Take5(..) => 5,
+    Take6(..) => 6,
+    Take7(..) => 7,
+    Take8(..) => 8,
+  }
+}
+
+fn short_jumps(field: usize) -> Vec<(usize, usize)> {
   let mut result = vec![];
   let coords = Coords::from(field);
   if max_x(coords.y) > coords.x + 1 {
-    result.push(usize::from(Coords { x: coords.x + 2, y: coords.y }));
+    result.push((
+      usize::from(Coords { x: coords.x + 1, y: coords.y }),
+      usize::from(Coords { x: coords.x + 2, y: coords.y })
+    ));
   }
   if min_x(coords.y) < coords.x - 1 {
-    result.push(usize::from(Coords { x: coords.x - 2, y: coords.y }));
+    result.push((
+      usize::from(Coords { x: coords.x - 1, y: coords.y }),
+      usize::from(Coords { x: coords.x - 2, y: coords.y })
+    ));
   }
   if max_y(coords.x) > coords.y + 1 {
-    result.push(usize::from(Coords { x: coords.x, y: coords.y + 2 }));
+    result.push((
+      usize::from(Coords { x: coords.x, y: coords.y + 1 }),
+      usize::from(Coords { x: coords.x, y: coords.y + 2 })
+    ));
   }
   if min_y(coords.x) < coords.y - 1 {
-    result.push(usize::from(Coords { x: coords.x, y: coords.y - 2 }));
+    result.push((
+      usize::from(Coords { x: coords.x, y: coords.y - 1 }),
+      usize::from(Coords { x: coords.x, y: coords.y - 2 })
+    ));
   }
   result
 }
@@ -186,9 +212,10 @@ fn short_jumps_side() {
   let steps = short_jumps(30);
   assert_eq!(steps.len(), 2);
   for step in steps.into_iter() {
+    let (via, to) = step;
     assert!(
       match step {
-        21 | 41 => true,
+        (26, 21) | (36, 41) => true,
         _ => false
       });
   }
@@ -201,7 +228,7 @@ fn short_jumps_center() {
   for step in steps.into_iter() {
     assert!(
       match step {
-        20 | 22 | 40 | 42 => true,
+        (26, 20) | (27, 22) | (36, 40) | (37, 42) => true,
         _ => false
       });
   }
@@ -293,17 +320,56 @@ fn long_jumps_center() {
   }
 }
 
+const TRANSPARENT : usize = 0;
+const WHITE : usize = 1;
+const BLACK : usize = 2;
+
+pub fn color(piece : u8) -> usize {
+  match piece {
+    WHITE_MAN | WHITE_KING => WHITE,
+    BLACK_MAN | BLACK_KING => BLACK,
+    _ => TRANSPARENT
+  }
+}
+
+fn explode_short_jump(from: usize, to: usize, via: &[usize], min_captures: usize) -> Vec<Move> {
+  vec![Take1(from, to, via[0])]
+}
+
 pub fn legal_moves<Pos>(position: Pos) -> Vec<Move> where Pos : Position {
   let mut result = Vec::with_capacity(20);
+  let mut captures = 0;
   if position.white_to_move() {
     for field in 0..50 {
       match position.piece_at(field) {
-        WHITE_MAN =>
-          for step in white_steps(field).into_iter() {
-            if position.piece_at(step) == EMPTY {
-              result.push(Shift(field, step));
+        WHITE_MAN => {
+          for (via, to) in short_jumps(field).into_iter() {
+            if position.piece_at(to) == EMPTY && color(position.piece_at(via)) == BLACK {
+              let moves = explode_short_jump(field, to, &vec![via], captures);
+              match moves.first() {
+                Some(ref peek) => {
+                  let num = num_taken(peek);
+                  if num > captures {
+                    result.clear();
+                    captures = num;
+                  }
+                },
+                None => ()
+              }
+              for mv in moves.into_iter() {
+                result.push(mv);
+              }
             }
-          },
+          }
+
+          if captures == 0 {
+            for step in white_steps(field).into_iter() {
+              if position.piece_at(step) == EMPTY {
+                result.push(Shift(field, step));
+              }
+            }
+          }
+        },
         _ => ()
       }
     }
@@ -311,12 +377,15 @@ pub fn legal_moves<Pos>(position: Pos) -> Vec<Move> where Pos : Position {
   else {
     for field in 0..50 {
       match position.piece_at(field) {
-        BLACK_MAN =>
-          for step in black_steps(field).into_iter() {
-            if position.piece_at(step) == EMPTY {
-              result.push(Shift(field, step));
+        BLACK_MAN => {
+          if captures == 0 {
+            for step in black_steps(field).into_iter() {
+              if position.piece_at(step) == EMPTY {
+                result.push(Shift(field, step));
+              }
             }
-          },
+          }
+        },
         _ => ()
       }
     }
@@ -376,6 +445,23 @@ fn one_black_man_side() {
     assert!(
       match mv {
         Shift(35, 40) => true,
+        _ => false
+      });
+  }
+}
+
+#[test]
+fn one_single_capture_white_man() {
+  let position = CodedPosition::create()
+    .put_piece(15, WHITE_MAN)
+    .put_piece(40, BLACK_MAN)
+    .put_piece(45, WHITE_MAN);
+  let legal = legal_moves(position);
+  assert_eq!(legal.len(), 1);
+  for mv in legal.into_iter() {
+    assert!(
+      match mv {
+        Take1(45, 36, 40) => true,
         _ => false
       });
   }
