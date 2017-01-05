@@ -8,11 +8,14 @@ fn promote(field: usize, piece: u8) -> u8 {
   else { piece }
 }
 
-pub trait Position : Eq + Hash + Sized {
-  fn create() -> Self;
+pub trait Position {
   fn white_to_move(&self) -> bool;
-  fn toggle_side(&self) -> Self;
   fn piece_at(&self, field: usize) -> u8;
+}
+
+pub trait Game : Position + Hash + Sized {
+  fn create() -> Self;
+  fn toggle_side(&self) -> Self;
   fn put_piece(&self, field: usize, piece: u8) -> Self;
 
   fn initial() -> Self {

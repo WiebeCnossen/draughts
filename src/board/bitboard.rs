@@ -1,6 +1,6 @@
 use std::hash::{Hash, Hasher};
 
-use board::position::Position;
+use board::position::{Position, Game};
 use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
 
 pub struct BitboardPosition {
@@ -46,16 +46,8 @@ fn clear(mask: u64, bit: usize) -> u64 {
 }
 
 impl Position for BitboardPosition {
-  fn create() -> BitboardPosition {
-    BitboardPosition { white_to_move: true, pieces: [0; 4] }
-  }
-
   fn white_to_move(&self) -> bool {
     self.white_to_move
-  }
-
-  fn toggle_side(&self) -> BitboardPosition {
-    BitboardPosition { white_to_move: !self.white_to_move, pieces: self.pieces }
   }
 
   fn piece_at(&self, field: usize) -> u8 {
@@ -64,6 +56,16 @@ impl Position for BitboardPosition {
     }
 
     EMPTY
+  }
+}
+
+impl Game for BitboardPosition {
+  fn create() -> BitboardPosition {
+    BitboardPosition { white_to_move: true, pieces: [0; 4] }
+  }
+
+  fn toggle_side(&self) -> BitboardPosition {
+    BitboardPosition { white_to_move: !self.white_to_move, pieces: self.pieces }
   }
 
   fn put_piece(&self, field: usize, piece: u8) -> BitboardPosition {

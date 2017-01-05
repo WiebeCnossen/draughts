@@ -1,6 +1,6 @@
 use std::hash::{Hash, Hasher};
 
-use board::position::Position;
+use board::position::{Position, Game};
 use board::piece::{EMPTY, WHITE_MAN, BLACK_MAN};
 
 pub struct ArrayPosition { white_to_move: bool, pieces: [u8; 50] }
@@ -77,20 +77,22 @@ fn clone(pieces: [u8; 50], field: usize, piece: u8) -> [u8; 50] {
 }
 
 impl Position for ArrayPosition {
-  fn create() -> ArrayPosition {
-    ArrayPosition { white_to_move: true, pieces: [EMPTY; 50] }
-  }
-
   fn white_to_move(&self) -> bool {
     self.white_to_move
   }
 
-  fn toggle_side(&self) -> ArrayPosition {
-    ArrayPosition { white_to_move: !self.white_to_move, pieces: self.pieces }
-  }
-
   fn piece_at(&self, field: usize) -> u8 {
     self.pieces[field]
+  }
+}
+
+impl Game for ArrayPosition {
+  fn create() -> ArrayPosition {
+    ArrayPosition { white_to_move: true, pieces: [EMPTY; 50] }
+  }
+
+  fn toggle_side(&self) -> ArrayPosition {
+    ArrayPosition { white_to_move: !self.white_to_move, pieces: self.pieces }
   }
 
   fn put_piece(&self, field: usize, piece: u8) -> ArrayPosition {

@@ -1,7 +1,7 @@
 use std;
 use std::hash::{Hash, Hasher};
 
-use board::position::Position;
+use board::position::{Position, Game};
 use board::piece::{EMPTY, WHITE_MAN, BLACK_MAN};
 
 pub struct CodedPosition { upper: u64, lower: u64 }
@@ -59,16 +59,8 @@ fn put_piece(bits: u64, field: usize, piece: u8) -> u64 {
 }
 
 impl Position for CodedPosition {
-  fn create() -> CodedPosition {
-    CodedPosition { upper: 0, lower: SIDE_BIT }
-  }
-
   fn white_to_move(&self) -> bool {
     (SIDE_BIT & self.lower) != 0
-  }
-
-  fn toggle_side(&self) -> CodedPosition {
-    CodedPosition { upper: self.upper, lower: SIDE_BIT ^ self.lower }
   }
 
   fn piece_at(&self, field: usize) -> u8 {
@@ -78,6 +70,16 @@ impl Position for CodedPosition {
     else {
       piece_at(self.lower, field - 25)
     }
+  }
+}
+
+impl Game for CodedPosition {
+  fn create() -> CodedPosition {
+    CodedPosition { upper: 0, lower: SIDE_BIT }
+  }
+
+  fn toggle_side(&self) -> CodedPosition {
+    CodedPosition { upper: self.upper, lower: SIDE_BIT ^ self.lower }
   }
 
   fn put_piece(&self, field: usize, piece: u8) -> CodedPosition {
