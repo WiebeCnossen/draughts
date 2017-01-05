@@ -1,4 +1,4 @@
-pub mod array;
+mod array;
 pub mod bitboard;
 pub mod coded;
 pub mod generator;

@@ -8,7 +8,7 @@ use board::position::Game;
 use board::Move;
 use board::Move::{Shift,Take1,Take2,Take3,Take4,Take5,Take6,Take7,Take8};
 
-use board::coded::CodedPosition;
+use board::bitboard::BitboardPosition;
 
 #[derive(Debug)]
 struct Coords { x: i8, y: i8 }
@@ -395,7 +395,7 @@ pub fn legal_moves<Pos>(position: Pos) -> Vec<Move> where Pos : Position {
 
 #[test]
 fn one_white_man_side() {
-  let position = CodedPosition::create()
+  let position = BitboardPosition::create()
     .put_piece(35, WHITE_MAN);
   let legal = legal_moves(position);
   assert_eq!(legal.len(), 1);
@@ -410,7 +410,7 @@ fn one_white_man_side() {
 
 #[test]
 fn one_white_man_blocked() {
-  let position = CodedPosition::create()
+  let position = BitboardPosition::create()
     .put_piece(35, WHITE_MAN)
     .put_piece(30, BLACK_MAN)
     .put_piece(26, BLACK_MAN);
@@ -420,7 +420,7 @@ fn one_white_man_blocked() {
 
 #[test]
 fn one_white_man_center() {
-  let position = CodedPosition::create()
+  let position = BitboardPosition::create()
     .put_piece(36, WHITE_MAN);
   let legal = legal_moves(position);
   assert_eq!(legal.len(), 2);
@@ -436,7 +436,7 @@ fn one_white_man_center() {
 
 #[test]
 fn one_black_man_side() {
-  let position = CodedPosition::create()
+  let position = BitboardPosition::create()
     .put_piece(35, BLACK_MAN)
     .toggle_side();
   let legal = legal_moves(position);
@@ -452,7 +452,7 @@ fn one_black_man_side() {
 
 #[test]
 fn one_single_capture_white_man() {
-  let position = CodedPosition::create()
+  let position = BitboardPosition::create()
     .put_piece(15, WHITE_MAN)
     .put_piece(40, BLACK_MAN)
     .put_piece(45, WHITE_MAN);
