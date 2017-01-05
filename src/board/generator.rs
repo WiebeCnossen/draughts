@@ -4,10 +4,13 @@ use std::convert::From;
 
 use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING};
 use board::position::Position;
-use board::position::Game;
 use board::Move;
 use board::Move::{Shift,Take1,Take2,Take3,Take4,Take5,Take6,Take7,Take8};
 
+#[cfg(test)]
+use board::position::Game;
+
+#[cfg(test)]
 use board::bitboard::BitboardPosition;
 
 #[derive(Debug)]
@@ -212,7 +215,6 @@ fn short_jumps_side() {
   let steps = short_jumps(30);
   assert_eq!(steps.len(), 2);
   for step in steps.into_iter() {
-    let (via, to) = step;
     assert!(
       match step {
         (26, 21) | (36, 41) => true,

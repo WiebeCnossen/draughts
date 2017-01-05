@@ -4,12 +4,18 @@ use board::position::{Position, Game};
 use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
 
 pub struct BitboardPosition {
-  pieces: [u64; 4]
+  empty : u64,
+  white_man: u64,
+  black_man: u64,
+  white_king: u64,
 }
 
 impl PartialEq for BitboardPosition {
   fn eq(&self, other: &BitboardPosition) -> bool {
-    self.pieces == other.pieces
+    self.empty == other.empty &&
+    self.white_man == other.white_man &&
+    self.black_man == other.black_man &&
+    self.white_king == other.white_king
   }
 }
 
@@ -17,7 +23,10 @@ impl Eq for BitboardPosition {}
 
 impl Hash for BitboardPosition {
   fn hash<H: Hasher>(&self, state: &mut H) {
-    self.pieces.hash(state);
+    self.empty.hash(state);
+    self.white_man.hash(state);
+    self.black_man.hash(state);
+    self.white_king.hash(state);
   }
 }
 
@@ -46,37 +55,43 @@ fn clear(mask: u64, bit: usize) -> u64 {
 
 impl Position for BitboardPosition {
   fn white_to_move(&self) -> bool {
-    self.pieces[0] & SIDE_BIT == 0
+    self.empty & SIDE_BIT == 0
   }
 
   fn piece_at(&self, field: usize) -> u8 {
-    for pos in 0..4 {
-      if self.pieces[pos] & BITS[field] != 0 { return pos as u8 }
-    }
-
-    BLACK_KING
+    if self.empty & BITS[field] != 0 { EMPTY }
+    else if self.white_man & BITS[field] != 0 { WHITE_MAN }
+    else if self.black_man & BITS[field] != 0 { BLACK_MAN }
+    else if self.white_king & BITS[field] != 0 { WHITE_KING }
+    else { BLACK_KING }
   }
 }
 
 impl Game for BitboardPosition {
   fn create() -> BitboardPosition {
-    BitboardPosition { pieces: [ALL_BITS, 0, 0, 0] }
+    BitboardPosition {
+      empty: ALL_BITS,
+      white_man: 0,
+      black_man: 0,
+      white_king: 0,
+    }
   }
 
   fn toggle_side(&self) -> BitboardPosition {
     BitboardPosition {
-      pieces: [self.pieces[0] ^ SIDE_BIT, self.pieces[1], self.pieces[2], self.pieces[3]]
+      empty: self.empty ^ SIDE_BIT,
+      white_man: self.white_man,
+      black_man: self.black_man,
+      white_king: self.white_king,
     }
   }
 
   fn put_piece(&self, field: usize, piece: u8) -> BitboardPosition {
     BitboardPosition {
-      pieces: [
-        if piece == EMPTY { set(self.pieces[0], field) } else { clear(self.pieces[0], field) },
-        if piece == WHITE_MAN { set(self.pieces[1], field) } else { clear(self.pieces[1], field) },
-        if piece == WHITE_KING { set(self.pieces[2], field) } else { clear(self.pieces[2], field) },
-        if piece == BLACK_MAN { set(self.pieces[3], field) } else { clear(self.pieces[3], field) },
-      ]
+      empty: if piece == EMPTY { set(self.empty, field) } else { clear(self.empty, field) },
+      white_man: if piece == WHITE_MAN { set(self.white_man, field) } else { clear(self.white_man, field) },
+      black_man: if piece == BLACK_MAN { set(self.black_man, field) } else { clear(self.black_man, field) },
+      white_king: if piece == WHITE_KING { set(self.white_king, field) } else { clear(self.white_king, field) },
     }
   }
 }

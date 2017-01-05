@@ -1,7 +1,10 @@
 use std::hash::{Hash, Hasher};
 
 use board::position::{Position, Game};
-use board::piece::{EMPTY, WHITE_MAN, BLACK_MAN};
+use board::piece::EMPTY;
+
+#[cfg(test)]
+use board::piece::{WHITE_MAN, BLACK_MAN};
 
 pub struct ArrayPosition { white_to_move: bool, pieces: [u8; 50] }
 

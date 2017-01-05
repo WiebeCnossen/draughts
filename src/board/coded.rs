@@ -2,6 +2,8 @@ use std;
 use std::hash::{Hash, Hasher};
 
 use board::position::{Position, Game};
+
+#[cfg(test)]
 use board::piece::{EMPTY, WHITE_MAN, BLACK_MAN};
 
 pub struct CodedPosition { upper: u64, lower: u64 }
