@@ -2,7 +2,7 @@ extern crate core;
 
 use std::convert::From;
 
-use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING};
+use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,BLACK,WHITE,color};
 use board::position::Position;
 use board::Move;
 use board::Move::{Shift,Take1,Take2,Take3,Take4,Take5,Take6,Take7,Take8};
@@ -319,18 +319,6 @@ fn long_jumps_center() {
         20 | 15 | 22 | 18 | 13 | 9 | 4 | 40 | 45 | 42 | 48 => true,
         _ => false
       });
-  }
-}
-
-const TRANSPARENT : usize = 0;
-const WHITE : usize = 1;
-const BLACK : usize = 2;
-
-pub fn color(piece : u8) -> usize {
-  match piece {
-    WHITE_MAN | WHITE_KING => WHITE,
-    BLACK_MAN | BLACK_KING => BLACK,
-    _ => TRANSPARENT
   }
 }
 
