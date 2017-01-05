@@ -2,6 +2,7 @@ extern crate core;
 
 use std::convert::From;
 
+use board::coords::{Coords,MinXY};
 use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,BLACK,WHITE,color};
 use board::position::Position;
 use board::Move;
@@ -13,90 +14,13 @@ use board::position::Game;
 #[cfg(test)]
 use board::bitboard::BitboardPosition;
 
-#[derive(Debug)]
-struct Coords { x: i8, y: i8 }
-
-impl PartialEq for Coords {
-    fn eq(&self, other: &Coords) -> bool {
-        self.x == other.x && self.y == other.y
-    }
-}
-impl Eq for Coords {}
-
-#[test]
-fn partial_eq() {
-    assert_eq!(Coords{ x: 1, y: 2 }, Coords{ x: 1, y: 2 });
-    assert!(Coords{ x: 1, y: 2 } == Coords{ x: 1, y: 2 });
-    assert!(Coords{ x: 1, y: 2 } != Coords{ x: 2, y: 1 });
-}
-
-impl From<Coords> for usize {
-    fn from(c: Coords) -> usize {
-        (45 - (5 * (c.x + c.y)) - ((c.y - c.x) / 2)) as usize
-    }
-}
-
-#[test]
-fn into_usize() {
-    assert_eq!(usize::from(Coords { x: 0, y: 0 }), 45);
-    assert_eq!(usize::from(Coords { x: 1, y: 0 }), 40);
-    assert_eq!(usize::from(Coords { x: 1, y: 1 }), 35);
-    assert_eq!(usize::from(Coords { x: 5, y: 4 }), 0);
-    assert_eq!(usize::from(Coords { x: 4, y: -4 }), 49);
-    assert_eq!(usize::from(Coords { x: 9, y: 0 }), 4);
-}
-
-impl From<usize> for Coords {
-    fn from(n: usize) -> Coords {
-        let n = n as i8;
-        let ny = (49 - n) / 5; // rows from bottom
-        let nx = (ny % 2) + (2 * (n % 5)); // columns from left
-        Coords { x: (nx + ny) / 2, y: (ny - nx) / 2 }
-    }
-}
-
-#[test]
-fn from_usize() {
-    assert_eq!(Coords::from(45usize), Coords { x: 0, y: 0 });
-    assert_eq!(Coords::from(40usize), Coords { x: 1, y: 0 });
-    assert_eq!(Coords::from(35usize), Coords { x: 1, y: 1 });
-    assert_eq!(Coords::from(30usize), Coords { x: 2, y: 1 });
-    assert_eq!(Coords::from(0usize), Coords { x: 5, y: 4 });
-    assert_eq!(Coords::from(49usize), Coords { x: 4, y: -4 });
-    assert_eq!(Coords::from(4usize), Coords { x: 9, y: 0 });
-}
-
-fn min_x(y: i8) -> i8 { y.abs() }
-
-fn max_x(y: i8) -> i8 { 9 - y.abs() }
-
-fn min_y(x: i8) -> i8 { -max_y(x) }
-
-fn max_y(x: i8) -> i8 { if x > 4 { 9 - x } else { x } }
-
-#[test]
-fn min_max() {
-    assert_eq!(min_x(-4), 4);
-    assert_eq!(min_x(0), 0);
-    assert_eq!(min_x(1), 1);
-    assert_eq!(max_x(-4), 5);
-    assert_eq!(max_x(0), 9);
-    assert_eq!(max_x(1), 8);
-    assert_eq!(min_y(0), 0);
-    assert_eq!(min_y(1), -1);
-    assert_eq!(min_y(5), -4);
-    assert_eq!(max_y(0), 0);
-    assert_eq!(max_y(1), 1);
-    assert_eq!(max_y(5), 4);
-}
-
 fn white_steps(field: usize) -> Vec<usize> {
   let mut result = vec![];
   let coords = Coords::from(field);
-  if max_x(coords.y) > coords.x {
+  if coords.max_x() > coords.x {
     result.push(usize::from(Coords { x: coords.x + 1, y: coords.y }));
   }
-  if max_y(coords.x) > coords.y {
+  if coords.max_y() > coords.y {
     result.push(usize::from(Coords { x: coords.x, y: coords.y + 1 }));
   }
   result
@@ -131,10 +55,10 @@ fn white_steps_center() {
 fn black_steps(field: usize) -> Vec<usize> {
   let mut result = vec![];
   let coords = Coords::from(field);
-  if min_x(coords.y) < coords.x {
+  if coords.min_x() < coords.x {
     result.push(usize::from(Coords { x: coords.x - 1, y: coords.y }));
   }
-  if min_y(coords.x) < coords.y {
+  if coords.min_y() < coords.y {
     result.push(usize::from(Coords { x: coords.x, y: coords.y - 1 }));
   }
   result
@@ -183,25 +107,25 @@ fn num_taken(mv: &Move) -> usize {
 fn short_jumps(field: usize) -> Vec<(usize, usize)> {
   let mut result = vec![];
   let coords = Coords::from(field);
-  if max_x(coords.y) > coords.x + 1 {
+  if coords.max_x() > coords.x + 1 {
     result.push((
       usize::from(Coords { x: coords.x + 1, y: coords.y }),
       usize::from(Coords { x: coords.x + 2, y: coords.y })
     ));
   }
-  if min_x(coords.y) < coords.x - 1 {
+  if coords.min_x() < coords.x - 1 {
     result.push((
       usize::from(Coords { x: coords.x - 1, y: coords.y }),
       usize::from(Coords { x: coords.x - 2, y: coords.y })
     ));
   }
-  if max_y(coords.x) > coords.y + 1 {
+  if coords.max_y() > coords.y + 1 {
     result.push((
       usize::from(Coords { x: coords.x, y: coords.y + 1 }),
       usize::from(Coords { x: coords.x, y: coords.y + 2 })
     ));
   }
-  if min_y(coords.x) < coords.y - 1 {
+  if coords.min_y() < coords.y - 1 {
     result.push((
       usize::from(Coords { x: coords.x, y: coords.y - 1 }),
       usize::from(Coords { x: coords.x, y: coords.y - 2 })
@@ -239,23 +163,23 @@ fn short_jumps_center() {
 fn king_roads(field: usize, min_size: i8) -> Vec<usize> {
   let mut result = vec![];
   let coords = Coords::from(field);
-  if max_x(coords.y) > coords.x + min_size - 1 {
-    for x in coords.x + min_size .. max_x(coords.y) + 1 {
+  if coords.max_x() > coords.x + min_size - 1 {
+    for x in coords.x + min_size .. coords.max_x() + 1 {
       result.push(usize::from(Coords { x: x, y: coords.y }));
     }
   }
-  if min_x(coords.y) < coords.x - min_size + 1 {
-    for x in min_x(coords.y) .. coords.x - min_size + 1 {
+  if coords.min_x() < coords.x - min_size + 1 {
+    for x in coords.min_x() .. coords.x - min_size + 1 {
       result.push(usize::from(Coords { x: x, y: coords.y }));
     }
   }
-  if max_y(coords.x) > coords.y + min_size - 1 {
-    for y in coords.y + min_size .. max_y(coords.x) + 1 {
+  if coords.max_y() > coords.y + min_size - 1 {
+    for y in coords.y + min_size .. coords.max_y() + 1 {
       result.push(usize::from(Coords { x: coords.x, y: y }));
     }
   }
-  if min_y(coords.x) < coords.y - min_size + 1 {
-    for y in min_y(coords.x) .. coords.y - min_size + 1 {
+  if coords.min_y() < coords.y - min_size + 1 {
+    for y in coords.min_y() .. coords.y - min_size + 1 {
       result.push(usize::from(Coords { x: coords.x, y: y }));
     }
   }
