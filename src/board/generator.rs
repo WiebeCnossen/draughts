@@ -1,7 +1,7 @@
 use board::coords::{Coords,MinXY};
 use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,BLACK,WHITE,color};
 use board::position::Position;
-use board::Move;
+use board::{Move,Take};
 use board::Move::{Shift,Take1,Take2,Take3,Take4,Take5,Take6,Take7,Take8};
 
 #[cfg(test)]
@@ -83,20 +83,6 @@ fn black_steps_center() {
         40 | 41 => true,
         _ => false
       });
-  }
-}
-
-fn num_taken(mv: &Move) -> usize {
-  match *mv {
-    Shift(..) => 0,
-    Take1(..) => 1,
-    Take2(..) => 2,
-    Take3(..) => 3,
-    Take4(..) => 4,
-    Take5(..) => 5,
-    Take6(..) => 6,
-    Take7(..) => 7,
-    Take8(..) => 8,
   }
 }
 
@@ -258,7 +244,7 @@ pub fn legal_moves<Pos>(position: Pos) -> Vec<Move> where Pos : Position {
               let moves = explode_short_jump(field, to, &vec![via], captures);
               match moves.first() {
                 Some(ref peek) => {
-                  let num = num_taken(peek);
+                  let num = peek.num_taken();
                   if num > captures {
                     result.clear();
                     captures = num;
