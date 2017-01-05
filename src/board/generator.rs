@@ -1,7 +1,3 @@
-extern crate core;
-
-use std::convert::From;
-
 use board::coords::{Coords,MinXY};
 use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,BLACK,WHITE,color};
 use board::position::Position;

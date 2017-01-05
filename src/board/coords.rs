@@ -1,15 +1,3 @@
-extern crate core;
-
-use std::convert::From;
-
-fn min_x(y: i8) -> i8 { y.abs() }
-
-fn max_x(y: i8) -> i8 { 9 - y.abs() }
-
-fn min_y(x: i8) -> i8 { -max_y(x) }
-
-fn max_y(x: i8) -> i8 { if x > 4 { 9 - x } else { x } }
-
 #[derive(Debug)]
 pub struct Coords {
   pub x: i8,
@@ -22,6 +10,11 @@ pub trait MinXY {
   fn min_y(&self) -> i8;
   fn max_y(&self) -> i8;
 }
+
+fn min_x(y: i8) -> i8 { y.abs() }
+fn max_x(y: i8) -> i8 { 9 - y.abs() }
+fn min_y(x: i8) -> i8 { -max_y(x) }
+fn max_y(x: i8) -> i8 { if x > 4 { 9 - x } else { x } }
 
 impl MinXY for Coords {
   fn min_x(&self) -> i8 { min_x(self.y) }
