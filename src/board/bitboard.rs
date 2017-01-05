@@ -22,6 +22,7 @@ impl Hash for BitboardPosition {
 }
 
 const SIDE_BIT : u64 = 1 << 50;
+const ALL_BITS : u64 = SIDE_BIT - 1;
 const BITS : [u64; 50] = [
   1 << 0, 1 << 1, 1 << 2, 1 << 3, 1 << 4,
   1 << 5, 1 << 6, 1 << 7, 1 << 8, 1 << 9,
@@ -50,16 +51,16 @@ impl Position for BitboardPosition {
 
   fn piece_at(&self, field: usize) -> u8 {
     for pos in 0..4 {
-      if self.pieces[pos] & BITS[field] != 0 { return (pos + 1) as u8 }
+      if self.pieces[pos] & BITS[field] != 0 { return pos as u8 }
     }
 
-    EMPTY
+    BLACK_KING
   }
 }
 
 impl Game for BitboardPosition {
   fn create() -> BitboardPosition {
-    BitboardPosition { pieces: [0; 4] }
+    BitboardPosition { pieces: [ALL_BITS, 0, 0, 0] }
   }
 
   fn toggle_side(&self) -> BitboardPosition {
@@ -71,10 +72,10 @@ impl Game for BitboardPosition {
   fn put_piece(&self, field: usize, piece: u8) -> BitboardPosition {
     BitboardPosition {
       pieces: [
-        if piece == WHITE_MAN { set(self.pieces[0], field) } else { clear(self.pieces[0], field) },
-        if piece == WHITE_KING { set(self.pieces[1], field) } else { clear(self.pieces[1], field) },
-        if piece == BLACK_MAN { set(self.pieces[2], field) } else { clear(self.pieces[2], field) },
-        if piece == BLACK_KING { set(self.pieces[3], field) } else { clear(self.pieces[3], field) },
+        if piece == EMPTY { set(self.pieces[0], field) } else { clear(self.pieces[0], field) },
+        if piece == WHITE_MAN { set(self.pieces[1], field) } else { clear(self.pieces[1], field) },
+        if piece == WHITE_KING { set(self.pieces[2], field) } else { clear(self.pieces[2], field) },
+        if piece == BLACK_MAN { set(self.pieces[3], field) } else { clear(self.pieces[3], field) },
       ]
     }
   }
@@ -107,13 +108,14 @@ fn put_one_piece() {
 fn put_pieces_in_same_row() {
   let position = BitboardPosition::create()
     .put_piece(31, WHITE_MAN)
-    .put_piece(32, BLACK_MAN);
+    .put_piece(32, BLACK_MAN)
+    .put_piece(33, BLACK_KING);
   assert!(position.white_to_move());
   assert_eq!(position.piece_at(25), EMPTY);
   assert_eq!(position.piece_at(30), EMPTY);
   assert_eq!(position.piece_at(31), WHITE_MAN);
   assert_eq!(position.piece_at(32), BLACK_MAN);
-  assert_eq!(position.piece_at(33), EMPTY);
+  assert_eq!(position.piece_at(33), BLACK_KING);
   assert_eq!(position.piece_at(35), EMPTY);
 }
 
