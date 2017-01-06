@@ -94,14 +94,17 @@ fn add_short_jumps(position: &Position, field: usize, result: &mut Vec<Move>, ca
   }
 }
 
-pub fn legal_moves<Pos>(position: Pos) -> Vec<Move> where Pos : Position {
+fn add_king_moves(position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: usize) {
+}
+
+pub fn legal_moves(position: &Position) -> Vec<Move> {
   let mut result = Vec::with_capacity(20);
   let mut captures = 0;
   if position.white_to_move() {
     for field in 0..50 {
       match position.piece_at(field) {
         WHITE_MAN => {
-          add_short_jumps(&position, field, &mut result, &mut captures, BLACK);
+          add_short_jumps(position, field, &mut result, &mut captures, BLACK);
 
           if captures == 0 {
             for step in white_steps(field).into_iter() {
@@ -111,6 +114,9 @@ pub fn legal_moves<Pos>(position: Pos) -> Vec<Move> where Pos : Position {
             }
           }
         },
+        WHITE_KING => {
+          add_king_moves(position, field, &mut result, &mut captures, BLACK);
+        },
         _ => ()
       }
     }
@@ -119,7 +125,7 @@ pub fn legal_moves<Pos>(position: Pos) -> Vec<Move> where Pos : Position {
     for field in 0..50 {
       match position.piece_at(field) {
         BLACK_MAN => {
-          add_short_jumps(&position, field, &mut result, &mut captures, WHITE);
+          add_short_jumps(position, field, &mut result, &mut captures, WHITE);
 
           if captures == 0 {
             for step in black_steps(field).into_iter() {
@@ -128,6 +134,9 @@ pub fn legal_moves<Pos>(position: Pos) -> Vec<Move> where Pos : Position {
               }
             }
           }
+        },
+        BLACK_KING => {
+          add_king_moves(position, field, &mut result, &mut captures, WHITE);
         },
         _ => ()
       }
@@ -146,7 +155,7 @@ fn fail(mv: Move) -> bool {
 fn one_white_man_side() {
   let position = BitboardPosition::create()
     .put_piece(35, WHITE_MAN);
-  let legal = legal_moves(position);
+  let legal = legal_moves(&position);
   assert_eq!(legal.len(), 1);
   for mv in legal.into_iter() {
     assert!(
@@ -163,7 +172,7 @@ fn one_white_man_blocked() {
     .put_piece(35, WHITE_MAN)
     .put_piece(30, BLACK_MAN)
     .put_piece(26, BLACK_MAN);
-  let legal = legal_moves(position);
+  let legal = legal_moves(&position);
   assert_eq!(legal.len(), 0);
 }
 
@@ -171,7 +180,7 @@ fn one_white_man_blocked() {
 fn one_white_man_center() {
   let position = BitboardPosition::create()
     .put_piece(36, WHITE_MAN);
-  let legal = legal_moves(position);
+  let legal = legal_moves(&position);
   assert_eq!(legal.len(), 2);
   for mv in legal.into_iter() {
     assert!(
@@ -188,7 +197,7 @@ fn one_black_man_side() {
   let position = BitboardPosition::create()
     .put_piece(35, BLACK_MAN)
     .toggle_side();
-  let legal = legal_moves(position);
+  let legal = legal_moves(&position);
   assert_eq!(legal.len(), 1);
   for mv in legal.into_iter() {
     assert!(
@@ -205,7 +214,7 @@ fn one_single_capture_white_man() {
     .put_piece(15, WHITE_MAN)
     .put_piece(40, BLACK_MAN)
     .put_piece(45, WHITE_MAN);
-  let legal = legal_moves(position);
+  let legal = legal_moves(&position);
   assert_eq!(legal.len(), 1);
   for mv in legal.into_iter() {
     assert!(
@@ -223,7 +232,7 @@ fn one_double_capture_white_man() {
     .put_piece(31, BLACK_MAN)
     .put_piece(40, BLACK_MAN)
     .put_piece(45, WHITE_MAN);
-  let legal = legal_moves(position);
+  let legal = legal_moves(&position);
   assert_eq!(legal.len(), 1);
   for mv in legal.into_iter() {
     assert!(
@@ -243,7 +252,7 @@ fn double_and_triple_capture_white_man() {
     .put_piece(41, BLACK_MAN)
     .put_piece(42, BLACK_MAN)
     .put_piece(45, WHITE_MAN);
-  let legal = legal_moves(position);
+  let legal = legal_moves(&position);
   assert_eq!(legal.len(), 1);
   for mv in legal.into_iter() {
     assert!(
@@ -260,7 +269,7 @@ fn two_captures_white_man() {
     .put_piece(40, BLACK_MAN)
     .put_piece(41, BLACK_MAN)
     .put_piece(46, WHITE_MAN);
-  let legal = legal_moves(position);
+  let legal = legal_moves(&position);
   assert_eq!(legal.len(), 2);
   for mv in legal.into_iter() {
     assert!(
@@ -279,13 +288,36 @@ fn two_captures_black_man() {
     .put_piece(31, WHITE_MAN)
     .put_piece(36, BLACK_MAN)
     .toggle_side();
-  let legal = legal_moves(position);
+  let legal = legal_moves(&position);
   assert_eq!(legal.len(), 2);
   for mv in legal.into_iter() {
     assert!(
       match mv {
         Take1(36, 25, 30)
         | Take1(36, 27, 31) => true,
+        _ => fail(mv)
+      });
+  }
+}
+
+#[test]
+fn white_king_moves() {
+  let position = BitboardPosition::create()
+    .put_piece(27, BLACK_MAN)
+    .put_piece(29, BLACK_MAN)
+    .put_piece(32, BLACK_MAN)
+    .put_piece(33, BLACK_MAN)
+    .put_piece(38, WHITE_MAN)
+    .put_piece(43, WHITE_KING);
+  let legal = legal_moves(&position);
+  assert_eq!(legal.len(), 4);
+  for mv in legal.into_iter() {
+    assert!(
+      match mv {
+        Shift(43, 34)
+        | Shift(43, 39)
+        | Shift(43, 48)
+        | Shift(43, 49) => true,
         _ => fail(mv)
       });
   }
