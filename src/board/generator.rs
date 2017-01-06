@@ -69,6 +69,27 @@ fn explode_short_jump(position: &Position, from: usize, to: usize, via: &[usize]
   result
 }
 
+fn add_short_jumps(position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: usize) {
+  for (via, to) in short_jumps(field).into_iter() {
+    if position.piece_at(to) == EMPTY && color(position.piece_at(via)) == color_to_capture {
+      let moves = explode_short_jump(position, field, to, &vec![via], *captures, color_to_capture);
+      match moves.first() {
+        Some(ref peek) => {
+          let num = peek.num_taken();
+          if num > *captures {
+            result.clear();
+            *captures = num;
+          }
+        },
+        None => ()
+      }
+      for mv in moves.into_iter() {
+        result.push(mv);
+      }
+    }
+  }
+}
+
 pub fn legal_moves<Pos>(position: Pos) -> Vec<Move> where Pos : Position {
   let mut result = Vec::with_capacity(20);
   let mut captures = 0;
@@ -76,24 +97,7 @@ pub fn legal_moves<Pos>(position: Pos) -> Vec<Move> where Pos : Position {
     for field in 0..50 {
       match position.piece_at(field) {
         WHITE_MAN => {
-          for (via, to) in short_jumps(field).into_iter() {
-            if position.piece_at(to) == EMPTY && color(position.piece_at(via)) == BLACK {
-              let moves = explode_short_jump(&position, field, to, &vec![via], captures, BLACK);
-              match moves.first() {
-                Some(ref peek) => {
-                  let num = peek.num_taken();
-                  if num > captures {
-                    result.clear();
-                    captures = num;
-                  }
-                },
-                None => ()
-              }
-              for mv in moves.into_iter() {
-                result.push(mv);
-              }
-            }
-          }
+          add_short_jumps(&position, field, &mut result, &mut captures, BLACK);
 
           if captures == 0 {
             for step in white_steps(field).into_iter() {
@@ -111,6 +115,8 @@ pub fn legal_moves<Pos>(position: Pos) -> Vec<Move> where Pos : Position {
     for field in 0..50 {
       match position.piece_at(field) {
         BLACK_MAN => {
+          add_short_jumps(&position, field, &mut result, &mut captures, WHITE);
+
           if captures == 0 {
             for step in black_steps(field).into_iter() {
               if position.piece_at(step) == EMPTY {
@@ -257,6 +263,25 @@ fn two_captures_white_man() {
       match mv {
         Take1(46, 35, 40)
         | Take1(46, 37, 41) => true,
+        _ => fail(mv)
+      });
+  }
+}
+
+#[test]
+fn two_captures_black_man() {
+  let position = BitboardPosition::create()
+    .put_piece(30, WHITE_MAN)
+    .put_piece(31, WHITE_MAN)
+    .put_piece(36, BLACK_MAN)
+    .toggle_side();
+  let legal = legal_moves(position);
+  assert_eq!(legal.len(), 2);
+  for mv in legal.into_iter() {
+    assert!(
+      match mv {
+        Take1(36, 25, 30)
+        | Take1(36, 27, 31) => true,
         _ => fail(mv)
       });
   }
