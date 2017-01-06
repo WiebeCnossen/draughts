@@ -160,7 +160,7 @@ fn king_roads(field: usize, min_size: i8) -> Vec<usize> {
 }
 
 #[cfg(test)]
-pub fn long_steps(field: usize) -> Vec<usize> {
+fn long_steps(field: usize) -> Vec<usize> {
   return king_roads(field, 1)
 }
 
@@ -191,7 +191,7 @@ fn long_steps_center() {
 }
 
 #[cfg(test)]
-pub fn long_jumps(field: usize) -> Vec<usize> {
+fn long_jumps(field: usize) -> Vec<usize> {
   return king_roads(field, 2)
 }
 

@@ -1,7 +1,7 @@
 use board::coords::{Coords,MinXY};
 use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,BLACK,WHITE,color};
 use board::position::Position;
-use board::mv::{Move,Take};
+use board::mv::{Move,Mover};
 use board::mv::Move::{Shift,Take1,Take2,Take3,Take4,Take5,Take6,Take7,Take8};
 use board::steps::{white_steps,black_steps,short_jumps};
 
@@ -11,41 +11,47 @@ use board::position::Game;
 #[cfg(test)]
 use board::bitboard::BitboardPosition;
 
-fn create_move(from: usize, to: usize, via: &[usize]) -> Move {
-  match via.len() {
-    0 => Shift(from, to),
-    1 => Take1(from, to, via[0]),
-    2 => Take2(from, to, via[0], via[1]),
-    3 => Take3(from, to, via[0], via[1], via[2]),
-    4 => Take4(from, to, via[0], via[1], via[2], via[3]),
-    5 => Take5(from, to, via[0], via[1], via[2], via[3], via[4]),
-    6 => Take6(from, to, via[0], via[1], via[2], via[3], via[4], via[5]),
-    7 => Take7(from, to, via[0], via[1], via[2], via[3], via[4], via[5], via[6]),
-    8 => Take8(from, to, via[0], via[1], via[2], via[3], via[4], via[5], via[6], via[7]),
+fn take_more(mv: &Move, via: usize, to: usize) -> Move {
+  match mv {
+    &Shift(..) =>
+      panic!("Taking more after Shift is prohibited"),
+    &Take1(from, _, via0) =>
+      Take2(from, to, via0, via),
+    &Take2(from, _, via0, via1) =>
+      Take3(from, to, via0, via1, via),
+    &Take3(from, _, via0, via1, via2) =>
+      Take4(from, to, via0, via1, via2, via),
+    &Take4(from, _, via0, via1, via2, via3) =>
+      Take5(from, to, via0, via1, via2, via3, via),
+    &Take5(from, _, via0, via1, via2, via3, via4) =>
+      Take6(from, to, via0, via1, via2, via3, via4, via),
+    &Take6(from, _, via0, via1, via2, via3, via4, via5) =>
+      Take7(from, to, via0, via1, via2, via3, via4, via5, via),
+    &Take7(from, _, via0, via1, via2, via3, via4, via5, via6) =>
+      Take8(from, to, via0, via1, via2, via3, via4, via5, via6, via),
     _ => panic!("Too many captures")
   }
 }
 
-fn explode_short_jump(position: &Position, from: usize, to: usize, via: &[usize], min_captures: usize, color_to_capture: usize) -> Vec<Move> {
-  fn explode(position: &Position, from: usize, to: usize, via: &[usize], color_to_capture: usize, moves: &mut Vec<Move>) {
+fn explode_short_jump(position: &Position, mv: Move, min_captures: usize, color_to_capture: usize) -> Vec<Move> {
+  fn explode(position: &Position, mv: Move, color_to_capture: usize, moves: &mut Vec<Move>) {
     let mut exploded = false;
-    for (over, next) in short_jumps(to).into_iter() {
-      if color(position.piece_at(over)) == color_to_capture && position.piece_at(next) == EMPTY
-         && via.iter().fold(true, |b,&f| b && f != over) {
+    for (via, to) in short_jumps(mv.to()).into_iter() {
+      if color(position.piece_at(via)) == color_to_capture
+         && position.piece_at(to) == EMPTY
+         && !mv.goes_via(via) {
         exploded = true;
-        let mut via_next : Vec<usize> = via.into();
-        via_next.push(over);
-        explode(position, from, next, &via_next[..], color_to_capture, moves);
+        explode(position, take_more(&mv, via, to), color_to_capture, moves);
       }
     }
 
     if !exploded {
-      moves.push(create_move(from, to, via));
+      moves.push(mv);
     }
   }
 
   let mut result = vec![];
-  explode(position, from, to, via, color_to_capture, &mut result);
+  explode(position, mv, color_to_capture, &mut result);
   if result.len() == 0 {
     return result;
   }
@@ -72,7 +78,7 @@ fn explode_short_jump(position: &Position, from: usize, to: usize, via: &[usize]
 fn add_short_jumps(position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: usize) {
   for (via, to) in short_jumps(field).into_iter() {
     if position.piece_at(to) == EMPTY && color(position.piece_at(via)) == color_to_capture {
-      let moves = explode_short_jump(position, field, to, &vec![via], *captures, color_to_capture);
+      let mut moves = explode_short_jump(position, Take1(field, to, via), *captures, color_to_capture);
       match moves.first() {
         Some(ref peek) => {
           let num = peek.num_taken();
@@ -83,9 +89,7 @@ fn add_short_jumps(position: &Position, field: usize, result: &mut Vec<Move>, ca
         },
         None => ()
       }
-      for mv in moves.into_iter() {
-        result.push(mv);
-      }
+      result.append(&mut moves);
     }
   }
 }
