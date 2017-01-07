@@ -1,5 +1,5 @@
 use board::coords::{Coords,MinXY};
-use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,BLACK,WHITE,color};
+use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,TRANSPARENT,BLACK,WHITE,color};
 use board::position::Position;
 use board::mv::{Move,Mover};
 use board::mv::Move::{Shift,Take1,Take2,Take3,Take4,Take5,Take6,Take7,Take8};
@@ -95,6 +95,27 @@ fn add_short_jumps(position: &Position, field: usize, result: &mut Vec<Move>, ca
 }
 
 fn add_king_moves(position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: usize) {
+  let coords = Coords::from(field);
+  if coords.x < coords.max_x() {
+    let mut via : Option<usize> = None;
+    let mut x = coords.x + 1;
+    while x <= coords.max_x() {
+      let to = usize::from(Coords { x: x, y: coords.y });
+      match color(position.piece_at(to)) {
+        color if color == TRANSPARENT => {
+          if *captures == 0 {
+            result.push(Shift(field, to));
+          }
+        },
+        color if color == color_to_capture => {
+          via = Some(to);
+          break;
+        },
+        _ => break
+      }
+      x += 1;
+    }
+  }
 }
 
 pub fn legal_moves(position: &Position) -> Vec<Move> {
