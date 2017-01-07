@@ -20,7 +20,9 @@ impl Eq for ArrayPosition {}
 impl Hash for ArrayPosition {
   fn hash<H: Hasher>(&self, state: &mut H) {
     self.white_to_move.hash(state);
-    self.pieces.hash(state);
+    for i in 0..50 {
+      self.pieces[i].hash(state);
+    }
   }
 }
 

@@ -1,5 +1,4 @@
 use std;
-use std::hash::{Hash, Hasher};
 
 use board::piece::Color;
 use board::position::{Position, Game};
@@ -7,22 +6,10 @@ use board::position::{Position, Game};
 #[cfg(test)]
 use board::piece::{EMPTY, WHITE_MAN, BLACK_MAN};
 
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(Hash)]
 pub struct CodedPosition { upper: u64, lower: u64 }
-
-impl PartialEq for CodedPosition {
-  fn eq(&self, other: &CodedPosition) -> bool {
-    self.upper == other.upper && self.lower == other.lower
-  }
-}
-
-impl Eq for CodedPosition {}
-
-impl Hash for CodedPosition {
-  fn hash<H: Hasher>(&self, state: &mut H) {
-    self.upper.hash(state);
-    self.lower.hash(state);
-  }
-}
 
 const PIECE_BITS : [usize; 6] =
   [0, 12, 24, 36, 48, 60];

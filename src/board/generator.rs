@@ -1,5 +1,5 @@
 use board::coords::{Coords,MinXY};
-use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,color,piece_own,piece_is,Color};
+use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,piece_own,piece_is,Color};
 use board::piece::Color::{White, Black};
 use board::position::Position;
 use board::mv::{Move,Mover};
@@ -98,7 +98,6 @@ fn add_short_jumps(position: &Position, field: usize, result: &mut Vec<Move>, ca
 fn add_king_moves(position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
   let coords = Coords::from(field);
   if coords.x < coords.max_x() {
-    let mut via : Option<usize> = None;
     let mut x = coords.x + 1;
     while x <= coords.max_x() {
       let to = usize::from(Coords { x: x, y: coords.y });

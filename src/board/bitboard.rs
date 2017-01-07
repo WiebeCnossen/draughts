@@ -1,33 +1,14 @@
-use std::hash::{Hash, Hasher};
-
 use board::position::{Position, Game};
 use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, Color};
 
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(Hash)]
 pub struct BitboardPosition {
   empty : u64,
   white_man: u64,
   black_man: u64,
   white_king: u64,
-}
-
-impl PartialEq for BitboardPosition {
-  fn eq(&self, other: &BitboardPosition) -> bool {
-    self.empty == other.empty &&
-    self.white_man == other.white_man &&
-    self.black_man == other.black_man &&
-    self.white_king == other.white_king
-  }
-}
-
-impl Eq for BitboardPosition {}
-
-impl Hash for BitboardPosition {
-  fn hash<H: Hasher>(&self, state: &mut H) {
-    self.empty.hash(state);
-    self.white_man.hash(state);
-    self.black_man.hash(state);
-    self.white_king.hash(state);
-  }
 }
 
 const SIDE_BIT : u64 = 1 << 50;
