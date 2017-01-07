@@ -1,5 +1,6 @@
 use board::coords::{Coords,MinXY};
-use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,TRANSPARENT,BLACK,WHITE,color};
+use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,color,piece_own,piece_is,Color};
+use board::piece::Color::{White, Black};
 use board::position::Position;
 use board::mv::{Move,Mover};
 use board::mv::Move::{Shift,Take1,Take2,Take3,Take4,Take5,Take6,Take7,Take8};
@@ -33,15 +34,15 @@ fn take_more(mv: &Move, via: usize, to: usize) -> Move {
   }
 }
 
-fn explode_short_jump(position: &Position, mv: Move, min_captures: usize, color_to_capture: usize) -> Vec<Move> {
-  fn explode(position: &Position, mv: Move, color_to_capture: usize, moves: &mut Vec<Move>) {
+fn explode_short_jump(position: &Position, mv: Move, min_captures: usize, color_to_capture: Color) -> Vec<Move> {
+  fn explode(position: &Position, mv: Move, color_to_capture: Color, moves: &mut Vec<Move>) {
     let mut exploded = false;
     for (via, to) in short_jumps(mv.to()).into_iter() {
-      if color(position.piece_at(via)) == color_to_capture
+      if piece_is(position.piece_at(via), color_to_capture.clone())
          && position.piece_at(to) == EMPTY
          && !mv.goes_via(via) {
         exploded = true;
-        explode(position, take_more(&mv, via, to), color_to_capture, moves);
+        explode(position, take_more(&mv, via, to), color_to_capture.clone(), moves);
       }
     }
 
@@ -75,10 +76,10 @@ fn explode_short_jump(position: &Position, mv: Move, min_captures: usize, color_
   result
 }
 
-fn add_short_jumps(position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: usize) {
+fn add_short_jumps(position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
   for (via, to) in short_jumps(field).into_iter() {
-    if position.piece_at(to) == EMPTY && color(position.piece_at(via)) == color_to_capture {
-      let mut moves = explode_short_jump(position, Take1(field, to, via), *captures, color_to_capture);
+    if position.piece_at(to) == EMPTY && piece_is(position.piece_at(via), color_to_capture.clone()) {
+      let mut moves = explode_short_jump(position, Take1(field, to, via), *captures, color_to_capture.clone());
       match moves.first() {
         Some(ref peek) => {
           let num = peek.num_taken();
@@ -94,24 +95,21 @@ fn add_short_jumps(position: &Position, field: usize, result: &mut Vec<Move>, ca
   }
 }
 
-fn add_king_moves(position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: usize) {
+fn add_king_moves(position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
   let coords = Coords::from(field);
   if coords.x < coords.max_x() {
     let mut via : Option<usize> = None;
     let mut x = coords.x + 1;
     while x <= coords.max_x() {
       let to = usize::from(Coords { x: x, y: coords.y });
-      match color(position.piece_at(to)) {
-        color if color == TRANSPARENT => {
+      match piece_own(position.piece_at(to), color_to_capture.clone()) {
+        Some(true) => (),
+        Some(false) => break,
+        None => {
           if *captures == 0 {
             result.push(Shift(field, to));
           }
-        },
-        color if color == color_to_capture => {
-          via = Some(to);
-          break;
-        },
-        _ => break
+        }
       }
       x += 1;
     }
@@ -121,11 +119,11 @@ fn add_king_moves(position: &Position, field: usize, result: &mut Vec<Move>, cap
 pub fn legal_moves(position: &Position) -> Vec<Move> {
   let mut result = Vec::with_capacity(20);
   let mut captures = 0;
-  if position.white_to_move() {
+  if position.side_to_move() == White {
     for field in 0..50 {
       match position.piece_at(field) {
         WHITE_MAN => {
-          add_short_jumps(position, field, &mut result, &mut captures, BLACK);
+          add_short_jumps(position, field, &mut result, &mut captures, Black);
 
           if captures == 0 {
             for step in white_steps(field).into_iter() {
@@ -136,7 +134,7 @@ pub fn legal_moves(position: &Position) -> Vec<Move> {
           }
         },
         WHITE_KING => {
-          add_king_moves(position, field, &mut result, &mut captures, BLACK);
+          add_king_moves(position, field, &mut result, &mut captures, Black);
         },
         _ => ()
       }
@@ -146,7 +144,7 @@ pub fn legal_moves(position: &Position) -> Vec<Move> {
     for field in 0..50 {
       match position.piece_at(field) {
         BLACK_MAN => {
-          add_short_jumps(position, field, &mut result, &mut captures, WHITE);
+          add_short_jumps(position, field, &mut result, &mut captures, White);
 
           if captures == 0 {
             for step in black_steps(field).into_iter() {
@@ -157,7 +155,7 @@ pub fn legal_moves(position: &Position) -> Vec<Move> {
           }
         },
         BLACK_KING => {
-          add_king_moves(position, field, &mut result, &mut captures, WHITE);
+          add_king_moves(position, field, &mut result, &mut captures, White);
         },
         _ => ()
       }

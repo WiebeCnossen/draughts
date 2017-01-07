@@ -1,6 +1,6 @@
 use std::hash::Hash;
 
-use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
+use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, Color};
 
 fn promote(field: usize, piece: u8) -> u8 {
   if piece == WHITE_MAN && field < 5 { WHITE_KING }
@@ -9,7 +9,7 @@ fn promote(field: usize, piece: u8) -> u8 {
 }
 
 pub trait Position {
-  fn white_to_move(&self) -> bool;
+  fn side_to_move(&self) -> Color;
   fn piece_at(&self, field: usize) -> u8;
 }
 

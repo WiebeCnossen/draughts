@@ -1,7 +1,7 @@
 use std::hash::{Hash, Hasher};
 
 use board::position::{Position, Game};
-use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
+use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, Color};
 
 pub struct BitboardPosition {
   empty : u64,
@@ -54,8 +54,8 @@ fn clear(mask: u64, bit: usize) -> u64 {
 }
 
 impl Position for BitboardPosition {
-  fn white_to_move(&self) -> bool {
-    self.empty & SIDE_BIT == 0
+  fn side_to_move(&self) -> Color {
+    if self.empty & SIDE_BIT == 0 { Color::White } else { Color::Black }
   }
 
   fn piece_at(&self, field: usize) -> u8 {
@@ -99,7 +99,7 @@ impl Game for BitboardPosition {
 #[test]
 fn create() {
   let empty = BitboardPosition::create();
-  assert!(empty.white_to_move());
+  assert_eq!(empty.side_to_move(), Color::White);
   assert_eq!(empty.piece_at(0), EMPTY);
   assert_eq!(empty.piece_at(19), EMPTY);
   assert_eq!(empty.piece_at(23), EMPTY);
@@ -111,7 +111,7 @@ fn create() {
 fn put_one_piece() {
   let position = BitboardPosition::create()
     .put_piece(31, WHITE_MAN);
-  assert!(position.white_to_move());
+  assert_eq!(position.side_to_move(), Color::White);
   assert_eq!(position.piece_at(25), EMPTY);
   assert_eq!(position.piece_at(30), EMPTY);
   assert_eq!(position.piece_at(31), WHITE_MAN);
@@ -125,7 +125,7 @@ fn put_pieces_in_same_row() {
     .put_piece(31, WHITE_MAN)
     .put_piece(32, BLACK_MAN)
     .put_piece(33, BLACK_KING);
-  assert!(position.white_to_move());
+  assert_eq!(position.side_to_move(), Color::White);
   assert_eq!(position.piece_at(25), EMPTY);
   assert_eq!(position.piece_at(30), EMPTY);
   assert_eq!(position.piece_at(31), WHITE_MAN);
@@ -140,7 +140,7 @@ fn put_pieces_in_distinct_rows() {
     .put_piece(6, WHITE_MAN)
     .put_piece(16, BLACK_MAN)
     .put_piece(11, BLACK_MAN);
-  assert!(position.white_to_move());
+  assert_eq!(position.side_to_move(), Color::White);
   assert_eq!(position.piece_at(0), EMPTY);
   assert_eq!(position.piece_at(5), EMPTY);
   assert_eq!(position.piece_at(6), WHITE_MAN);
@@ -157,7 +157,7 @@ fn put_pieces_in_distinct_rows() {
 #[test]
 fn initial() {
   let initial = BitboardPosition::initial();
-  assert!(initial.white_to_move());
+  assert_eq!(initial.side_to_move(), Color::White);
   assert_eq!(initial.piece_at(0), BLACK_MAN);
   assert_eq!(initial.piece_at(19), BLACK_MAN);
   assert_eq!(initial.piece_at(23), EMPTY);
@@ -168,5 +168,5 @@ fn initial() {
 #[test]
 fn toggle_side() {
   let black = BitboardPosition::create().toggle_side();
-  assert!(!black.white_to_move());
+  assert_eq!(black.side_to_move(), Color::Black);
 }
