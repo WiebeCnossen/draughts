@@ -158,6 +158,7 @@ fn long_paths_vec(field: usize, min_size: i8) -> Vec<Vec<usize>> {
     for x in coords.min_x() .. coords.x - min_size + 1 {
       result.push(usize::from(Coords { x: x, y: coords.y }));
     }
+    result.reverse();
     super_result.push(result);
   }
   else {
@@ -178,6 +179,7 @@ fn long_paths_vec(field: usize, min_size: i8) -> Vec<Vec<usize>> {
     for y in coords.min_y() .. coords.y - min_size + 1 {
       result.push(usize::from(Coords { x: coords.x, y: y }));
     }
+    result.reverse();
     super_result.push(result);
   }
   else {

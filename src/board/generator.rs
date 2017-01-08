@@ -346,3 +346,22 @@ fn white_king_moves() {
       });
   }
 }
+
+#[test]
+fn black_king_moves() {
+  let position = BitboardPosition::create()
+    .put_piece(0, BLACK_KING)
+    .put_piece(11, WHITE_MAN)
+    .put_piece(17, WHITE_KING)
+    .toggle_side();
+  let legal = Generator::create().legal_moves(&position);
+  assert_eq!(legal.len(), 2);
+  for mv in legal.into_iter() {
+    assert!(
+      match mv {
+        Shift(0, 5)
+        | Shift(0, 6) => true,
+        _ => fail(mv)
+      });
+  }
+}
