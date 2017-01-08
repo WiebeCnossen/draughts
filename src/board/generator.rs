@@ -1,4 +1,3 @@
-use board::coords::{Coords,MinXY};
 use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,piece_own,piece_is,Color};
 use board::piece::Color::{White, Black};
 use board::position::Position;
@@ -105,13 +104,11 @@ impl Generator {
   }
 
   fn add_king_moves(&self, position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
-    let coords = Coords::from(field);
-    if coords.x < coords.max_x() {
-      let mut x = coords.x + 1;
-      while x <= coords.max_x() {
-        let to = usize::from(Coords { x: x, y: coords.y });
+    let paths = self.steps.long_paths(field);
+    for dir in 0..4 {
+      for &to in paths[dir] {
         match piece_own(position.piece_at(to), color_to_capture.clone()) {
-          Some(true) => (),
+          Some(true) => break,
           Some(false) => break,
           None => {
             if *captures == 0 {
@@ -119,7 +116,6 @@ impl Generator {
             }
           }
         }
-        x += 1;
       }
     }
   }
