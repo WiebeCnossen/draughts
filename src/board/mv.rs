@@ -11,15 +11,8 @@ pub enum Move {
   Take8(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize)
 }
 
-pub trait Mover {
-  fn from(&self) -> usize;
-  fn to(&self) -> usize;
-  fn num_taken(&self) -> usize;
-  fn goes_via(&self, via: usize) -> bool;
-}
-
-impl Mover for Move {
-  fn from(&self) -> usize {
+impl Move {
+  pub fn from(&self) -> usize {
     match self {
       &Move::Shift(from, ..)
       | &Move::Take1(from, ..)
@@ -33,7 +26,7 @@ impl Mover for Move {
     }
   }
 
-  fn to(&self) -> usize {
+  pub fn to(&self) -> usize {
     match self {
       &Move::Shift(_, to)
       | &Move::Take1(_, to, ..)
@@ -47,7 +40,7 @@ impl Mover for Move {
     }
   }
 
-  fn num_taken(&self) -> usize {
+  pub fn num_taken(&self) -> usize {
     match self {
       &Move::Shift(..) => 0,
       &Move::Take1(..) => 1,
@@ -61,7 +54,7 @@ impl Mover for Move {
     }
   }
 
-  fn goes_via(&self, via: usize) -> bool {
+  pub fn goes_via(&self, via: usize) -> bool {
     match self {
       &Move::Shift(..) =>
         false,

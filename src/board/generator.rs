@@ -2,9 +2,9 @@ use board::coords::{Coords,MinXY};
 use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,piece_own,piece_is,Color};
 use board::piece::Color::{White, Black};
 use board::position::Position;
-use board::mv::{Move,Mover};
+use board::mv::Move;
 use board::mv::Move::{Shift,Take1,Take2,Take3,Take4,Take5,Take6,Take7,Take8};
-use board::steps::{white_steps,black_steps,short_jumps};
+use board::steps::Steps;
 
 #[cfg(test)]
 use board::position::Game;
@@ -34,15 +34,23 @@ fn take_more(mv: &Move, via: usize, to: usize) -> Move {
   }
 }
 
-fn explode_short_jump(position: &Position, mv: Move, min_captures: usize, color_to_capture: Color) -> Vec<Move> {
-  fn explode(position: &Position, mv: Move, color_to_capture: Color, moves: &mut Vec<Move>) {
+pub struct Generator {
+  steps: Steps
+}
+
+impl Generator {
+  pub fn create() -> Generator {
+    Generator { steps: Steps::create() }
+  }
+
+  fn explode(&self, position: &Position, mv: Move, color_to_capture: Color, moves: &mut Vec<Move>) {
     let mut exploded = false;
-    for (via, to) in short_jumps(mv.to()).into_iter() {
+    for &(via, to) in self.steps.short_jumps(mv.to()).into_iter() {
       if piece_is(position.piece_at(via), color_to_capture.clone())
-         && position.piece_at(to) == EMPTY
-         && !mv.goes_via(via) {
+        && position.piece_at(to) == EMPTY
+        && !mv.goes_via(via) {
         exploded = true;
-        explode(position, take_more(&mv, via, to), color_to_capture.clone(), moves);
+        self.explode(position, take_more(&mv, via, to), color_to_capture.clone(), moves);
       }
     }
 
@@ -51,116 +59,118 @@ fn explode_short_jump(position: &Position, mv: Move, min_captures: usize, color_
     }
   }
 
-  let mut result = vec![];
-  explode(position, mv, color_to_capture, &mut result);
-  if result.len() == 0 {
-    return result;
-  }
-
-  let max = result.iter().fold(0, |mx, mv| { let nt = mv.num_taken(); if mx > nt { mx } else { nt }});
-  if max < min_captures {
-    result.clear();
-    return result;
-  }
-
-  let mut i = 0;
-  while i < result.len() {
-    if result[i].num_taken() < max {
-      result.swap_remove(i);
+  fn explode_short_jump(&self, position: &Position, mv: Move, min_captures: usize, color_to_capture: Color) -> Vec<Move> {
+    let mut result = vec![];
+    self.explode(position, mv, color_to_capture, &mut result);
+    if result.len() == 0 {
+      return result;
     }
-    else {
-      i += 1;
+
+    let max = result.iter().fold(0, |mx, mv| { let nt = mv.num_taken(); if mx > nt { mx } else { nt }});
+    if max < min_captures {
+      result.clear();
+      return result;
     }
-  }
 
-  result
-}
-
-fn add_short_jumps(position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
-  for (via, to) in short_jumps(field).into_iter() {
-    if position.piece_at(to) == EMPTY && piece_is(position.piece_at(via), color_to_capture.clone()) {
-      let mut moves = explode_short_jump(position, Take1(field, to, via), *captures, color_to_capture.clone());
-      match moves.first() {
-        Some(ref peek) => {
-          let num = peek.num_taken();
-          if num > *captures {
-            result.clear();
-            *captures = num;
-          }
-        },
-        None => ()
+    let mut i = 0;
+    while i < result.len() {
+      if result[i].num_taken() < max {
+        result.swap_remove(i);
       }
-      result.append(&mut moves);
+      else {
+        i += 1;
+      }
+    }
+
+    result
+  }
+
+  fn add_short_jumps(&self, position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
+    for &(via, to) in self.steps.short_jumps(field).into_iter() {
+      if position.piece_at(to) == EMPTY && piece_is(position.piece_at(via), color_to_capture.clone()) {
+        let mut moves = self.explode_short_jump(position, Take1(field, to, via), *captures, color_to_capture.clone());
+        match moves.first() {
+          Some(ref peek) => {
+            let num = peek.num_taken();
+            if num > *captures {
+              result.clear();
+              *captures = num;
+            }
+          },
+          None => ()
+        }
+        result.append(&mut moves);
+      }
     }
   }
-}
 
-fn add_king_moves(position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
-  let coords = Coords::from(field);
-  if coords.x < coords.max_x() {
-    let mut x = coords.x + 1;
-    while x <= coords.max_x() {
-      let to = usize::from(Coords { x: x, y: coords.y });
-      match piece_own(position.piece_at(to), color_to_capture.clone()) {
-        Some(true) => (),
-        Some(false) => break,
-        None => {
-          if *captures == 0 {
-            result.push(Shift(field, to));
+  fn add_king_moves(&self, position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
+    let coords = Coords::from(field);
+    if coords.x < coords.max_x() {
+      let mut x = coords.x + 1;
+      while x <= coords.max_x() {
+        let to = usize::from(Coords { x: x, y: coords.y });
+        match piece_own(position.piece_at(to), color_to_capture.clone()) {
+          Some(true) => (),
+          Some(false) => break,
+          None => {
+            if *captures == 0 {
+              result.push(Shift(field, to));
+            }
           }
         }
+        x += 1;
       }
-      x += 1;
     }
   }
-}
 
-pub fn legal_moves(position: &Position) -> Vec<Move> {
-  let mut result = Vec::with_capacity(20);
-  let mut captures = 0;
-  if position.side_to_move() == White {
-    for field in 0..50 {
-      match position.piece_at(field) {
-        WHITE_MAN => {
-          add_short_jumps(position, field, &mut result, &mut captures, Black);
+  pub fn legal_moves(&self, position: &Position) -> Vec<Move> {
+    let mut result = Vec::with_capacity(20);
+    let mut captures = 0;
+    if position.side_to_move() == White {
+      for field in 0..50 {
+        match position.piece_at(field) {
+          WHITE_MAN => {
+            self.add_short_jumps(position, field, &mut result, &mut captures, Black);
 
-          if captures == 0 {
-            for step in white_steps(field).into_iter() {
-              if position.piece_at(step) == EMPTY {
-                result.push(Shift(field, step));
+            if captures == 0 {
+              for &step in self.steps.white_steps(field) {
+                if position.piece_at(step) == EMPTY {
+                  result.push(Shift(field, step));
+                }
               }
             }
-          }
-        },
-        WHITE_KING => {
-          add_king_moves(position, field, &mut result, &mut captures, Black);
-        },
-        _ => ()
+          },
+          WHITE_KING => {
+            self.add_king_moves(position, field, &mut result, &mut captures, Black);
+          },
+          _ => ()
+        }
       }
     }
-  }
-  else {
-    for field in 0..50 {
-      match position.piece_at(field) {
-        BLACK_MAN => {
-          add_short_jumps(position, field, &mut result, &mut captures, White);
+    else {
+      for field in 0..50 {
+        match position.piece_at(field) {
+          BLACK_MAN => {
+            self.add_short_jumps(position, field, &mut result, &mut captures, White);
 
-          if captures == 0 {
-            for step in black_steps(field).into_iter() {
-              if position.piece_at(step) == EMPTY {
-                result.push(Shift(field, step));
+            if captures == 0 {
+              for &step in self.steps.black_steps(field).into_iter() {
+                if position.piece_at(step) == EMPTY {
+                  result.push(Shift(field, step));
+                }
               }
             }
-          }
-        },
-        BLACK_KING => {
-          add_king_moves(position, field, &mut result, &mut captures, White);
-        },
-        _ => ()
+          },
+          BLACK_KING => {
+            self.add_king_moves(position, field, &mut result, &mut captures, White);
+          },
+          _ => ()
+        }
       }
     }
+    result
   }
-  result
 }
 
 #[cfg(test)]
@@ -173,7 +183,7 @@ fn fail(mv: Move) -> bool {
 fn one_white_man_side() {
   let position = BitboardPosition::create()
     .put_piece(35, WHITE_MAN);
-  let legal = legal_moves(&position);
+  let legal = Generator::create().legal_moves(&position);
   assert_eq!(legal.len(), 1);
   for mv in legal.into_iter() {
     assert!(
@@ -190,7 +200,7 @@ fn one_white_man_blocked() {
     .put_piece(35, WHITE_MAN)
     .put_piece(30, BLACK_MAN)
     .put_piece(26, BLACK_MAN);
-  let legal = legal_moves(&position);
+  let legal = Generator::create().legal_moves(&position);
   assert_eq!(legal.len(), 0);
 }
 
@@ -198,7 +208,7 @@ fn one_white_man_blocked() {
 fn one_white_man_center() {
   let position = BitboardPosition::create()
     .put_piece(36, WHITE_MAN);
-  let legal = legal_moves(&position);
+  let legal = Generator::create().legal_moves(&position);
   assert_eq!(legal.len(), 2);
   for mv in legal.into_iter() {
     assert!(
@@ -215,7 +225,7 @@ fn one_black_man_side() {
   let position = BitboardPosition::create()
     .put_piece(35, BLACK_MAN)
     .toggle_side();
-  let legal = legal_moves(&position);
+  let legal = Generator::create().legal_moves(&position);
   assert_eq!(legal.len(), 1);
   for mv in legal.into_iter() {
     assert!(
@@ -232,7 +242,7 @@ fn one_single_capture_white_man() {
     .put_piece(15, WHITE_MAN)
     .put_piece(40, BLACK_MAN)
     .put_piece(45, WHITE_MAN);
-  let legal = legal_moves(&position);
+  let legal = Generator::create().legal_moves(&position);
   assert_eq!(legal.len(), 1);
   for mv in legal.into_iter() {
     assert!(
@@ -250,7 +260,7 @@ fn one_double_capture_white_man() {
     .put_piece(31, BLACK_MAN)
     .put_piece(40, BLACK_MAN)
     .put_piece(45, WHITE_MAN);
-  let legal = legal_moves(&position);
+  let legal = Generator::create().legal_moves(&position);
   assert_eq!(legal.len(), 1);
   for mv in legal.into_iter() {
     assert!(
@@ -270,7 +280,7 @@ fn double_and_triple_capture_white_man() {
     .put_piece(41, BLACK_MAN)
     .put_piece(42, BLACK_MAN)
     .put_piece(45, WHITE_MAN);
-  let legal = legal_moves(&position);
+  let legal = Generator::create().legal_moves(&position);
   assert_eq!(legal.len(), 1);
   for mv in legal.into_iter() {
     assert!(
@@ -287,7 +297,7 @@ fn two_captures_white_man() {
     .put_piece(40, BLACK_MAN)
     .put_piece(41, BLACK_MAN)
     .put_piece(46, WHITE_MAN);
-  let legal = legal_moves(&position);
+  let legal = Generator::create().legal_moves(&position);
   assert_eq!(legal.len(), 2);
   for mv in legal.into_iter() {
     assert!(
@@ -306,7 +316,7 @@ fn two_captures_black_man() {
     .put_piece(31, WHITE_MAN)
     .put_piece(36, BLACK_MAN)
     .toggle_side();
-  let legal = legal_moves(&position);
+  let legal = Generator::create().legal_moves(&position);
   assert_eq!(legal.len(), 2);
   for mv in legal.into_iter() {
     assert!(
@@ -327,7 +337,7 @@ fn white_king_moves() {
     .put_piece(33, BLACK_MAN)
     .put_piece(38, WHITE_MAN)
     .put_piece(43, WHITE_KING);
-  let legal = legal_moves(&position);
+  let legal = Generator::create().legal_moves(&position);
   assert_eq!(legal.len(), 4);
   for mv in legal.into_iter() {
     assert!(
