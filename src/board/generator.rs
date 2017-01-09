@@ -104,7 +104,7 @@ impl Generator {
   }
 
   fn add_king_moves(&self, position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
-    let paths = self.steps.long_paths(field);
+    let paths = self.steps.paths(field);
     for dir in 0..4 {
       for &to in paths[dir] {
         match piece_own(position.piece_at(to), color_to_capture.clone()) {
