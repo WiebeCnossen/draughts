@@ -106,11 +106,14 @@ impl Generator {
   fn add_king_moves(&self, position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
     let paths = self.steps.paths(field);
     for dir in 0..4 {
+      let mut via : Option<usize> = None;
       for &to in paths[dir] {
-        match piece_own(position.piece_at(to), color_to_capture.clone()) {
-          Some(true) => break,
-          Some(false) => break,
-          None => {
+        match (piece_own(position.piece_at(to), color_to_capture.clone()), via) {
+          (Some(false), _)
+          | (Some(true), Some(_)) => break,
+          (Some(true), None) => via = Some(to),
+          (None, Some(via)) => result.push(Take1(field, via, to)),
+          (None, None) => {
             if *captures == 0 {
               result.push(Shift(field, to));
             }
