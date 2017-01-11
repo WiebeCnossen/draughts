@@ -12,6 +12,7 @@ fn promote(field: usize, piece: u8) -> u8 {
 }
 
 const FEN_CHARS : [char; 5] = ['e', 'w', 'W', 'b', 'B'];
+const ASCII_CHARS : [char; 5] = ['.', 'w', 'W', 'b', 'B'];
 
 pub trait Position {
   fn side_to_move(&self) -> Color;
@@ -50,13 +51,23 @@ pub trait Position {
     }
     fen
   }
+
+  fn ascii(&self) -> String {
+    let mut ascii = String::new();
+    for field in 0..100 {
+      let c = if (field + (field / 10)) % 2 == 0 { ' ' } else { ASCII_CHARS[self.piece_at(field / 2) as usize] };
+      ascii.push(c); ascii.push(c);
+      if field % 10 == 9 { ascii.push('\r'); ascii.push('\n'); } else { ascii.push(' '); }
+    }
+    ascii
+  }
 }
 
 use std::fmt;
 
 impl fmt::Display for Position {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "{}", self.fen())
+    write!(f, "{}", self.sfen())
   }
 }
 
@@ -199,4 +210,19 @@ fn as_sfen() {
     .put_piece(15, WHITE_KING)
     .toggle_side();
   assert_eq!("beb3w4eB3W4555555", constructed.sfen());
+}
+
+#[test]
+fn as_ascii() {
+  match BitboardPosition::parse("w54bb452w2bewwb2w2ewebe3beew3") {
+    Ok(position) => {
+      let ascii = position.ascii();
+      println!("\r\n{}\r\n", ascii);
+      assert_eq!(ascii.len(), 310);
+    },
+    Err(msg) => {
+      println!("{}", msg);
+      assert!(false);
+    }
+  }
 }

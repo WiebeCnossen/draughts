@@ -76,23 +76,40 @@ impl Move {
         via0 == via || via1 == via || via2 == via || via3 == via || via4 == via || via5 == via || via6 == via || via7 == via,
     }
   }
+
+  pub fn as_string(&self) -> String {
+    let c = if let &Move::Shift(..) = self { '-' } else { 'x' };
+    format!("{}{}{}", self.from(), c, self.to())
+  }
+
+  pub fn as_full_string(&self) -> String {
+    match self {
+      &Move::Shift(from, to) =>
+        format!("{}-{}", from , to),
+      &Move::Take1(from, to, via0) =>
+        format!("{}x{}x{}", from, to, via0),
+      &Move::Take2(from, to, via0, via1) =>
+        format!("{}x{}x{}x{}", from, to, via0, via1),
+      &Move::Take3(from, to, via0, via1, via2) =>
+        format!("{}x{}x{}x{}x{}", from, to, via0, via1, via2),
+      &Move::Take4(from, to, via0, via1, via2, via3) =>
+        format!("{}x{}x{}x{}x{}x{}", from, to, via0, via1, via2, via3),
+      &Move::Take5(from, to, via0, via1, via2, via3, via4) =>
+        format!("{}x{}x{}x{}x{}x{}x{}", from, to, via0, via1, via2, via3, via4),
+      &Move::Take6(from, to, via0, via1, via2, via3, via4, via5) =>
+        format!("{}x{}x{}x{}x{}x{}x{}x{}", from, to, via0, via1, via2, via3, via4, via5),
+      &Move::Take7(from, to, via0, via1, via2, via3, via4, via5, via6) =>
+        format!("{}x{}x{}x{}x{}x{}x{}x{}x{}", from, to, via0, via1, via2, via3, via4, via5, via6),
+      &Move::Take8(from, to, via0, via1, via2, via3, via4, via5, via6, via7) =>
+        format!("{}x{}x{}x{}x{}x{}x{}x{}x{}x{}", from, to, via0, via1, via2, via3, via4, via5, via6, via7),
+    }
+  }
 }
 
 use std::fmt;
 
 impl fmt::Display for Move {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    match self {
-      &Move::Shift(from, to) => write!(f, "{}-{}", from , to),
-      &Move::Take1(from, to, via0) => write!(f, "{}x{}x{}", from , to, via0),
-      &Move::Take2(from, to, ..)
-      | &Move::Take3(from, to, ..)
-      | &Move::Take4(from, to, ..)
-      | &Move::Take5(from, to, ..)
-      | &Move::Take6(from, to, ..)
-      | &Move::Take7(from, to, ..)
-      | &Move::Take8(from, to, ..)
-       => write!(f, "{}xx{}", from , to),
-    }
+    write!(f, "{}", self.as_full_string())
   }
 }
