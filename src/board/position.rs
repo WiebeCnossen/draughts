@@ -103,20 +103,40 @@ pub trait Game : Position + Hash + Sized {
       }
       else {
         let pieces = match c {
+          '|' | ' ' | '/' => Some((EMPTY, 0)),
           'e' | '1' => Some((EMPTY, 1)),
           '2' => Some((EMPTY, 2)),
           '3' => Some((EMPTY, 3)),
           '4' => Some((EMPTY, 4)),
           '5' => Some((EMPTY, 5)),
           'w' => Some((WHITE_MAN, 1)),
+          'h' => Some((WHITE_MAN, 2)),
+          'i' => Some((WHITE_MAN, 3)),
+          't' => Some((WHITE_MAN, 4)),
+          'r' => Some((WHITE_MAN, 5)),
           'b' => Some((BLACK_MAN, 1)),
+          'l' => Some((BLACK_MAN, 2)),
+          'a' => Some((BLACK_MAN, 3)),
+          'c' => Some((BLACK_MAN, 4)),
+          'k' => Some((BLACK_MAN, 5)),
           'W' => Some((WHITE_KING, 1)),
+          'H' => Some((WHITE_KING, 2)),
+          'I' => Some((WHITE_KING, 3)),
+          'T' => Some((WHITE_KING, 4)),
+          'E' => Some((WHITE_KING, 5)),
           'B' => Some((BLACK_KING, 1)),
+          'L' => Some((BLACK_KING, 2)),
+          'A' => Some((BLACK_KING, 3)),
+          'C' => Some((BLACK_KING, 4)),
+          'K' => Some((BLACK_KING, 5)),
           _ => None
         };
         match pieces {
           Some((piece, count)) =>
             for _ in 0..count {
+              if field == 50 {
+                return Err(format!("Too many fields"))
+              }
               position = position.put_piece(field, piece);
               field += 1;
             },
@@ -126,7 +146,7 @@ pub trait Game : Position + Hash + Sized {
       i += 1;
     }
     if field != 50 {
-      return Err("Invalid number of fields".into())
+      return Err(format!("Insufficient number of fields: {}", field))
     }
     Ok(position)
   }
@@ -202,6 +222,48 @@ fn from_sfen() {
 }
 
 #[test]
+fn from_ufen() {
+  let constructed = BitboardPosition::create()
+    .put_piece(1, BLACK_MAN)
+    .put_piece(5, WHITE_MAN)
+    .put_piece(6, WHITE_MAN)
+    .put_piece(7, WHITE_MAN)
+    .put_piece(11, BLACK_KING)
+    .put_piece(15, WHITE_KING)
+    .toggle_side();
+  match BitboardPosition::parse("beb3i21B3W4555555") {
+    Err(msg) => {
+      println!("{}", msg);
+      assert!(false);
+    },
+    Ok(parsed) => assert!(constructed == parsed)
+  }
+}
+
+#[test]
+fn goerres_bayar() {
+  let spaced =
+    match BitboardPosition::parse("w ce/bea/k/a2/2b2/5/r/r/et/eie") {
+      Err(msg) => {
+        println!("{}", msg);
+        assert!(false);
+        None
+      },
+      Ok(parsed) => Some(parsed)
+    };
+  let small =
+    match BitboardPosition::parse("wcebeaka22b25rreteie") {
+      Err(msg) => {
+        println!("{}", msg);
+        assert!(false);
+        None
+      },
+      Ok(parsed) => Some(parsed)
+    };
+  assert!(spaced == small);
+}
+
+#[test]
 fn as_sfen() {
   let constructed = BitboardPosition::create()
     .put_piece(1, BLACK_MAN)
@@ -214,7 +276,7 @@ fn as_sfen() {
 
 #[test]
 fn as_ascii() {
-  match BitboardPosition::parse("w54bb452w2bewwb2w2ewebe3beew3") {
+  match BitboardPosition::parse("w 5/4b/b4/5/2w2/bewwb/2w2/ewebe/3be/ew3") {
     Ok(position) => {
       let ascii = position.ascii();
       println!("\r\n{}\r\n", ascii);
