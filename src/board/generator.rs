@@ -369,11 +369,62 @@ fn black_king_moves() {
   }
 }
 
-/*
-w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww
-1. 49-44 40x49
-2. 50-44 49x16
-3. 44x4 23x32
-4. 26-21 16x27
-5. 4x31
-*/
+#[test]
+fn study1() {
+  let position =
+    BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
+      .ok()
+      .unwrap()
+      .go(Shift(48,43));
+  let legal = Generator::create().legal_moves(&position);
+  assert_eq!(legal.len(), 1);
+  for mv in legal.into_iter() {
+    assert!(
+      match mv {
+        Take1(39, 48, 43) => true,
+        _ => fail(mv)
+      });
+  }
+}
+
+#[test]
+fn study2() {
+  let position =
+    BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
+      .ok()
+      .unwrap()
+      .go(Shift(48, 43))
+      .go(Take1(39, 48, 43))
+      .go(Shift(49, 43));
+  let legal = Generator::create().legal_moves(&position);
+  assert_eq!(legal.len(), 1);
+  for mv in legal.into_iter() {
+    assert!(
+      match mv {
+        Take2(48, 15, 31, 20) => true,
+        _ => fail(mv)
+      });
+  }
+}
+
+#[test]
+fn study3() {
+  let position =
+    BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
+      .ok()
+      .unwrap()
+      .go(Shift(48, 43))
+      .go(Take1(39, 48, 43))
+      .go(Shift(49, 43))
+      .go(Take2(48, 15, 31, 20))
+      .go(Take4(43, 38, 28, 18, 8, 3));
+  let legal = Generator::create().legal_moves(&position);
+  assert_eq!(legal.len(), 1);
+  for mv in legal.into_iter() {
+    assert!(
+      match mv {
+        Take1(22, 31, 27) => true,
+        _ => fail(mv)
+      });
+  }
+}
