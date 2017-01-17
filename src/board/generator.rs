@@ -42,25 +42,15 @@ impl Generator {
     Generator { steps: Steps::create() }
   }
 
-  fn explode(&self, position: &Position, mv: Move, color_to_capture: Color, moves: &mut Vec<Move>) {
-    let mut exploded = false;
-    for &(via, to) in self.steps.short_jumps(mv.to()).into_iter() {
-      if piece_is(position.piece_at(via), color_to_capture.clone())
-        && position.piece_at(to) == EMPTY
-        && !mv.goes_via(via) {
-        exploded = true;
-        self.explode(position, take_more(&mv, via, to), color_to_capture.clone(), moves);
+  fn merge_moves(mut result : &mut Vec<Move>, moves : &mut Vec<Move>) {
+    while let Some(mv) = moves.pop() {
+      if !result.contains(&mv) {
+        result.push(mv)
       }
-    }
-
-    if !exploded {
-      moves.push(mv);
     }
   }
 
-  fn explode_short_jump(&self, position: &Position, mv: Move, min_captures: usize, color_to_capture: Color) -> Vec<Move> {
-    let mut result = vec![];
-    self.explode(position, mv, color_to_capture, &mut result);
+  fn trim_result(mut result : Vec<Move>, min_captures : usize) -> Vec<Move> {
     if result.len() == 0 {
       return result;
     }
@@ -84,10 +74,32 @@ impl Generator {
     result
   }
 
+  fn explode_short_jump(&self, position: &Position, mv: Move, color_to_capture: Color, moves: &mut Vec<Move>) {
+    let mut exploded = false;
+    for &(via, to) in self.steps.short_jumps(mv.to()).into_iter() {
+      if piece_is(position.piece_at(via), color_to_capture.clone())
+        && position.piece_at(to) == EMPTY
+        && !mv.goes_via(via) {
+        exploded = true;
+        self.explode_short_jump(position, take_more(&mv, via, to), color_to_capture.clone(), moves);
+      }
+    }
+
+    if !exploded {
+      moves.push(mv);
+    }
+  }
+
+  fn explode_short_jumps(&self, position: &Position, mv: Move, min_captures: usize, color_to_capture: Color) -> Vec<Move> {
+    let mut result = vec![];
+    self.explode_short_jump(position, mv, color_to_capture, &mut result);
+    Generator::trim_result(result, min_captures)
+  }
+
   fn add_short_jumps(&self, position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
     for &(via, to) in self.steps.short_jumps(field).into_iter() {
       if position.piece_at(to) == EMPTY && piece_is(position.piece_at(via), color_to_capture.clone()) {
-        let mut moves = self.explode_short_jump(position, Take1(field, to, via), *captures, color_to_capture.clone());
+        let mut moves = self.explode_short_jumps(position, Take1(field, to, via), *captures, color_to_capture.clone());
         match moves.first() {
           Some(ref peek) => {
             let num = peek.num_taken();
@@ -103,33 +115,42 @@ impl Generator {
     }
   }
 
-  fn explode_long_jump(&self, position: &Position, mv: Move, min_captures: usize, color_to_capture: Color) -> Vec<Move> {
-    let mut result = vec![];
-    self.explode(position, mv, color_to_capture, &mut result);
-    if result.len() == 0 {
-      return result;
-    }
-
-    let max = result.iter().fold(0, |mx, mv| { let nt = mv.num_taken(); if mx > nt { mx } else { nt }});
-    if max < min_captures {
-      result.clear();
-      return result;
-    }
-
-    let mut i = 0;
-    while i < result.len() {
-      if result[i].num_taken() < max {
-        result.swap_remove(i);
+  fn explode_long_jump(&self, position: &Position, mv: Move, color_to_capture: Color, moves: &mut Vec<Move>) {
+    let mut exploded = false;
+    let paths = self.steps.paths(mv.to());
+    for dir in 0..4 {
+      let mut via : Option<usize> = None;
+      for &to in paths[dir] {
+        match (piece_own(position.piece_at(to), color_to_capture.clone()), via) {
+          (Some(false), _)
+          | (Some(true), Some(_)) => break,
+          (Some(true), None) => via = Some(to),
+          (None, Some(via)) => {
+            if mv.goes_via(via) {
+              break;
+            }
+            else {
+              exploded = true;
+              self.explode_long_jump(position, take_more(&mv, via, to), color_to_capture.clone(), moves);
+            }
+          },
+          (None, None) => ()
+        }
       }
-      else {
-        i += 1;
-      }
     }
 
-    result
+    if !exploded {
+      moves.push(mv);
+    }
   }
 
-  fn add_king_moves(&self, position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
+  fn explode_long_jumps(&self, position: &Position, mv: Move, min_captures: usize, color_to_capture: Color) -> Vec<Move> {
+    let mut result = vec![];
+    self.explode_long_jump(position, mv, color_to_capture, &mut result);
+    Generator::trim_result(result, min_captures)
+  }
+
+  fn add_king_moves(&self, position: &Position, field: usize, mut result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
     let paths = self.steps.paths(field);
     for dir in 0..4 {
       let mut via : Option<usize> = None;
@@ -139,7 +160,7 @@ impl Generator {
           | (Some(true), Some(_)) => break,
           (Some(true), None) => via = Some(to),
           (None, Some(via)) => {
-            let mut moves = self.explode_long_jump(position, Take1(field, to, via), *captures, color_to_capture.clone());
+            let mut moves = self.explode_long_jumps(position, Take1(field, to, via), *captures, color_to_capture.clone());
             if let Some(ref peek) = moves.first() {
               let num = peek.num_taken();
               if num > *captures {
@@ -147,7 +168,7 @@ impl Generator {
                 *captures = num;
               }
             }
-            result.append(&mut moves);
+            Generator::merge_moves(&mut result, &mut moves);
           },
           (None, None) => {
             if *captures == 0 {
@@ -211,7 +232,8 @@ impl Generator {
 #[cfg(test)]
 fn verify(position: &Position, moves: &[Move]) {
   let legal = Generator::create().legal_moves(position);
-  assert!(legal.len() >= moves.len());
+  let count = legal.len();
+  assert!(count >= moves.len());
   assert!(
     legal.into_iter().fold(
       true,
@@ -222,6 +244,7 @@ fn verify(position: &Position, moves: &[Move]) {
         }
         expected && ok
       }));
+  assert_eq!(count, moves.len());
 }
 
 #[test]
@@ -384,4 +407,11 @@ fn multi_long_capture() {
   let position =
     BitboardPosition::parse("w 5/5/3b1/5/5/5/5/1b3/5/W4").ok().unwrap();
   verify(&position, &vec![Take2(45, 4, 36, 13), Take2(45, 9, 36, 13)][..]);
+}
+
+#[test]
+fn coup_turc() {
+  let position =
+    BitboardPosition::parse("b 5/el2/5/Bebew/2w2/5/eh2/3we/ew3/5").ok().unwrap();
+  verify(&position, &vec![Take4(15, 27, 31, 38, 19, 22)][..]);
 }
