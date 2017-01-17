@@ -83,29 +83,29 @@ impl Move {
 
   pub fn as_string(&self) -> String {
     let c = if let &Move::Shift(..) = self { '-' } else { 'x' };
-    format!("{}{}{}", self.from(), c, self.to())
+    format!("{}{}{}", self.from() + 1, c, self.to() + 1)
   }
 
   pub fn as_full_string(&self) -> String {
     match self {
       &Move::Shift(from, to) =>
-        format!("{}-{}", from , to),
+        format!("{}-{}", from + 1, to + 1),
       &Move::Take1(from, to, via0) =>
-        format!("{}x{}x{}", from, to, via0),
+        format!("{}x{}x{}", from + 1, to + 1, via0 + 1),
       &Move::Take2(from, to, via0, via1) =>
-        format!("{}x{}x{}x{}", from, to, via0, via1),
+        format!("{}x{}x{}x{}", from + 1, to + 1, via0 + 1, via1 + 1),
       &Move::Take3(from, to, via0, via1, via2) =>
-        format!("{}x{}x{}x{}x{}", from, to, via0, via1, via2),
+        format!("{}x{}x{}x{}x{}", from + 1, to + 1, via0 + 1, via1 + 1, via2 + 1),
       &Move::Take4(from, to, via0, via1, via2, via3) =>
-        format!("{}x{}x{}x{}x{}x{}", from, to, via0, via1, via2, via3),
+        format!("{}x{}x{}x{}x{}x{}", from + 1, to + 1, via0 + 1, via1 + 1, via2 + 1, via3 + 1),
       &Move::Take5(from, to, via0, via1, via2, via3, via4) =>
-        format!("{}x{}x{}x{}x{}x{}x{}", from, to, via0, via1, via2, via3, via4),
+        format!("{}x{}x{}x{}x{}x{}x{}", from + 1, to + 1, via0 + 1, via1 + 1, via2 + 1, via3 + 1, via4 + 1),
       &Move::Take6(from, to, via0, via1, via2, via3, via4, via5) =>
-        format!("{}x{}x{}x{}x{}x{}x{}x{}", from, to, via0, via1, via2, via3, via4, via5),
+        format!("{}x{}x{}x{}x{}x{}x{}x{}", from + 1, to + 1, via0 + 1, via1 + 1, via2 + 1, via3 + 1, via4 + 1, via5 + 1),
       &Move::Take7(from, to, via0, via1, via2, via3, via4, via5, via6) =>
-        format!("{}x{}x{}x{}x{}x{}x{}x{}x{}", from, to, via0, via1, via2, via3, via4, via5, via6),
+        format!("{}x{}x{}x{}x{}x{}x{}x{}x{}", from + 1, to + 1, via0 + 1, via1 + 1, via2 + 1, via3 + 1, via4 + 1, via5 + 1, via6 + 1),
       &Move::Take8(from, to, via0, via1, via2, via3, via4, via5, via6, via7) =>
-        format!("{}x{}x{}x{}x{}x{}x{}x{}x{}x{}", from, to, via0, via1, via2, via3, via4, via5, via6, via7),
+        format!("{}x{}x{}x{}x{}x{}x{}x{}x{}x{}", from + 1, to + 1, via0 + 1, via1 + 1, via2 + 1, via3 + 1, via4 + 1, via5 + 1, via6 + 1, via7 + 1),
     }
   }
 }
