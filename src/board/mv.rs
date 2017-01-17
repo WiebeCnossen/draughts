@@ -1,4 +1,6 @@
 #[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
 pub enum Move {
   Shift(usize, usize),
   Take1(usize, usize, usize),

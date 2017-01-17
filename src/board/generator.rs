@@ -112,7 +112,13 @@ impl Generator {
           (Some(false), _)
           | (Some(true), Some(_)) => break,
           (Some(true), None) => via = Some(to),
-          (None, Some(via)) => result.push(Take1(field, via, to)),
+          (None, Some(via)) => {
+            if *captures == 0 {
+              result.clear();
+              *captures = 1;
+            }
+            result.push(Take1(field, to, via))
+          },
           (None, None) => {
             if *captures == 0 {
               result.push(Shift(field, to));
@@ -173,24 +179,26 @@ impl Generator {
 }
 
 #[cfg(test)]
-fn fail(mv: Move) -> bool {
-  println!("{}", mv);
-  false
+fn verify(position: &Position, moves: &[Move]) {
+  let legal = Generator::create().legal_moves(position);
+  assert!(legal.len() >= moves.len());
+  assert!(
+    legal.into_iter().fold(
+      true,
+      |ok, mv| {
+        let expected = moves.iter().fold(false, |v, m| v || mv == *m);
+        if !expected {
+          println!("Unexpected move {}", mv);
+        }
+        expected && ok
+      }));
 }
 
 #[test]
 fn one_white_man_side() {
   let position = BitboardPosition::create()
     .put_piece(35, WHITE_MAN);
-  let legal = Generator::create().legal_moves(&position);
-  assert_eq!(legal.len(), 1);
-  for mv in legal.into_iter() {
-    assert!(
-      match mv {
-        Shift(35, 30) => true,
-        _ => fail(mv)
-      });
-  }
+  verify(&position, &vec![Shift(35, 30)][..]);
 }
 
 #[test]
@@ -199,24 +207,14 @@ fn one_white_man_blocked() {
     .put_piece(35, WHITE_MAN)
     .put_piece(30, BLACK_MAN)
     .put_piece(26, BLACK_MAN);
-  let legal = Generator::create().legal_moves(&position);
-  assert_eq!(legal.len(), 0);
+  verify(&position, &vec![][..]);
 }
 
 #[test]
 fn one_white_man_center() {
   let position = BitboardPosition::create()
     .put_piece(36, WHITE_MAN);
-  let legal = Generator::create().legal_moves(&position);
-  assert_eq!(legal.len(), 2);
-  for mv in legal.into_iter() {
-    assert!(
-      match mv {
-        Shift(36, 30)
-        | Shift(36, 31) => true,
-        _ => fail(mv)
-      });
-  }
+  verify(&position, &vec![Shift(36, 30), Shift(36, 31)][..]);
 }
 
 #[test]
@@ -224,15 +222,7 @@ fn one_black_man_side() {
   let position = BitboardPosition::create()
     .put_piece(35, BLACK_MAN)
     .toggle_side();
-  let legal = Generator::create().legal_moves(&position);
-  assert_eq!(legal.len(), 1);
-  for mv in legal.into_iter() {
-    assert!(
-      match mv {
-        Shift(35, 40) => true,
-        _ => fail(mv)
-      });
-  }
+  verify(&position, &vec![Shift(35, 40)][..]);
 }
 
 #[test]
@@ -241,15 +231,7 @@ fn one_single_capture_white_man() {
     .put_piece(15, WHITE_MAN)
     .put_piece(40, BLACK_MAN)
     .put_piece(45, WHITE_MAN);
-  let legal = Generator::create().legal_moves(&position);
-  assert_eq!(legal.len(), 1);
-  for mv in legal.into_iter() {
-    assert!(
-      match mv {
-        Take1(45, 36, 40) => true,
-        _ => fail(mv)
-      });
-  }
+  verify(&position, &vec![Take1(45, 36, 40)][..]);
 }
 
 #[test]
@@ -259,15 +241,7 @@ fn one_double_capture_white_man() {
     .put_piece(31, BLACK_MAN)
     .put_piece(40, BLACK_MAN)
     .put_piece(45, WHITE_MAN);
-  let legal = Generator::create().legal_moves(&position);
-  assert_eq!(legal.len(), 1);
-  for mv in legal.into_iter() {
-    assert!(
-      match mv {
-        Take2(45, 27, 40, 31) => true,
-        _ => fail(mv)
-      });
-  }
+  verify(&position, &vec![Take2(45, 27, 40, 31)][..]);
 }
 
 #[test]
@@ -279,15 +253,7 @@ fn double_and_triple_capture_white_man() {
     .put_piece(41, BLACK_MAN)
     .put_piece(42, BLACK_MAN)
     .put_piece(45, WHITE_MAN);
-  let legal = Generator::create().legal_moves(&position);
-  assert_eq!(legal.len(), 1);
-  for mv in legal.into_iter() {
-    assert!(
-      match mv {
-        Take3(45, 38, 40, 41, 42) => true,
-        _ => fail(mv)
-      });
-  }
+  verify(&position, &vec![Take3(45, 38, 40, 41, 42)][..]);
 }
 
 #[test]
@@ -296,16 +262,7 @@ fn two_captures_white_man() {
     .put_piece(40, BLACK_MAN)
     .put_piece(41, BLACK_MAN)
     .put_piece(46, WHITE_MAN);
-  let legal = Generator::create().legal_moves(&position);
-  assert_eq!(legal.len(), 2);
-  for mv in legal.into_iter() {
-    assert!(
-      match mv {
-        Take1(46, 35, 40)
-        | Take1(46, 37, 41) => true,
-        _ => fail(mv)
-      });
-  }
+  verify(&position, &vec![Take1(46, 35, 40), Take1(46, 37, 41)][..]);
 }
 
 #[test]
@@ -315,16 +272,7 @@ fn two_captures_black_man() {
     .put_piece(31, WHITE_MAN)
     .put_piece(36, BLACK_MAN)
     .toggle_side();
-  let legal = Generator::create().legal_moves(&position);
-  assert_eq!(legal.len(), 2);
-  for mv in legal.into_iter() {
-    assert!(
-      match mv {
-        Take1(36, 25, 30)
-        | Take1(36, 27, 31) => true,
-        _ => fail(mv)
-      });
-  }
+  verify(&position, &vec![Take1(36, 25, 30), Take1(36, 27, 31)][..]);
 }
 
 #[test]
@@ -336,18 +284,7 @@ fn white_king_moves() {
     .put_piece(33, BLACK_MAN)
     .put_piece(38, WHITE_MAN)
     .put_piece(43, WHITE_KING);
-  let legal = Generator::create().legal_moves(&position);
-  assert_eq!(legal.len(), 4);
-  for mv in legal.into_iter() {
-    assert!(
-      match mv {
-        Shift(43, 34)
-        | Shift(43, 39)
-        | Shift(43, 48)
-        | Shift(43, 49) => true,
-        _ => fail(mv)
-      });
-  }
+  verify(&position, &vec![Shift(43, 34), Shift(43, 39), Shift(43, 48), Shift(43, 49)][..]);
 }
 
 #[test]
@@ -357,16 +294,7 @@ fn black_king_moves() {
     .put_piece(11, WHITE_MAN)
     .put_piece(17, WHITE_KING)
     .toggle_side();
-  let legal = Generator::create().legal_moves(&position);
-  assert_eq!(legal.len(), 2);
-  for mv in legal.into_iter() {
-    assert!(
-      match mv {
-        Shift(0, 5)
-        | Shift(0, 6) => true,
-        _ => fail(mv)
-      });
-  }
+  verify(&position, &vec![Shift(0, 5), Shift(0, 6)][..]);
 }
 
 #[test]
@@ -376,15 +304,7 @@ fn study1() {
       .ok()
       .unwrap()
       .go(Shift(48,43));
-  let legal = Generator::create().legal_moves(&position);
-  assert_eq!(legal.len(), 1);
-  for mv in legal.into_iter() {
-    assert!(
-      match mv {
-        Take1(39, 48, 43) => true,
-        _ => fail(mv)
-      });
-  }
+  verify(&position, &vec![Take1(39, 48, 43)][..]);
 }
 
 #[test]
@@ -396,15 +316,7 @@ fn study2() {
       .go(Shift(48, 43))
       .go(Take1(39, 48, 43))
       .go(Shift(49, 43));
-  let legal = Generator::create().legal_moves(&position);
-  assert_eq!(legal.len(), 1);
-  for mv in legal.into_iter() {
-    assert!(
-      match mv {
-        Take2(48, 15, 31, 20) => true,
-        _ => fail(mv)
-      });
-  }
+  verify(&position, &vec![Take2(48, 15, 31, 20)][..]);
 }
 
 #[test]
@@ -418,13 +330,21 @@ fn study3() {
       .go(Shift(49, 43))
       .go(Take2(48, 15, 31, 20))
       .go(Take4(43, 38, 28, 18, 8, 3));
-  let legal = Generator::create().legal_moves(&position);
-  assert_eq!(legal.len(), 1);
-  for mv in legal.into_iter() {
-    assert!(
-      match mv {
-        Take1(22, 31, 27) => true,
-        _ => fail(mv)
-      });
-  }
+  verify(&position, &vec![Take1(22, 31, 27)][..]);
+}
+
+#[test]
+fn study4() {
+  let position =
+    BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
+      .ok()
+      .unwrap()
+      .go(Shift(48, 43))
+      .go(Take1(39, 48, 43))
+      .go(Shift(49, 43))
+      .go(Take2(48, 15, 31, 20))
+      .go(Take4(43, 38, 28, 18, 8, 3))
+      .go(Take1(22, 31, 27))
+      .go(Shift(25, 20));
+  verify(&position, &vec![Take1(15, 26, 20)][..]);
 }
