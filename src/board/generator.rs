@@ -103,6 +103,32 @@ impl Generator {
     }
   }
 
+  fn explode_long_jump(&self, position: &Position, mv: Move, min_captures: usize, color_to_capture: Color) -> Vec<Move> {
+    let mut result = vec![];
+    self.explode(position, mv, color_to_capture, &mut result);
+    if result.len() == 0 {
+      return result;
+    }
+
+    let max = result.iter().fold(0, |mx, mv| { let nt = mv.num_taken(); if mx > nt { mx } else { nt }});
+    if max < min_captures {
+      result.clear();
+      return result;
+    }
+
+    let mut i = 0;
+    while i < result.len() {
+      if result[i].num_taken() < max {
+        result.swap_remove(i);
+      }
+      else {
+        i += 1;
+      }
+    }
+
+    result
+  }
+
   fn add_king_moves(&self, position: &Position, field: usize, result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
     let paths = self.steps.paths(field);
     for dir in 0..4 {
@@ -113,11 +139,15 @@ impl Generator {
           | (Some(true), Some(_)) => break,
           (Some(true), None) => via = Some(to),
           (None, Some(via)) => {
-            if *captures == 0 {
-              result.clear();
-              *captures = 1;
+            let mut moves = self.explode_long_jump(position, Take1(field, to, via), *captures, color_to_capture.clone());
+            if let Some(ref peek) = moves.first() {
+              let num = peek.num_taken();
+              if num > *captures {
+                result.clear();
+                *captures = num;
+              }
             }
-            result.push(Take1(field, to, via))
+            result.append(&mut moves);
           },
           (None, None) => {
             if *captures == 0 {
@@ -347,4 +377,11 @@ fn study4() {
       .go(Take1(22, 31, 27))
       .go(Shift(25, 20));
   verify(&position, &vec![Take1(15, 26, 20)][..]);
+}
+
+#[test]
+fn multi_long_capture() {
+  let position =
+    BitboardPosition::parse("w 5/5/3b1/5/5/5/5/1b3/5/W4").ok().unwrap();
+  verify(&position, &vec![Take2(45, 4, 36, 13), Take2(45, 9, 36, 13)][..]);
 }
