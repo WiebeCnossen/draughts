@@ -35,9 +35,20 @@ pub fn read_lines(reader: &mut BufReader<ChildStdout>, exit: &str) -> Vec<String
   let mut result = vec![];
   loop {
     let line = read_stdout(reader);
-    println!("[scan] {}", line);
-    result.push(line);
-    if result.last().unwrap().starts_with(exit) { break }
+    result.push(line.clone());
+    if result.last().unwrap().starts_with(exit) {
+      println!("\n\r[scan] {}", line);
+      break
+    }
+    else {
+      print!("\r                    ");
+      print!("                    ");
+      print!("                    ");
+      print!("                    ");
+      print!("                    ");
+      print!("\r[scan] {}", line);
+      io::stdout().flush().expect("no flush");
+    }
   }
   result
 }
