@@ -58,6 +58,8 @@ pub trait Position {
     for field in 0..100 {
       let c = if (field + (field / 10)) % 2 == 0 { ' ' } else { ASCII_CHARS[self.piece_at(field / 2) as usize] };
       ascii.push(c); ascii.push(c);
+      if (field == 9 && self.side_to_move() == Color::Black)
+         || (field == 99 && self.side_to_move() == Color::White) { ascii.push_str("  *") }
       if field % 10 == 9 { ascii.push('\r'); ascii.push('\n'); } else { ascii.push(' '); }
     }
     ascii
@@ -346,7 +348,7 @@ fn as_ascii() {
     Ok(position) => {
       let ascii = position.ascii();
       println!("\r\n{}\r\n", ascii);
-      assert_eq!(ascii.len(), 310);
+      assert_eq!(ascii.len(), 313);
     },
     Err(msg) => {
       println!("{}", msg);
