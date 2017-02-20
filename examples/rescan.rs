@@ -1,57 +1,13 @@
 extern crate draughts;
 
-use std::io;
-use std::io::{BufRead, BufReader, Write};
-use std::process::{ChildStdout, Command, Stdio};
+use std::io::{BufReader, Write};
+use std::process::{Command, Stdio};
 
 use draughts::board::bitboard::BitboardPosition;
 use draughts::board::generator::Generator;
 use draughts::board::mv::Move;
 use draughts::board::position::{Game, Position};
-
-fn trim_eol(mut s: String) -> String {
-  match s.pop() {
-    None => s,
-    Some('\n') | Some('\r') => trim_eol(s),
-    Some(c) => { s.push(c); s }
-  }
-}
-
-pub fn read_stdin() -> String {
-  print!("[user] ");
-  io::stdout().flush().ok();
-  let mut line = String::new();
-  io::stdin().read_line(&mut line).ok();
-  trim_eol(line)
-}
-
-pub fn read_stdout(reader: &mut BufReader<ChildStdout>) -> String {
-  let mut line = String::new();
-  reader.read_line(&mut line).ok();
-  trim_eol(line)
-}
-
-pub fn read_lines(reader: &mut BufReader<ChildStdout>, exit: &str) -> Vec<String> {
-  let mut result = vec![];
-  loop {
-    let line = read_stdout(reader);
-    result.push(line.clone());
-    if result.last().unwrap().starts_with(exit) {
-      println!("\n\r[scan] {}", line);
-      break
-    }
-    else {
-      print!("\r                    ");
-      print!("                    ");
-      print!("                    ");
-      print!("                    ");
-      print!("                    ");
-      print!("\r[scan] {}", line);
-      io::stdout().flush().expect("no flush");
-    }
-  }
-  result
-}
+use draughts::uci::io::{read_stdin, read_lines, LineReader};
 
 fn main() {
   let mut child = Command::new("/mnt/c/Users/wiebe/scan_20/scan")
@@ -90,8 +46,13 @@ fn main() {
     if head == "peek" {
       stdin.write("level 1 1000 0\n".as_bytes()).ok();
       stdin.write("analyse\n".as_bytes()).ok();
-      let line = read_lines(&mut stdout, "move").pop().unwrap();
-      let move_string = line.split(" ").nth(1).unwrap();
+      let mut last_line = String::new();
+      for line in LineReader::create(&mut stdout, "move") {
+        println!("[scan] {}", line);
+        last_line = line;
+      }
+
+      let move_string = last_line.split(" ").nth(1).unwrap();
       suggestion = moves.clone().into_iter().find(|m| m.as_full_string() == move_string);
     }
     else if head == "go" {
