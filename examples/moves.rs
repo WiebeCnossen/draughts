@@ -119,7 +119,7 @@ pub fn main() {
     let legal = generator.legal_moves(&position);
     let mv = legal.into_iter().find(|m| m.as_string() == move_string).unwrap();
     println!("{}", mv.as_full_string());
-    position = position.go(mv);
+    position = position.go(&mv);
     println!("{}", position.ascii());
   }
 }

@@ -2,7 +2,7 @@ use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,piece_own,pie
 use board::piece::Color::{White, Black};
 use board::position::Position;
 use board::mv::Move;
-use board::mv::Move::{Shift,Take1,Take2,Take3,Take4,Take5,Take6,Take7,Take8};
+use board::mv::Move::{Shift,Take1,Take2,Take3,Take4,Take5,Take6,Take7,Take8,Take9,Take10,Take11,Take12};
 use board::steps::Steps;
 
 #[cfg(test)]
@@ -11,7 +11,7 @@ use board::position::Game;
 #[cfg(test)]
 use board::bitboard::BitboardPosition;
 
-fn take_more(mv: &Move, via: usize, to: usize) -> Move {
+fn take_more(mv: &Move, via: usize, to: usize, position: &Position) -> Move {
   match mv {
     &Shift(..) =>
       panic!("Taking more after Shift is prohibited"),
@@ -29,7 +29,15 @@ fn take_more(mv: &Move, via: usize, to: usize) -> Move {
       Take7(from, to, via0, via1, via2, via3, via4, via5, via),
     &Take7(from, _, via0, via1, via2, via3, via4, via5, via6) =>
       Take8(from, to, via0, via1, via2, via3, via4, via5, via6, via),
-    _ => panic!("Too many captures")
+    &Take8(from, _, via0, via1, via2, via3, via4, via5, via6, via7) =>
+      Take9(from, to, via0, via1, via2, via3, via4, via5, via6, via7, via),
+    &Take9(from, _, via0, via1, via2, via3, via4, via5, via6, via7, via8) =>
+      Take10(from, to, via0, via1, via2, via3, via4, via5, via6, via7, via8, via),
+    &Take10(from, _, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9) =>
+      Take11(from, to, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9, via),
+    &Take11(from, _, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9, via10) =>
+      Take12(from, to, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9, via10, via),
+    _ => panic!("Too many captures at \r\n{}", position.ascii())
   }
 }
 
@@ -81,7 +89,7 @@ impl Generator {
         && position.piece_at(to) == EMPTY
         && !mv.goes_via(via) {
         exploded = true;
-        self.explode_short_jump(position, take_more(&mv, via, to), color_to_capture.clone(), moves);
+        self.explode_short_jump(position, take_more(&mv, via, to, position), color_to_capture.clone(), moves);
       }
     }
 
@@ -131,7 +139,7 @@ impl Generator {
             }
             else {
               exploded = true;
-              self.explode_long_jump(position, take_more(&mv, via, to), color_to_capture.clone(), moves);
+              self.explode_long_jump(position, take_more(&mv, via, to, position), color_to_capture.clone(), moves);
             }
           },
           (None, None) => ()
@@ -356,7 +364,7 @@ fn study1() {
     BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
       .ok()
       .unwrap()
-      .go(Shift(48,43));
+      .go(&Shift(48,43));
   verify(&position, &vec![Take1(39, 48, 43)][..]);
 }
 
@@ -366,9 +374,9 @@ fn study2() {
     BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
       .ok()
       .unwrap()
-      .go(Shift(48, 43))
-      .go(Take1(39, 48, 43))
-      .go(Shift(49, 43));
+      .go(&Shift(48, 43))
+      .go(&Take1(39, 48, 43))
+      .go(&Shift(49, 43));
   verify(&position, &vec![Take2(48, 15, 31, 20)][..]);
 }
 
@@ -378,11 +386,11 @@ fn study3() {
     BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
       .ok()
       .unwrap()
-      .go(Shift(48, 43))
-      .go(Take1(39, 48, 43))
-      .go(Shift(49, 43))
-      .go(Take2(48, 15, 31, 20))
-      .go(Take4(43, 38, 28, 18, 8, 3));
+      .go(&Shift(48, 43))
+      .go(&Take1(39, 48, 43))
+      .go(&Shift(49, 43))
+      .go(&Take2(48, 15, 31, 20))
+      .go(&Take4(43, 38, 28, 18, 8, 3));
   verify(&position, &vec![Take1(22, 31, 27)][..]);
 }
 
@@ -392,13 +400,13 @@ fn study4() {
     BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
       .ok()
       .unwrap()
-      .go(Shift(48, 43))
-      .go(Take1(39, 48, 43))
-      .go(Shift(49, 43))
-      .go(Take2(48, 15, 31, 20))
-      .go(Take4(43, 38, 28, 18, 8, 3))
-      .go(Take1(22, 31, 27))
-      .go(Shift(25, 20));
+      .go(&Shift(48, 43))
+      .go(&Take1(39, 48, 43))
+      .go(&Shift(49, 43))
+      .go(&Take2(48, 15, 31, 20))
+      .go(&Take4(43, 38, 28, 18, 8, 3))
+      .go(&Take1(22, 31, 27))
+      .go(&Shift(25, 20));
   verify(&position, &vec![Take1(15, 26, 20)][..]);
 }
 
@@ -414,4 +422,11 @@ fn coup_turc() {
   let position =
     BitboardPosition::parse("b 5/el2/5/Bebew/2w2/5/eh2/3we/ew3/5").ok().unwrap();
   verify(&position, &vec![Take4(15, 27, 31, 38, 19, 22)][..]);
+}
+
+#[test]
+fn to_start_field() {
+  let position =
+    BitboardPosition::parse("b 2b2/b4/3bb/5/wewww/3we/4B/ww2w/eww2/5").ok().unwrap();
+  verify(&position, &vec![Take4(34, 29, 39, 42, 22, 23),Take4(34, 34, 39, 42, 22, 23)][..]);
 }

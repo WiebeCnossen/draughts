@@ -12,7 +12,11 @@ pub enum Move {
   Take5(usize, usize, usize, usize, usize, usize, usize),
   Take6(usize, usize, usize, usize, usize, usize, usize, usize),
   Take7(usize, usize, usize, usize, usize, usize, usize, usize, usize),
-  Take8(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize)
+  Take8(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize),
+  Take9(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize),
+  Take10(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize),
+  Take11(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize),
+  Take12(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize)
 }
 
 impl Move {
@@ -26,7 +30,11 @@ impl Move {
       | &Move::Take5(from, ..)
       | &Move::Take6(from, ..)
       | &Move::Take7(from, ..)
-      | &Move::Take8(from, ..) => from,
+      | &Move::Take8(from, ..)
+      | &Move::Take9(from, ..)
+      | &Move::Take10(from, ..)
+      | &Move::Take11(from, ..)
+      | &Move::Take12(from, ..) => from,
     }
   }
 
@@ -40,7 +48,11 @@ impl Move {
       | &Move::Take5(_, to, ..)
       | &Move::Take6(_, to, ..)
       | &Move::Take7(_, to, ..)
-      | &Move::Take8(_, to, ..) => to,
+      | &Move::Take8(_, to, ..)
+      | &Move::Take9(_, to, ..)
+      | &Move::Take10(_, to, ..)
+      | &Move::Take11(_, to, ..)
+      | &Move::Take12(_, to, ..) => to,
     }
   }
 
@@ -55,6 +67,10 @@ impl Move {
       &Move::Take6(..) => 6,
       &Move::Take7(..) => 7,
       &Move::Take8(..) => 8,
+      &Move::Take9(..) => 9,
+      &Move::Take10(..) => 10,
+      &Move::Take11(..) => 11,
+      &Move::Take12(..) => 12,
     }
   }
 
@@ -78,6 +94,14 @@ impl Move {
         via0 == via || via1 == via || via2 == via || via3 == via || via4 == via || via5 == via || via6 == via,
       &Move::Take8(_, _, via0, via1, via2, via3, via4, via5, via6, via7) =>
         via0 == via || via1 == via || via2 == via || via3 == via || via4 == via || via5 == via || via6 == via || via7 == via,
+      &Move::Take9(_, _, via0, via1, via2, via3, via4, via5, via6, via7, via8) =>
+        via0 == via || via1 == via || via2 == via || via3 == via || via4 == via || via5 == via || via6 == via || via7 == via || via8 == via,
+      &Move::Take10(_, _, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9) =>
+        via0 == via || via1 == via || via2 == via || via3 == via || via4 == via || via5 == via || via6 == via || via7 == via || via8 == via || via9 == via,
+      &Move::Take11(_, _, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9, via10) =>
+        via0 == via || via1 == via || via2 == via || via3 == via || via4 == via || via5 == via || via6 == via || via7 == via || via8 == via || via9 == via || via10 == via,
+      &Move::Take12(_, _, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9, via10, via11) =>
+        via0 == via || via1 == via || via2 == via || via3 == via || via4 == via || via5 == via || via6 == via || via7 == via || via8 == via || via9 == via || via10 == via || via11 == via,
     }
   }
 
@@ -106,6 +130,14 @@ impl Move {
         format!("{}x{}x{}x{}x{}x{}x{}x{}x{}", from + 1, to + 1, via0 + 1, via1 + 1, via2 + 1, via3 + 1, via4 + 1, via5 + 1, via6 + 1),
       &Move::Take8(from, to, via0, via1, via2, via3, via4, via5, via6, via7) =>
         format!("{}x{}x{}x{}x{}x{}x{}x{}x{}x{}", from + 1, to + 1, via0 + 1, via1 + 1, via2 + 1, via3 + 1, via4 + 1, via5 + 1, via6 + 1, via7 + 1),
+      &Move::Take9(from, to, via0, via1, via2, via3, via4, via5, via6, via7, via8) =>
+        format!("{}x{}x{}x{}x{}x{}x{}x{}x{}x{}x{}", from + 1, to + 1, via0 + 1, via1 + 1, via2 + 1, via3 + 1, via4 + 1, via5 + 1, via6 + 1, via7 + 1, via8 + 1),
+      &Move::Take10(from, to, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9) =>
+        format!("{}x{}x{}x{}x{}x{}x{}x{}x{}x{}x{}x{}", from + 1, to + 1, via0 + 1, via1 + 1, via2 + 1, via3 + 1, via4 + 1, via5 + 1, via6 + 1, via7 + 1, via8 + 1, via9 + 1),
+      &Move::Take11(from, to, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9, via10) =>
+        format!("{}x{}x{}x{}x{}x{}x{}x{}x{}x{}x{}x{}x{}", from + 1, to + 1, via0 + 1, via1 + 1, via2 + 1, via3 + 1, via4 + 1, via5 + 1, via6 + 1, via7 + 1, via8 + 1, via9 + 1, via10 + 1),
+      &Move::Take12(from, to, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9, via10, via11) =>
+        format!("{}x{}x{}x{}x{}x{}x{}x{}x{}x{}x{}x{}x{}x{}", from + 1, to + 1, via0 + 1, via1 + 1, via2 + 1, via3 + 1, via4 + 1, via5 + 1, via6 + 1, via7 + 1, via8 + 1, via9 + 1, via10 + 1, via11 + 1),
     }
   }
 }

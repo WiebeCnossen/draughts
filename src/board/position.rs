@@ -154,8 +154,8 @@ pub trait Game : Position + Hash + Sized {
     Ok(position)
   }
 
-  fn go(&self, mv: Move) -> Self {
-    match mv {
+  fn go(&self, mv: &Move) -> Self {
+    match *mv {
       Move::Shift(from, to) =>
         self.put_piece(from, EMPTY)
             .put_piece(to, promote(to, self.piece_at(from)))
@@ -228,6 +228,64 @@ pub trait Game : Position + Hash + Sized {
             .put_piece(via6, EMPTY)
             .put_piece(via7, EMPTY)
             .toggle_side(),
+      Move::Take9(from, to, via0, via1, via2, via3, via4, via5, via6, via7, via8) =>
+        self.put_piece(from, EMPTY)
+            .put_piece(to, promote(to, self.piece_at(from)))
+            .put_piece(via0, EMPTY)
+            .put_piece(via1, EMPTY)
+            .put_piece(via2, EMPTY)
+            .put_piece(via3, EMPTY)
+            .put_piece(via4, EMPTY)
+            .put_piece(via5, EMPTY)
+            .put_piece(via6, EMPTY)
+            .put_piece(via7, EMPTY)
+            .put_piece(via8, EMPTY)
+            .toggle_side(),
+      Move::Take10(from, to, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9) =>
+        self.put_piece(from, EMPTY)
+            .put_piece(to, promote(to, self.piece_at(from)))
+            .put_piece(via0, EMPTY)
+            .put_piece(via1, EMPTY)
+            .put_piece(via2, EMPTY)
+            .put_piece(via3, EMPTY)
+            .put_piece(via4, EMPTY)
+            .put_piece(via5, EMPTY)
+            .put_piece(via6, EMPTY)
+            .put_piece(via7, EMPTY)
+            .put_piece(via8, EMPTY)
+            .put_piece(via9, EMPTY)
+            .toggle_side(),
+      Move::Take11(from, to, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9, via10) =>
+        self.put_piece(from, EMPTY)
+            .put_piece(to, promote(to, self.piece_at(from)))
+            .put_piece(via0, EMPTY)
+            .put_piece(via1, EMPTY)
+            .put_piece(via2, EMPTY)
+            .put_piece(via3, EMPTY)
+            .put_piece(via4, EMPTY)
+            .put_piece(via5, EMPTY)
+            .put_piece(via6, EMPTY)
+            .put_piece(via7, EMPTY)
+            .put_piece(via8, EMPTY)
+            .put_piece(via9, EMPTY)
+            .put_piece(via10, EMPTY)
+            .toggle_side(),
+      Move::Take12(from, to, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9, via10, via11) =>
+        self.put_piece(from, EMPTY)
+            .put_piece(to, promote(to, self.piece_at(from)))
+            .put_piece(via0, EMPTY)
+            .put_piece(via1, EMPTY)
+            .put_piece(via2, EMPTY)
+            .put_piece(via3, EMPTY)
+            .put_piece(via4, EMPTY)
+            .put_piece(via5, EMPTY)
+            .put_piece(via6, EMPTY)
+            .put_piece(via7, EMPTY)
+            .put_piece(via8, EMPTY)
+            .put_piece(via9, EMPTY)
+            .put_piece(via10, EMPTY)
+            .put_piece(via11, EMPTY)
+            .toggle_side(),
     }
   }
 }
@@ -237,7 +295,7 @@ fn promotion() {
   let position = BitboardPosition::create()
     .put_piece(1, BLACK_MAN)
     .put_piece(5, WHITE_MAN)
-    .go(Move::Shift(5, 0));
+    .go(&Move::Shift(5, 0));
   assert_eq!(position.side_to_move(), Color::Black);
   assert_eq!(position.piece_at(0), WHITE_KING);
   assert_eq!(position.piece_at(1), BLACK_MAN);

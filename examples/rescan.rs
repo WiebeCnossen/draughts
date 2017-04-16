@@ -90,7 +90,7 @@ fn main() {
       while moves.len() == 1 {
         let mv = moves.pop().unwrap();
         println!("[rescan] auto-move {}", mv.as_full_string());
-        current = current.go(mv);
+        current = current.go(&mv);
         moves = generator.legal_moves(&current);
       }
       println!("\r\n{}\r\n", current.ascii());
@@ -120,15 +120,15 @@ fn main() {
           }
         }
       };
-      current = current.go(mv);
+      current = current.go(&mv);
       moves = generator.legal_moves(&current);
       while moves.len() == 1 {
         let mv = moves.pop().unwrap();
         println!("[rescan] auto-move {}", mv.as_full_string());
-        current = current.go(mv);
+        current = current.go(&mv);
         moves = generator.legal_moves(&current);
       }
-      println!("\r\n{}\r\n", current.ascii());
+      println!("\r\n{}\r\n{}", current.ascii(), current.sfen());
       stdin.write(format!("pos {}\n", current.fen()).as_bytes()).ok();
       stdin.write("level 1 10000 0\n".as_bytes()).ok();
       stdin.write("analyse\n".as_bytes()).ok();
