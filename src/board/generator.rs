@@ -1,15 +1,10 @@
+use board::bitboard::BitboardPosition;
 use board::piece::{EMPTY,WHITE_MAN,WHITE_KING,BLACK_MAN,BLACK_KING,piece_own,piece_is,Color};
 use board::piece::Color::{White, Black};
-use board::position::Position;
+use board::position::{Game,Position};
 use board::mv::Move;
 use board::mv::Move::{Shift,Take1,Take2,Take3,Take4,Take5,Take6,Take7,Take8,Take9,Take10,Take11,Take12};
 use board::steps::Steps;
-
-#[cfg(test)]
-use board::position::Game;
-
-#[cfg(test)]
-use board::bitboard::BitboardPosition;
 
 fn take_more(mv: &Move, via: usize, to: usize, position: &Position) -> Move {
   match mv {
@@ -160,6 +155,7 @@ impl Generator {
 
   fn add_king_moves(&self, position: &Position, field: usize, mut result: &mut Vec<Move>, captures: &mut usize, color_to_capture: Color) {
     let paths = self.steps.paths(field);
+    let without_king = &BitboardPosition::clone(position).put_piece(field, EMPTY);
     for dir in 0..4 {
       let mut via : Option<usize> = None;
       for &to in paths[dir] {
@@ -168,7 +164,7 @@ impl Generator {
           | (Some(true), Some(_)) => break,
           (Some(true), None) => via = Some(to),
           (None, Some(via)) => {
-            let mut moves = self.explode_long_jumps(position, Take1(field, to, via), *captures, color_to_capture.clone());
+            let mut moves = self.explode_long_jumps(without_king, Take1(field, to, via), *captures, color_to_capture.clone());
             if let Some(ref peek) = moves.first() {
               let num = peek.num_taken();
               if num > *captures {
@@ -428,5 +424,5 @@ fn coup_turc() {
 fn to_start_field() {
   let position =
     BitboardPosition::parse("b 2b2/b4/3bb/5/wewww/3we/4B/ww2w/eww2/5").ok().unwrap();
-  verify(&position, &vec![Take4(34, 29, 39, 42, 22, 23),Take4(34, 34, 39, 42, 22, 23)][..]);
+  verify(&position, &vec![Take4(34, 29, 39, 42, 22, 23),Take4(34, 34, 39, 42, 22, 23),Take4(34, 34, 23, 22, 42, 39)][..]);
 }

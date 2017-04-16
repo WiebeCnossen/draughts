@@ -88,6 +88,12 @@ pub trait Game : Position + Hash + Sized {
       |pos, field| pos.put_piece(field, WHITE_MAN))
   }
 
+  fn clone(source: &Position) -> Self {
+    (0..50).fold(
+      if source.side_to_move() == Color::White { Self::create() } else { Self::create().toggle_side() },
+      |pos, field| pos.put_piece(field, source.piece_at(field)))
+  }
+
   fn parse<'a>(fen: &'a str) -> Result<Self, String> {
     if fen.len() < 11 {
       return Err("Invalid length".into())
