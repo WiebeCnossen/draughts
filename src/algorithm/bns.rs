@@ -10,47 +10,81 @@ pub struct BnsResult {
   pub mv: Move
 }
 
-fn next_guess(cut: Eval, lower: Eval, upper: Eval, step: Eval) -> Eval {
-  let part = (upper - lower) / 2;
-  let offset = if step < part { step } else { part };
-  if lower == cut { cut + offset } else { cut - offset }
+struct BnsState {
+  pub lower: Eval,
+  pub upper: Eval,
+  pub cut: Eval,
+  pub step: Eval,
+  pub up: bool
+}
+
+impl BnsState {
+  fn initial(cut: Eval) -> BnsState {
+    BnsState {
+      lower: MIN_EVAL,
+      upper: MAX_EVAL,
+      cut: cut,
+      step: 0,
+      up: false
+    }
+  }
+
+  fn next(&self, better_count: u8) -> BnsState {
+    let up = better_count > 0;
+    let lower = if up { self.cut } else { self.lower };
+    let upper = if up { self.upper } else { self.cut };
+    let step =
+      if self.step == 0 { 20 }
+      else {
+        let mid = (lower + upper) / 2 - lower;
+        let temp = if self.up == up { self.step * 2 } else { self.step / 2 };
+        if mid < temp { mid } else { temp }
+      };
+    let cut = if up { lower + step } else { upper - step };
+    BnsState {
+      lower: lower,
+      upper: upper,
+      cut: cut,
+      step: step,
+      up: up
+    }
+  }
 }
 
 pub fn best_node_search<TGame>(judge: &Judge, position: &TGame, depth: u8, initial_cut: Eval, precision: Eval) -> BnsResult where TGame : Game {
   let moves = judge.moves(position);
-  let mut meta = Meta::create();
-  let mut lower = MIN_EVAL;
-  let mut upper = MAX_EVAL;
   let mut best_move = None;
-  let mut cut = initial_cut;
+  let mut state = BnsState::initial(initial_cut);
   loop {
-    println!("{} -> {} -> {} ({} nodes)", lower, cut, upper, meta.get_nodes());
-    if lower == upper { panic!() }
-    let mut better_count = 0;
+    let mut meta = Meta::create();
+    if state.lower >= state.upper { panic!("Lower must be smaller than upper") }
+    if state.lower > state.cut { panic!("Cut must be at least lower") }
+    if state.upper <= state.cut { panic!("Cut must be smaller than upper") }
+    let mut better_count = 0u8;
     for mv in &moves[..] {
-      if !makes_cut(judge, &mut meta, &position.go(mv), depth, -cut - 1) {
+      if !makes_cut(judge, &mut meta, &position.go(mv), depth, -state.cut - 1) {
         best_move = Some(mv);
         better_count = better_count + 1;
-        if lower + precision >= upper  || better_count > 1 {
+        if state.lower + precision >= state.upper  || better_count > 1 {
           break;
         }
       }
     }
 
-    match (better_count, lower + precision >= upper, best_move) {
+    let next = state.next(better_count);
+    match (better_count, next.lower + precision >= next.upper, best_move) {
       (1, _, Some(mv)) |
       (_, true, Some(mv)) => {
         return BnsResult {
-          cut: cut,
+          cut: state.cut,
           meta: meta,
           mv: mv.clone()
         }
       },
-      (0, _, _) => upper = cut,
-      (_, _, _) => lower = cut
+      _ => state = next
     }
 
-    cut = next_guess(cut, lower, upper, 200);
+    println!("{} >= {} > {} ({} nodes)", state.lower, state.cut, state.upper, meta.get_nodes());
   }
 }
 

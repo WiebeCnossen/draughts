@@ -10,7 +10,7 @@ pub struct Slonenok {
 }
 
 const PIECES : [i16; 5] = [0, 1000, 3000, -1000, -3000];
-const OFFSET : [i16; 5] = [0, 1, 3, 1, 0];
+const OFFSET : [i16; 10] = [0, 1, 3, 7, 15, 15, 7, 3, 1, 0];
 
 impl Slonenok {
   pub fn create(generator : Generator) -> Slonenok {
@@ -19,8 +19,8 @@ impl Slonenok {
 
   fn evaluate(piece: u8, field: usize) -> Eval {
     match piece {
-      WHITE_MAN | WHITE_KING => PIECES[piece as usize] + OFFSET[field / 10usize] + OFFSET[field % 5usize],
-      BLACK_MAN | BLACK_KING => PIECES[piece as usize] - OFFSET[field / 10usize] - OFFSET[field % 5usize],
+      WHITE_MAN | WHITE_KING => PIECES[piece as usize] + OFFSET[field / 5] + OFFSET[2 * (field % 5) + 1 - field / 5 % 2],
+      BLACK_MAN | BLACK_KING => PIECES[piece as usize] - OFFSET[field / 5] - OFFSET[2 * (field % 5) + 1 - field / 5 % 2],
       _ => ZERO_EVAL
     }
 
