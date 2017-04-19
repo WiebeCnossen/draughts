@@ -9,7 +9,7 @@ pub struct Slonenok {
   generator : Generator
 }
 
-const PIECES : [i16; 5] = [0, 1000, 3000, -1000, -3000];
+const PIECES : [i16; 5] = [0, 500, 1500, -500, -1500];
 const OFFSET : [i16; 10] = [0, 1, 3, 7, 15, 15, 7, 3, 1, 0];
 
 impl Slonenok {

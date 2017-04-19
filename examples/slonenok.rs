@@ -1,5 +1,6 @@
 extern crate draughts;
 
+use draughts::algorithm::alphabeta::DepthScope;
 use draughts::algorithm::bns::best_node_search;
 use draughts::algorithm::metric::Metric;
 use draughts::board::bitboard::BitboardPosition;
@@ -24,7 +25,7 @@ pub fn main() {
     let mut depth = 1u8;
     let mut cut = 0;
     loop {
-      let bns = best_node_search(judge, &position, depth, cut, 1);
+      let bns = best_node_search(judge, &position, &DepthScope::from_depth(depth), cut, 1);
       cut = bns.cut;
       println!("{} | {} @ {} ({} nodes)", depth, bns.mv, cut, bns.meta.get_nodes());
       if bns.meta.get_nodes() > 10_000_000 { break }

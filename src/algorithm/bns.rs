@@ -1,3 +1,4 @@
+use algorithm::scope::Scope;
 use algorithm::alphabeta::makes_cut;
 use algorithm::metric::{Metric, Meta};
 use board::mv::Move;
@@ -34,7 +35,7 @@ impl BnsState {
     let lower = if up { self.cut } else { self.lower };
     let upper = if up { self.upper } else { self.cut };
     let step =
-      if self.step == 0 { 20 }
+      if self.step == 0 { 4 }
       else {
         let mid = (lower + upper) / 2 - lower;
         let temp = if self.up == up { self.step * 2 } else { self.step / 2 };
@@ -51,18 +52,20 @@ impl BnsState {
   }
 }
 
-pub fn best_node_search<TGame>(judge: &Judge, position: &TGame, depth: u8, initial_cut: Eval, precision: Eval) -> BnsResult where TGame : Game {
+pub fn best_node_search<TGame, TScope>(judge: &Judge, position: &TGame, scope: &TScope, initial_cut: Eval, precision: Eval) -> BnsResult where TGame : Game, TScope : Scope {
   let moves = judge.moves(position);
   let mut best_move = None;
   let mut state = BnsState::initial(initial_cut);
   loop {
     let mut meta = Meta::create();
+    /*
     if state.lower >= state.upper { panic!("Lower must be smaller than upper") }
     if state.lower > state.cut { panic!("Cut must be at least lower") }
     if state.upper <= state.cut { panic!("Cut must be smaller than upper") }
+    */
     let mut better_count = 0u8;
     for mv in &moves[..] {
-      if !makes_cut(judge, &mut meta, &position.go(mv), depth, -state.cut - 1) {
+      if !makes_cut(judge, &mut meta, &position.go(mv), scope, -state.cut - 1) {
         best_move = Some(mv);
         better_count = better_count + 1;
         if state.lower + precision >= state.upper  || better_count > 1 {
