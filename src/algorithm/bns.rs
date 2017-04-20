@@ -56,8 +56,8 @@ pub fn best_node_search<TGame, TScope>(judge: &Judge, position: &TGame, scope: &
   let moves = judge.moves(position);
   let mut best_move = None;
   let mut state = BnsState::initial(initial_cut);
+  let mut meta = Meta::create();
   loop {
-    let mut meta = Meta::create();
     /*
     if state.lower >= state.upper { panic!("Lower must be smaller than upper") }
     if state.lower > state.cut { panic!("Cut must be at least lower") }
@@ -86,8 +86,6 @@ pub fn best_node_search<TGame, TScope>(judge: &Judge, position: &TGame, scope: &
       },
       _ => state = next
     }
-
-    println!("{} >= {} > {} ({} nodes)", state.lower, state.cut, state.upper, meta.get_nodes());
   }
 }
 

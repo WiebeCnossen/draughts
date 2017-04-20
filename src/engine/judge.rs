@@ -11,4 +11,5 @@ pub trait Judge {
   fn evaluate(&self, position: &Position) -> Eval;
   fn quiet(&self, position: &Position, moves: &[Move]) -> bool;
   fn moves(&self, position: &Position) -> Vec<Move>;
+  fn display_name(&self) -> &str;
 }
