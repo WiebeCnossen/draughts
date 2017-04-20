@@ -7,11 +7,11 @@ use draughts::board::bitboard::BitboardPosition;
 use draughts::board::generator::Generator;
 use draughts::board::position::Game;
 use draughts::engine::judge::Judge;
-use draughts::engine::randaap::RandAap;
+use draughts::engine::slonenok::Slonenok;
 use draughts::uci::io::{read_stdin};
 
 pub fn main() {
-  let judge = &RandAap::create(Generator::create());
+  let judge = &Slonenok::create(Generator::create(), -1, 1);
   loop {
     let line = read_stdin();
     if line == "quit" { break }
