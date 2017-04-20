@@ -1,6 +1,6 @@
 use algorithm::scope::Scope;
 use algorithm::alphabeta::makes_cut;
-use algorithm::metric::{Metric, Meta};
+use algorithm::metric::Meta;
 use board::mv::Move;
 use board::position::Game;
 use engine::judge::{Eval, MIN_EVAL, MAX_EVAL, Judge};

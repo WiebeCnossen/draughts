@@ -5,6 +5,7 @@ use draughts::algorithm::bns::best_node_search;
 use draughts::algorithm::metric::Metric;
 use draughts::board::bitboard::BitboardPosition;
 use draughts::board::generator::Generator;
+use draughts::board::piece::Color;
 use draughts::board::position::{Position,Game};
 use draughts::engine::judge::Judge;
 use draughts::engine::randaap::RandAap;
@@ -13,8 +14,8 @@ use draughts::engine::slonenok::Slonenok;
 fn game(white: &Judge, black: &Judge, initial: &Position, nodes: usize) -> (u8, u8) {
   let generator = Generator::create();
   let mut position = BitboardPosition::clone(initial);
-  let mut white_to_move = true;
   let mut prev = vec![];
+  let show = nodes > 1_000_000;
   loop {
     let before = prev.iter().fold(
       0,
@@ -23,8 +24,18 @@ fn game(white: &Judge, black: &Judge, initial: &Position, nodes: usize) -> (u8, 
       return (1, 1)
     }
 
-    if generator.legal_moves(&position).len() == 0 {
-      return if white_to_move { (0, 2) } else { (2, 0) }
+    let white_to_move = position.side_to_move() == Color::White;
+    let moves = generator.legal_moves(&position);
+    match moves.len() {
+      0 => return if white_to_move { (0, 2) } else { (2, 0) },
+      1 => {
+        if show { println!("{}", moves[0]); }
+        let next  = position.go(&moves[0]);
+        prev.push(position);
+        position = next;
+        continue
+      },
+      _ => ()
     }
 
     let mut spent = 0;
@@ -45,9 +56,8 @@ fn game(white: &Judge, black: &Judge, initial: &Position, nodes: usize) -> (u8, 
       prev.push(position);
       position = next;
 
-      white_to_move = !white_to_move;
-      if nodes > 1_000_000 {
-        println!("{}", bns.mv);
+      if show {
+        println!("{} ({} @ {})", bns.mv, cut, depth);
         println!("{}", black.display_name());
         println!("{}{}", position.ascii(), white.display_name());
       }
@@ -66,7 +76,7 @@ pub fn main() {
   ];
   let one = &Slonenok::create(Generator::create(), -1, 1);
   let two = &RandAap::create(Generator::create());
-  for depth in 10..15 {
+  for depth in 0..15 {
     println!("Depth {}\r\n----", depth);
     let nodes = 1000 << depth;
     let mut ss = 0;

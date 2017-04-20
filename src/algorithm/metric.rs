@@ -1,5 +1,3 @@
-use engine::judge::Eval;
-
 pub trait Metric {
   fn get_nodes(&self) -> usize;
   fn add_nodes(&mut self, increment: usize);
