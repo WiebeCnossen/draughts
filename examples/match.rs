@@ -29,7 +29,11 @@ fn game(white: &Judge, black: &Judge, initial: &Position, nodes: usize) -> (u8, 
     match moves.len() {
       0 => return if white_to_move { (0, 2) } else { (2, 0) },
       1 => {
-        if show { println!("{}", moves[0]); }
+        if show {
+          println!("{}", moves[0]);
+          println!("{}", black.display_name());
+          println!("{}{}", position.ascii(), white.display_name());
+        }
         let next  = position.go(&moves[0]);
         prev.push(position);
         position = next;

@@ -1,5 +1,5 @@
 use board::generator::Generator;
-use board::piece::{WHITE_MAN, BLACK_MAN};
+use board::piece::{WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
 use board::piece::Color::White;
 use board::mv::Move;
 use board::position::Position;
@@ -28,7 +28,7 @@ impl RandAap {
     RandAap { generator: generator }
   }
 
-  fn evaluate(piece: u8, field: usize) -> Eval {
+  fn evaluate(&self, piece: u8, field: usize) -> Eval {
     PIECES[piece as usize] +
     match piece {
       WHITE_MAN => FIELDS[field],
@@ -40,10 +40,18 @@ impl RandAap {
 
 impl Judge for RandAap {
   fn evaluate(&self, position: &Position) -> Eval {
-    let eval = (0usize..50usize)
-      .map(|i| RandAap::evaluate(position.piece_at(i), i))
-      .sum();
-    if position.side_to_move() == White { eval } else { -eval }
+    let eval = (0usize..50usize).fold(
+      (0, 0, 0),
+      |(white, black, score), i| {
+        let piece = position.piece_at(i);
+        (
+          match piece { WHITE_MAN | WHITE_KING => white + 1, _ => white },
+          match piece { BLACK_MAN | BLACK_KING => black + 1, _ => black },
+          score + self.evaluate(piece, i)
+        )
+      });
+    let score = if eval.0 <= 3 && eval.1 <= 3 { eval.2 / 10 } else { eval.2 };
+    if position.side_to_move() == White { score } else { -score }
   }
 
   fn moves(&self, position: &Position) -> Vec<Move> {
