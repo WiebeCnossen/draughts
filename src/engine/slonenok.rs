@@ -6,10 +6,7 @@ use board::position::Position;
 use engine::judge::{ZERO_EVAL, Eval, Judge};
 
 pub struct Slonenok {
-  generator : Generator,
-  vertical_effect: Eval,
-  horizontal_effect: Eval,
-  name: String
+  generator : Generator
 }
 
 struct PositionStats {
@@ -60,21 +57,19 @@ impl PositionStats {
 
 const PIECES : [Eval; 5] = [ZERO_EVAL, 500, 1500, -500, -1500];
 const HOFFSET : [Eval; 10] = [0, 1, 3, 7, 15, 15, 7, 3, 1, 0];
-const VOFFSET : [Eval; 10] = [0, 1, 3, 7, 15, 31, 15, 7, 3, 1];
+const VOFFSET_FULL : [Eval; 10] = [8, 7, 5, 1, -7, -23, -7, 1, 5, 7];
+const VOFFSET_EMPTY : [Eval; 10] = [-15, -23, -7, 1, 5, 7, 8, 9, 10, 11];
 const BALANCE : [Eval; 10] = [-6, -5, -4, -3, -2, 2, 3, 4, 5, 6];
 
 impl Slonenok {
-  pub fn create(generator : Generator, vertical_effect: Eval, horizontal_effect: Eval) -> Slonenok {
+  pub fn create(generator : Generator) -> Slonenok {
     Slonenok {
-      generator: generator,
-      vertical_effect: vertical_effect,
-      horizontal_effect: horizontal_effect,
-      name: format!("Slonënok h{}x{}", vertical_effect, horizontal_effect)
+      generator: generator
     }
   }
 
   // draw heuristic
-  fn drawish(&self, stats: PositionStats) -> bool {
+  fn drawish(&self, stats: &PositionStats) -> bool {
     let whites = stats.piece_count[WHITE_MAN as usize] + stats.piece_count[WHITE_KING as usize];
     let blacks = stats.piece_count[BLACK_MAN as usize] + stats.piece_count[BLACK_KING as usize];
     stats.piece_count[WHITE_KING as usize] > 0 && stats.piece_count[BLACK_KING as usize] > 0
@@ -87,18 +82,39 @@ impl Judge for Slonenok {
     let stats = PositionStats::for_position(position);
 
     let beans = (0..5).fold(0, |b,i| b + PIECES[i] * stats.piece_count[i]);
+    let men = stats.piece_count[WHITE_MAN as usize] + stats.piece_count[BLACK_MAN as usize];
     let hoffset_white = (0..10).fold(0, |b,i| b + HOFFSET[i] * stats.hoffset_white[i]);
     let hoffset_black = (0..10).fold(0, |b,i| b + HOFFSET[i] * stats.hoffset_black[i]);
-    let voffset_white = (0..10).fold(0, |b,i| b + VOFFSET[i] * stats.voffset_white[i]);
-    let voffset_black = (0..10).fold(0, |b,i| b + VOFFSET[i] * stats.voffset_black[i]);
+    let voffset_white_full = (0..10).fold(0, |b,i| b + VOFFSET_FULL[i] * stats.voffset_white[i]);
+    let voffset_white_empty = (0..10).fold(0, |b,i| b + VOFFSET_EMPTY[i] * stats.voffset_white[i]);
+    let voffset_black_full = (0..10).fold(0, |b,i| b + VOFFSET_FULL[i] * stats.voffset_black[i]);
+    let voffset_black_empty = (0..10).fold(0, |b,i| b + VOFFSET_EMPTY[i] * stats.voffset_black[i]);
+    let voffset_white =
+      if men >= 30 { voffset_white_full }
+      else if men <= 10 { voffset_white_empty }
+      else { ((men - 30) * voffset_white_full + (30 - men) * voffset_white_empty) / 20 };
+    let voffset_black =
+      if men >= 30 { voffset_black_full }
+      else if men <= 10 { voffset_black_empty }
+      else { ((men - 30) * voffset_black_full + (30 - men) * voffset_black_empty) / 20 };
     let balance_white = (0..10).fold(0, |b,i| b + BALANCE[i] * stats.hoffset_white[i]);
     let balance_black = (0..10).fold(0, |b,i| b + BALANCE[i] * stats.hoffset_black[i]);
 
     let score = beans
-      + self.horizontal_effect * (hoffset_white - hoffset_black)
-      + self.vertical_effect * (voffset_white - voffset_black)
-      - balance_white.abs() + balance_black.abs();
-    let scaled = if self.drawish(stats) { score / 10 } else { score };
+      + (hoffset_white - hoffset_black)
+      + (voffset_white - voffset_black)
+      - 2 * (balance_white.abs() - balance_black.abs());
+    let scaled =
+      if self.drawish(&stats) { score / 10 } else {
+        let min_kings =
+          if stats.piece_count[WHITE_KING as usize] < stats.piece_count[BLACK_KING as usize] {
+            stats.piece_count[WHITE_KING as usize]
+          }
+          else {
+            stats.piece_count[BLACK_KING as usize]
+          };
+        score >> min_kings
+      };
     if position.side_to_move() == White { scaled } else { -scaled }
   }
 
@@ -110,5 +126,5 @@ impl Judge for Slonenok {
     moves.len() > 1 && moves[0].num_taken() == 0
   }
 
-  fn display_name(&self) -> &str { self.name.as_str() }
+  fn display_name(&self) -> &str { "Slonënok" }
 }

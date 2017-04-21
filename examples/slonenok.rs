@@ -11,7 +11,7 @@ use draughts::engine::slonenok::Slonenok;
 use draughts::uci::io::{read_stdin};
 
 pub fn main() {
-  let judge = &Slonenok::create(Generator::create(), -1, 1);
+  let judge = &Slonenok::create(Generator::create());
   loop {
     let line = read_stdin();
     if line == "quit" { break }

@@ -78,11 +78,11 @@ pub fn main() {
     "w kcekaeb2b2/5rweirr",
     "w kkbeak2b2/2w2riewrr",
   ];
-  let one = &Slonenok::create(Generator::create(), -1, 1);
+  let one = &Slonenok::create(Generator::create());
   let two = &RandAap::create(Generator::create());
-  for depth in 0..15 {
-    println!("Depth {}\r\n----", depth);
-    let nodes = 1000 << depth;
+  for level in 0..15 {
+    println!("Level {}\r\n----", level);
+    let nodes = 1000 << level;
     let mut ss = 0;
     let mut sr = 0;
     for fen in &positions[..] {
