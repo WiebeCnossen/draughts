@@ -7,17 +7,64 @@ use engine::judge::{ZERO_EVAL, Eval, Judge};
 
 pub struct Slonenok {
   generator : Generator,
-  vertical_effect: i16,
-  horizontal_effect: i16,
+  vertical_effect: Eval,
+  horizontal_effect: Eval,
   name: String
 }
 
-const PIECES : [i16; 5] = [0, 500, 1500, -500, -1500];
-const HOFFSET : [i16; 10] = [0, 1, 3, 7, 15, 15, 7, 3, 1, 0];
-const VOFFSET : [i16; 10] = [0, 1, 3, 7, 15, 31, 15, 7, 3, 1];
+struct PositionStats {
+  pub piece_count: [Eval; 5],
+  pub voffset_white: [Eval; 10],
+  pub voffset_black: [Eval; 10],
+  pub hoffset_white: [Eval; 10],
+  pub hoffset_black: [Eval; 10]
+}
+
+impl PositionStats {
+  pub fn for_position(position: &Position) -> PositionStats {
+    let mut piece_count = [0; 5];
+    let mut voffset_white = [0; 10];
+    let mut voffset_black = [0; 10];
+    let mut hoffset_white = [0; 10];
+    let mut hoffset_black = [0; 10];
+
+    for field in 0..50 {
+      let piece = position.piece_at(field);
+      piece_count[piece as usize] = piece_count[piece as usize] + 1;
+      match piece {
+        WHITE_MAN => {
+          let x = 1 + 2 * (field % 5) - field / 5 % 2;
+          hoffset_white[x] = hoffset_white[x] + 1;
+          let y = 9 - field / 5;
+          voffset_white[y] = voffset_white[y] + 1;
+        },
+        BLACK_MAN => {
+          let x = 8 - 2 * (field % 5) + field / 5 % 2;
+          hoffset_black[x] = hoffset_white[x] + 1;
+          let y = field / 5;
+          voffset_black[y] = voffset_black[y] + 1;
+        },
+        _ => ()
+      };
+    }
+
+    PositionStats {
+      piece_count: piece_count,
+      voffset_white: voffset_white,
+      voffset_black: voffset_black,
+      hoffset_white: hoffset_white,
+      hoffset_black: hoffset_black
+    }
+  }
+}
+
+const PIECES : [Eval; 5] = [ZERO_EVAL, 500, 1500, -500, -1500];
+const HOFFSET : [Eval; 10] = [0, 1, 3, 7, 15, 15, 7, 3, 1, 0];
+const VOFFSET : [Eval; 10] = [0, 1, 3, 7, 15, 31, 15, 7, 3, 1];
+const BALANCE : [Eval; 10] = [-6, -5, -4, -3, -2, 2, 3, 4, 5, 6];
 
 impl Slonenok {
-  pub fn create(generator : Generator, vertical_effect: i16, horizontal_effect: i16) -> Slonenok {
+  pub fn create(generator : Generator, vertical_effect: Eval, horizontal_effect: Eval) -> Slonenok {
     Slonenok {
       generator: generator,
       vertical_effect: vertical_effect,
@@ -26,30 +73,33 @@ impl Slonenok {
     }
   }
 
-  fn evaluate(&self, piece: u8, field: usize) -> Eval {
-    PIECES[piece as usize] +
-    match piece {
-      WHITE_MAN => self.vertical_effect * VOFFSET[9 - field / 5] + self.horizontal_effect * HOFFSET[2 * (field % 5) + 1 - field / 5 % 2],
-      BLACK_MAN => -self.vertical_effect * VOFFSET[field / 5] - self.horizontal_effect * HOFFSET[2 * (field % 5) + 1 - field / 5 % 2],
-      _ => ZERO_EVAL
-    }
+  // draw heuristic
+  fn drawish(&self, stats: PositionStats) -> bool {
+    let whites = stats.piece_count[WHITE_MAN as usize] + stats.piece_count[WHITE_KING as usize];
+    let blacks = stats.piece_count[BLACK_MAN as usize] + stats.piece_count[BLACK_KING as usize];
+    stats.piece_count[WHITE_KING as usize] > 0 && stats.piece_count[BLACK_KING as usize] > 0
+    && whites <= 3 && blacks <= 3
   }
 }
 
 impl Judge for Slonenok {
   fn evaluate(&self, position: &Position) -> Eval {
-    let eval = (0usize..50usize).fold(
-      (0, 0, 0),
-      |(white, black, score), i| {
-        let piece = position.piece_at(i);
-        (
-          match piece { WHITE_MAN | WHITE_KING => white + 1, _ => white },
-          match piece { BLACK_MAN | BLACK_KING => black + 1, _ => black },
-          score + self.evaluate(piece, i)
-        )
-      });
-    let score = if eval.0 <= 3 && eval.1 <= 3 { eval.2 / 10 } else { eval.2 };
-    if position.side_to_move() == White { score } else { -score }
+    let stats = PositionStats::for_position(position);
+
+    let beans = (0..5).fold(0, |b,i| b + PIECES[i] * stats.piece_count[i]);
+    let hoffset_white = (0..10).fold(0, |b,i| b + HOFFSET[i] * stats.hoffset_white[i]);
+    let hoffset_black = (0..10).fold(0, |b,i| b + HOFFSET[i] * stats.hoffset_black[i]);
+    let voffset_white = (0..10).fold(0, |b,i| b + VOFFSET[i] * stats.voffset_white[i]);
+    let voffset_black = (0..10).fold(0, |b,i| b + VOFFSET[i] * stats.voffset_black[i]);
+    let balance_white = (0..10).fold(0, |b,i| b + BALANCE[i] * stats.hoffset_white[i]);
+    let balance_black = (0..10).fold(0, |b,i| b + BALANCE[i] * stats.hoffset_black[i]);
+
+    let score = beans
+      + self.horizontal_effect * (hoffset_white - hoffset_black)
+      + self.vertical_effect * (voffset_white - voffset_black)
+      - balance_white.abs() + balance_black.abs();
+    let scaled = if self.drawish(stats) { score / 10 } else { score };
+    if position.side_to_move() == White { scaled } else { -scaled }
   }
 
   fn moves(&self, position: &Position) -> Vec<Move> {
