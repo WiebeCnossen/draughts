@@ -122,8 +122,14 @@ impl Judge for Slonenok {
     self.generator.legal_moves(position)
   }
 
-  fn quiet(&self, _: &Position, moves: &[Move]) -> bool {
-    moves.len() > 1 && moves[0].num_taken() == 0
+  fn quiet_move(&self, position: &Position, mv: &Move) -> bool {
+    mv.num_taken() == 0 &&
+    if position.side_to_move() == White {
+      mv.to() >= 14 || position.piece_at(mv.from()) != WHITE_MAN
+    }
+    else {
+      mv.to() <= 35 || position.piece_at(mv.from()) != BLACK_MAN
+    }
   }
 
   fn display_name(&self) -> &str { "Slonënok" }

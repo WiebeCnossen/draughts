@@ -22,7 +22,7 @@ pub fn main() {
       },
       Ok(pos) => pos
     };
-    let mut depth = 1u8;
+    let mut depth = 0u8;
     let mut cut = 0;
     loop {
       let bns = best_node_search(judge, &position, &DepthScope::from_depth(depth), cut, 1);

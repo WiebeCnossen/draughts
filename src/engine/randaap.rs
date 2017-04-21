@@ -58,8 +58,8 @@ impl Judge for RandAap {
     self.generator.legal_moves(position)
   }
 
-  fn quiet(&self, _: &Position, moves: &[Move]) -> bool {
-    moves.len() > 1 && moves[0].num_taken() == 0
+  fn quiet_move(&self, _: &Position, mv: &Move) -> bool {
+    mv.num_taken() == 0
   }
 
   fn display_name(&self) -> &str { "RandAap" }

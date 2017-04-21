@@ -13,7 +13,7 @@ impl DepthScope {
   pub fn from_depth(depth: u8) -> DepthScope {
     DepthScope {
       depth: depth,
-      quiet_moves: 0,
+      quiet_moves: 1,
       stack: 0
     }
   }
@@ -21,23 +21,29 @@ impl DepthScope {
 
 impl Scope for DepthScope {
   fn next(&self, quiet: bool) -> Option<DepthScope> {
-    match (quiet, self.depth <= self.stack, self.quiet_moves > 0) {
-      (false, _, _) => Some(DepthScope {
-                        depth: self.depth,
-                        quiet_moves: 0,
-                        stack: self.stack + 1
-                      }),
-      (_, true, _) => None,
-      (_, _, true) => Some(DepthScope {
-                        depth: self.depth - self.stack - 1,
-                        quiet_moves: self.quiet_moves + 1,
-                        stack: 0
-                      }),
-      _ => Some(DepthScope {
-             depth: self.depth,
-             quiet_moves: self.quiet_moves + 1,
-             stack: self.stack + 1
-           })
+    if !quiet {
+      Some(DepthScope {
+        depth: self.depth,
+        quiet_moves: 0,
+        stack: self.stack
+      })
+    }
+    else if self.quiet_moves == 0 && self.depth < self.stack {
+      Some(DepthScope {
+        depth: self.depth,
+        quiet_moves: 1,
+        stack: self.stack + 1
+      })
+    }
+    else if self.depth > self.stack {
+      Some(DepthScope {
+        depth: self.depth - self.stack - 1,
+        quiet_moves: self.quiet_moves + 1,
+        stack: 0
+      })
+    }
+    else {
+      None
     }
   }
 }
@@ -49,16 +55,21 @@ pub fn makes_cut<TGame, TScope>(judge: &Judge, metric: &mut Metric, position: &T
   metric.add_nodes(moves.len());
   if moves.len() == 0 { return false }
 
-  let quiet = judge.quiet(position, &moves);
+  let quiet = judge.quiet_position(position, &moves);
   match scope.next(quiet) {
     None => judge.evaluate(position) >= cut,
-    Some(next) => moves.iter().any(|mv| {
-                    !makes_cut(
-                      judge,
-                      metric,
-                      &position.go(mv),
-                      &next,
-                      -(cut + 1))
-                  })
+    Some(_) => moves.iter().any(|mv| {
+      let quiet = judge.quiet_move(position, &mv);
+      match scope.next(quiet) {
+        None => judge.evaluate(position) >= cut,
+        Some(next) =>
+          !makes_cut(
+            judge,
+            metric,
+            &position.go(mv),
+            &next,
+            -(cut + 1))
+      }
+    })
   }
 }
