@@ -6,7 +6,8 @@ use engine::judge::{Eval, MIN_EVAL, Judge};
 pub struct DepthScope {
   depth: u8,
   quiet_moves: u8,
-  stack: u8
+  forced: u8,
+  unforced: u8
 }
 
 impl DepthScope {
@@ -14,7 +15,8 @@ impl DepthScope {
     DepthScope {
       depth: depth,
       quiet_moves: 1,
-      stack: 0
+      forced: 0,
+      unforced: 0
     }
   }
 }
@@ -25,21 +27,24 @@ impl Scope for DepthScope {
       Some(DepthScope {
         depth: self.depth,
         quiet_moves: 0,
-        stack: self.stack
+        forced: self.forced + 1,
+        unforced: self.unforced
       })
     }
-    else if self.quiet_moves == 0 && self.depth < self.stack {
+    else if self.quiet_moves == 0 && self.depth > self.unforced {
       Some(DepthScope {
         depth: self.depth,
         quiet_moves: 1,
-        stack: self.stack + 1
+        forced: self.forced,
+        unforced: self.unforced + 1
       })
     }
-    else if self.depth > self.stack {
+    else if self.depth > self.forced + self.unforced {
       Some(DepthScope {
-        depth: self.depth - self.stack - 1,
+        depth: self.depth - self.forced - self.unforced - 1,
         quiet_moves: self.quiet_moves + 1,
-        stack: 0
+        forced: 0,
+        unforced: 0
       })
     }
     else {
