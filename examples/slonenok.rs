@@ -28,7 +28,7 @@ pub fn main() {
       let bns = best_node_search(judge, &position, &DepthScope::from_depth(depth), cut, 1);
       cut = bns.cut;
       println!("{} @ {} | {} @ {} ({} nodes)", judge.display_name(), depth, bns.mv, cut, bns.meta.get_nodes());
-      if bns.meta.get_nodes() > 10_000_000 { break }
+      if depth >= 63 || bns.meta.get_nodes() > 10_000_000 { break }
       depth = depth + 1;
     }
   }

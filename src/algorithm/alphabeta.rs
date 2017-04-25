@@ -53,28 +53,37 @@ impl Scope for DepthScope {
   }
 }
 
-pub fn makes_cut<TGame, TScope>(judge: &Judge, metric: &mut Metric, position: &TGame, scope: &TScope, cut: Eval) -> bool where TGame : Game, TScope : Scope {
-  if cut <= MIN_EVAL { return true }
+pub fn makes_cut<TGame, TScope>(judge: &Judge, metric: &mut Metric, position: &TGame, scope: &TScope, cut: Eval) -> Eval where TGame : Game, TScope : Scope {
+  if cut <= MIN_EVAL { return MIN_EVAL }
 
   let moves = judge.moves(position);
   metric.add_nodes(moves.len());
-  if moves.len() == 0 { return false }
+  if moves.len() == 0 { return MIN_EVAL }
 
   let quiet = judge.quiet_position(position, &moves);
   match scope.next(quiet) {
-    None => judge.evaluate(position) >= cut,
-    Some(_) => moves.iter().any(|mv| {
-      let quiet = judge.quiet_move(position, &mv);
-      match scope.next(quiet) {
-        None => judge.evaluate(position) >= cut,
-        Some(next) =>
-          !makes_cut(
-            judge,
-            metric,
-            &position.go(mv),
-            &next,
-            -(cut + 1))
+    None => judge.evaluate(position),
+    Some(_) => {
+      let mut best = MIN_EVAL;
+      for mv in moves {
+        let quiet = judge.quiet_move(position, &mv);
+        let score =
+          match scope.next(quiet) {
+            None => judge.evaluate(position),
+            Some(next) => {
+              -makes_cut(
+                judge,
+                metric,
+                &position.go(&mv),
+                &next,
+                -cut-1)
+            }
+          };
+        if score > best { best = score; }
+        if best >= cut { return best }
       }
-    })
+
+      return best
+    }
   }
 }

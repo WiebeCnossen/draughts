@@ -64,8 +64,10 @@ pub fn best_node_search<TGame, TScope>(judge: &Judge, position: &TGame, scope: &
     if state.upper <= state.cut { panic!("Cut must be smaller than upper") }
     */
     let mut better_count = 0u8;
+    let beta = -state.cut - 1;
     for mv in &moves[..] {
-      if !makes_cut(judge, &mut meta, &position.go(mv), scope, -state.cut - 1) {
+      let score = makes_cut(judge, &mut meta, &position.go(mv), scope, beta);
+      if score < beta {
         best_move = Some(mv);
         better_count = better_count + 1;
         if state.lower + precision >= state.upper  || better_count > 1 {
@@ -88,23 +90,3 @@ pub fn best_node_search<TGame, TScope>(judge: &Judge, position: &TGame, scope: &
     }
   }
 }
-
-
-/*
-
-function BNS(node, α, β)
-  subtreeCount := number of children of node
-  do
-    test := NextGuess(α, β, subtreeCount)
-    betterCount := 0
-    foreach child of node
-      bestVal := -AlphaBeta(child, -test, -(test - 1))
-      if bestVal ≥ test
-        betterCount := betterCount + 1
-        bestNode := child
-    //update number of sub-trees that exceeds separation test value
-    //update alpha-beta range
-  while not((β - α < 2) or (betterCount = 1))
-  return bestNode
-
- */
