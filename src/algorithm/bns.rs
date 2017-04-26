@@ -52,7 +52,7 @@ impl BnsState {
   }
 }
 
-pub fn best_node_search<TGame, TScope>(judge: &Judge, position: &TGame, scope: &TScope, initial_cut: Eval, precision: Eval) -> BnsResult where TGame : Game, TScope : Scope {
+pub fn best_node_search<TGame, TScope>(judge: &mut Judge, position: &TGame, scope: &TScope, initial_cut: Eval, precision: Eval) -> BnsResult where TGame : Game, TScope : Scope {
   let moves = judge.moves(position);
   let mut best_move = None;
   let mut state = BnsState::initial(initial_cut);

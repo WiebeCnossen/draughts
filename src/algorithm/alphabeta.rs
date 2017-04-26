@@ -22,7 +22,7 @@ impl DepthScope {
 }
 
 impl Scope for DepthScope {
-  fn next(&self, quiet: bool) -> Option<DepthScope> {
+  fn next(&self, quiet: bool, gap: Eval) -> Option<DepthScope> {
     if !quiet {
       Some(DepthScope {
         depth: self.depth,
@@ -31,7 +31,7 @@ impl Scope for DepthScope {
         unforced: self.unforced
       })
     }
-    else if self.quiet_moves == 0 && self.depth > self.unforced {
+    else if self.quiet_moves == 0 && self.depth > 2 * self.unforced {
       Some(DepthScope {
         depth: self.depth,
         quiet_moves: 1,
@@ -39,7 +39,7 @@ impl Scope for DepthScope {
         unforced: self.unforced + 1
       })
     }
-    else if self.depth > self.forced + self.unforced {
+    else if gap < 500 * self.depth as Eval && self.depth > self.forced + self.unforced {
       Some(DepthScope {
         depth: self.depth - self.forced - self.unforced - 1,
         quiet_moves: self.quiet_moves + 1,
@@ -51,39 +51,51 @@ impl Scope for DepthScope {
       None
     }
   }
+  fn depth(&self) -> u8 { self.depth }
 }
 
-pub fn makes_cut<TGame, TScope>(judge: &Judge, metric: &mut Metric, position: &TGame, scope: &TScope, cut: Eval) -> Eval where TGame : Game, TScope : Scope {
+pub fn makes_cut<TGame, TScope>(judge: &mut Judge, metric: &mut Metric, position: &TGame, scope: &TScope, cut: Eval) -> Eval where TGame : Game, TScope : Scope {
   if cut <= MIN_EVAL { return MIN_EVAL }
+
+  if let Some(eval) = judge.recall(position, scope.depth()) {
+    if eval >= cut { return eval }
+  }
 
   let moves = judge.moves(position);
   metric.add_nodes(moves.len());
   if moves.len() == 0 { return MIN_EVAL }
 
   let quiet = judge.quiet_position(position, &moves);
-  match scope.next(quiet) {
-    None => judge.evaluate(position),
+  let current_score = judge.evaluate(position);
+
+  match scope.next(quiet, cut - current_score) {
+    None => current_score,
     Some(_) => {
       let mut best = MIN_EVAL;
       for mv in moves {
         let quiet = judge.quiet_move(position, &mv);
         let score =
-          match scope.next(quiet) {
-            None => judge.evaluate(position),
+          match scope.next(quiet, cut - current_score) {
+            None => current_score,
             Some(next) => {
               -makes_cut(
                 judge,
                 metric,
                 &position.go(&mv),
                 &next,
-                -cut-1)
+                -cut+1)
             }
           };
-        if score > best { best = score; }
-        if best >= cut { return best }
+        if score > best {
+          best = score;
+          if best >= cut { break; }
+        }
       }
 
-      return best
+      if best >= cut {
+        judge.remember(position, scope.depth(), best);
+      }
+      best
     }
   }
 }

@@ -1,13 +1,12 @@
+use std::collections::HashMap;
+
 use board::generator::Generator;
 use board::piece::{WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
 use board::piece::Color::White;
 use board::mv::Move;
-use board::position::Position;
+use board::position::{Game, Position};
+use board::bitboard::BitboardPosition;
 use engine::judge::{ZERO_EVAL, Eval, Judge};
-
-pub struct Slonenok {
-  generator : Generator
-}
 
 struct PositionStats {
   pub piece_count: [Eval; 5],
@@ -61,10 +60,22 @@ const VOFFSET_FULL : [Eval; 10] = [8, 7, 5, 1, -7, -23, -7, 1, 5, 7];
 const VOFFSET_EMPTY : [Eval; 10] = [-15, -23, -7, 1, 5, 7, 8, 9, 10, 11];
 const BALANCE : [Eval; 10] = [-6, -5, -4, -3, -2, 2, 3, 4, 5, 6];
 
+struct HashEval {
+  pub evaluation: Eval,
+  pub depth: u8,
+  pub position: BitboardPosition
+}
+
+pub struct Slonenok {
+  generator : Generator,
+  hash: HashMap<BitboardPosition, HashEval>
+}
+
 impl Slonenok {
   pub fn create(generator : Generator) -> Slonenok {
     Slonenok {
-      generator: generator
+      generator: generator,
+      hash: HashMap::new()
     }
   }
 
@@ -75,9 +86,31 @@ impl Slonenok {
     stats.piece_count[WHITE_KING as usize] > 0 && stats.piece_count[BLACK_KING as usize] > 0
     && whites <= 3 && blacks <= 3
   }
+
+  pub fn reset(&mut self) {
+    self.hash.clear()
+  }
 }
 
 impl Judge for Slonenok {
+  fn recall(&self, position: &Position, depth: u8) -> Option<Eval> {
+    let bitboard = BitboardPosition::clone(position);
+    match self.hash.get(&bitboard) {
+      Some(found) if found.depth >= depth => {
+        if found.position != bitboard { panic!("{}<>{}", found.position.ascii(), position.ascii()); }
+        Some(found.evaluation)
+      },
+      _ => None
+    }
+  }
+  fn remember(&mut self, position: &Position, depth: u8, evaluation: Eval) {
+    let bitboard = BitboardPosition::clone(position);
+    let clone = BitboardPosition::clone(position);
+    if let Some(found) = self.hash.get(&bitboard) {
+      if found.depth > depth || (found.depth == depth && found.evaluation >= evaluation) { return }
+    }
+    self.hash.insert(bitboard, HashEval { depth: depth, evaluation: evaluation, position: clone });
+  }
   fn evaluate(&self, position: &Position) -> Eval {
     let stats = PositionStats::for_position(position);
 
@@ -125,10 +158,10 @@ impl Judge for Slonenok {
   fn quiet_move(&self, position: &Position, mv: &Move) -> bool {
     mv.num_taken() == 0 &&
     if position.side_to_move() == White {
-      mv.to() >= 14 || position.piece_at(mv.from()) != WHITE_MAN
+      mv.to() >= 10 || position.piece_at(mv.from()) != WHITE_MAN
     }
     else {
-      mv.to() <= 35 || position.piece_at(mv.from()) != BLACK_MAN
+      mv.to() <= 39 || position.piece_at(mv.from()) != BLACK_MAN
     }
   }
 

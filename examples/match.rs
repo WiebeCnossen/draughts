@@ -11,7 +11,7 @@ use draughts::engine::judge::Judge;
 use draughts::engine::randaap::RandAap;
 use draughts::engine::slonenok::Slonenok;
 
-fn game(white: &Judge, black: &Judge, initial: &Position, nodes: usize) -> (u8, u8) {
+fn game(white: &mut Judge, black: &mut Judge, initial: &Position, nodes: usize) -> (u8, u8) {
   let generator = Generator::create();
   let mut position = BitboardPosition::clone(initial);
   let mut prev = vec![];
@@ -78,8 +78,8 @@ pub fn main() {
     "w kcekaeb2b2/5rweirr",
     "w kkbeak2b2/2w2riewrr",
   ];
-  let one = &Slonenok::create(Generator::create());
-  let two = &RandAap::create(Generator::create());
+  let one = &mut Slonenok::create(Generator::create());
+  let two = &mut RandAap::create(Generator::create());
   for level in 0..15 {
     println!("Level {}\r\n----", level);
     let nodes = 1000 << level;
@@ -88,12 +88,14 @@ pub fn main() {
     for fen in &positions[..] {
       let position = &BitboardPosition::parse(fen).unwrap();
       {
+        one.reset();
         let (ds, dr) = game(one, two, position, nodes);
         ss = ss + ds;
         sr = sr + dr;
         println!("{}-{} / {} - {} : {} - {}", ds, dr, one.display_name(), two.display_name(), ss, sr);
       }
       {
+        one.reset();
         let (dr, ds) = game(two, one, position, nodes);
         ss = ss + ds;
         sr = sr + dr;
