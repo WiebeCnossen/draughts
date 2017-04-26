@@ -1,8 +1,8 @@
 extern crate draughts;
 
-use draughts::algorithm::alphabeta::DepthScope;
 use draughts::algorithm::bns::best_node_search;
 use draughts::algorithm::metric::Metric;
+use draughts::algorithm::scope::DepthScope;
 use draughts::board::bitboard::BitboardPosition;
 use draughts::board::generator::Generator;
 use draughts::board::piece::Color;
@@ -47,7 +47,7 @@ fn game(white: &mut Judge, black: &mut Judge, initial: &Position, nodes: usize) 
     let mut cut = 0;
     loop {
       let scope = DepthScope::from_depth(depth);
-      let bns = best_node_search(if white_to_move { white } else { black }, &position, &scope, cut, 1);
+      let bns = best_node_search(if white_to_move { white } else { black }, &position, &scope, cut);
       spent = spent + bns.meta.get_nodes();
       cut = bns.cut;
 

@@ -23,7 +23,7 @@ impl BnsState {
   fn initial(cut: Eval) -> BnsState {
     BnsState {
       lower: MIN_EVAL,
-      upper: MAX_EVAL,
+      upper: MAX_EVAL + 1,
       cut: cut,
       step: 0,
       up: false
@@ -52,7 +52,7 @@ impl BnsState {
   }
 }
 
-pub fn best_node_search<TGame, TScope>(judge: &mut Judge, position: &TGame, scope: &TScope, initial_cut: Eval, precision: Eval) -> BnsResult where TGame : Game, TScope : Scope {
+pub fn best_node_search<TGame, TScope>(judge: &mut Judge, position: &TGame, scope: &TScope, initial_cut: Eval) -> BnsResult where TGame : Game, TScope : Scope {
   let moves = judge.moves(position);
   let mut best_move = None;
   let mut state = BnsState::initial(initial_cut);
@@ -70,14 +70,14 @@ pub fn best_node_search<TGame, TScope>(judge: &mut Judge, position: &TGame, scop
       if score < beta {
         best_move = Some(mv);
         better_count = better_count + 1;
-        if state.lower + precision >= state.upper  || better_count > 1 {
+        if state.lower + 1 >= state.upper  || better_count > 1 {
           break;
         }
       }
     }
 
     let next = state.next(better_count);
-    match (better_count, next.lower + precision >= next.upper, best_move) {
+    match (better_count, next.lower + 1 >= next.upper, best_move) {
       (1, _, Some(mv)) |
       (_, true, Some(mv)) => {
         return BnsResult {
