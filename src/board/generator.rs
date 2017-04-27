@@ -229,12 +229,6 @@ impl Generator {
         }
       }
     }
-    if position.side_to_move() == Color::White {
-      result.sort_by(|mv1, mv2| mv1.to().cmp(&mv2.to()));
-    }
-    else {
-      result.sort_by(|mv1, mv2| mv2.to().cmp(&mv1.to()));
-    }
     result
   }
 }

@@ -1,3 +1,4 @@
+use std::cmp::Ordering::{Less, Greater};
 use std::collections::HashMap;
 
 use board::generator::Generator;
@@ -59,23 +60,31 @@ const HOFFSET : [Eval; 10] = [0, 1, 3, 7, 15, 15, 7, 3, 1, 0];
 const VOFFSET_FULL : [Eval; 10] = [8, 7, 5, 1, -7, -23, -7, 1, 5, 7];
 const VOFFSET_EMPTY : [Eval; 10] = [-15, -23, -7, 1, 5, 7, 8, 9, 10, 11];
 const BALANCE : [Eval; 10] = [-6, -5, -4, -3, -2, 2, 3, 4, 5, 6];
+const KILLERS : usize = 20;
 
 struct HashEval {
   pub evaluation: Eval,
-  pub depth: u8,
-  pub position: BitboardPosition
+  pub depth: u8
 }
 
 pub struct Slonenok {
   generator : Generator,
-  hash: HashMap<BitboardPosition, HashEval>
+  hash: HashMap<BitboardPosition, HashEval>,
+  white_killer_moves: [Move; KILLERS],
+  white_killer_cursor: usize,
+  black_killer_moves: [Move; KILLERS],
+  black_killer_cursor: usize
 }
 
 impl Slonenok {
   pub fn create(generator : Generator) -> Slonenok {
     Slonenok {
       generator: generator,
-      hash: HashMap::new()
+      hash: HashMap::new(),
+      white_killer_moves: [Move::Shift(0, 0); KILLERS],
+      white_killer_cursor: 0,
+      black_killer_moves: [Move::Shift(0, 0); KILLERS],
+      black_killer_cursor: 0
     }
   }
 
@@ -96,20 +105,30 @@ impl Judge for Slonenok {
   fn recall(&self, position: &Position, depth: u8) -> Option<Eval> {
     let bitboard = BitboardPosition::clone(position);
     match self.hash.get(&bitboard) {
-      Some(found) if found.depth >= depth => {
-        if found.position != bitboard { panic!("{}<>{}", found.position.ascii(), position.ascii()); }
-        Some(found.evaluation)
-      },
+      Some(found) if found.depth >= depth => Some(found.evaluation),
       _ => None
     }
   }
-  fn remember(&mut self, position: &Position, depth: u8, evaluation: Eval) {
+  fn remember(&mut self, position: &Position, depth: u8, evaluation: Eval, mv: Move, low: bool) {
+    if position.side_to_move() == White {
+      if !self.white_killer_moves.contains(&mv) {
+        self.white_killer_moves[self.white_killer_cursor] = mv;
+        self.white_killer_cursor = (self.white_killer_cursor + 1) % KILLERS;
+      }
+    }
+    else {
+      if !self.black_killer_moves.contains(&mv) {
+        self.black_killer_moves[self.black_killer_cursor] = mv;
+        self.black_killer_cursor = (self.black_killer_cursor + 1) % KILLERS;
+      }
+    }
+
+    if low { return }
     let bitboard = BitboardPosition::clone(position);
-    let clone = BitboardPosition::clone(position);
     if let Some(found) = self.hash.get(&bitboard) {
       if found.depth > depth || (found.depth == depth && found.evaluation >= evaluation) { return }
     }
-    self.hash.insert(bitboard, HashEval { depth: depth, evaluation: evaluation, position: clone });
+    self.hash.insert(bitboard, HashEval { depth: depth, evaluation: evaluation });
   }
   fn evaluate(&self, position: &Position) -> Eval {
     let stats = PositionStats::for_position(position);
@@ -191,7 +210,26 @@ impl Judge for Slonenok {
   }
 
   fn moves(&self, position: &Position) -> Vec<Move> {
-    self.generator.legal_moves(position)
+    let mut result = self.generator.legal_moves(position);
+    if position.side_to_move() == White {
+      result.sort_by(|mv1, mv2| {
+        match (self.white_killer_moves.contains(&mv1), self.white_killer_moves.contains(&mv2)) {
+          (false, true) => Greater,
+          (true, false) => Less,
+          _ => mv1.to().cmp(&mv2.to())
+        }
+      })
+    }
+    else {
+      result.sort_by(|mv1, mv2| {
+        match (self.black_killer_moves.contains(&mv1), self.black_killer_moves.contains(&mv2)) {
+          (false, true) => Greater,
+          (true, false) => Less,
+          _ => mv2.to().cmp(&mv1.to())
+        }
+      })
+    }
+    result
   }
 
   fn quiet_move(&self, position: &Position, mv: &Move) -> bool {

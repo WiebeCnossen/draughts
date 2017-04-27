@@ -45,10 +45,18 @@ pub fn makes_cut<TGame, TScope>(judge: &mut Judge, metric: &mut Metric, position
       }
 
       if best >= cut {
-        judge.remember(position, scope.depth(), best);
-        SearchResult::with_move(pending.unwrap(), best)
+        if let Some(mv) = pending {
+          judge.remember(position, scope.depth(), best, mv, false);
+          SearchResult::with_move(mv, best)
+        }
+        else {
+          panic!("No move pending");
+        }
       }
       else {
+        if let Some(mv) = pending {
+          judge.remember(position, scope.depth(), best, mv, true);
+        }
         SearchResult::evaluation(best)
       }
     }

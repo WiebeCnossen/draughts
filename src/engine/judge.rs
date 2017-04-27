@@ -9,7 +9,7 @@ pub const MIN_EVAL : Eval = -15000i16;
 
 pub trait Judge {
   fn recall(&self, _: &Position, _: u8) -> Option<Eval> { None }
-  fn remember(&mut self, _: &Position, _: u8, _: Eval) { }
+  fn remember(&mut self, _: &Position, _: u8, _:Eval, _: Move, _: bool) { }
   fn evaluate(&self, position: &Position) -> Eval;
   fn moves(&self, position: &Position) -> Vec<Move>;
   fn display_name(&self) -> &str;

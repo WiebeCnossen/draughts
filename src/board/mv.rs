@@ -1,4 +1,5 @@
 #[derive(Clone)]
+#[derive(Copy)]
 #[derive(PartialEq)]
 #[derive(Eq)]
 #[derive(PartialOrd)]
