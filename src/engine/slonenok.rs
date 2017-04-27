@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use board::generator::Generator;
-use board::piece::{WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
+use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
 use board::piece::Color::White;
 use board::mv::Move;
 use board::position::{Game, Position};
@@ -133,7 +133,46 @@ impl Judge for Slonenok {
     let balance_white = (0..10).fold(0, |b,i| b + BALANCE[i] * stats.hoffset_white[i]);
     let balance_black = (0..10).fold(0, |b,i| b + BALANCE[i] * stats.hoffset_black[i]);
 
+    let mut structure = 0;
+    for start in 10..14 {
+      if position.piece_at(start) == BLACK_MAN &&
+         position.piece_at(start + 1) == BLACK_MAN &&
+         position.piece_at(start - 5) == BLACK_MAN &&
+         position.piece_at(start - 10) == EMPTY &&
+         position.piece_at(start - 9) == EMPTY {
+        structure += 100;
+      }
+    }
+    for start in 15..19 {
+      if position.piece_at(start) == BLACK_MAN &&
+         position.piece_at(start + 1) == BLACK_MAN &&
+         position.piece_at(start - 4) == BLACK_MAN &&
+         position.piece_at(start - 10) == EMPTY &&
+         position.piece_at(start - 9) == EMPTY {
+        structure += 100;
+      }
+    }
+    for start in 30..34 {
+      if position.piece_at(start) == WHITE_MAN &&
+         position.piece_at(start + 1) == WHITE_MAN &&
+         position.piece_at(start + 6) == WHITE_MAN &&
+         position.piece_at(start + 10) == EMPTY &&
+         position.piece_at(start + 11) == EMPTY {
+        structure -= 100;
+      }
+    }
+    for start in 35..39 {
+      if position.piece_at(start) == WHITE_MAN &&
+         position.piece_at(start + 1) == WHITE_MAN &&
+         position.piece_at(start + 5) == WHITE_MAN &&
+         position.piece_at(start + 10) == EMPTY &&
+         position.piece_at(start + 11) == EMPTY {
+        structure -= 100;
+      }
+    }
+
     let score = beans
+      + structure
       + (hoffset_white - hoffset_black)
       + (voffset_white - voffset_black)
       - 2 * (balance_white.abs() - balance_black.abs());
