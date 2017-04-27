@@ -1,26 +1,28 @@
 use algorithm::metric::Metric;
 use algorithm::scope::Scope;
+use algorithm::search::SearchResult;
 use board::position::Game;
 use engine::judge::{Eval, MIN_EVAL, Judge};
 
-pub fn makes_cut<TGame, TScope>(judge: &mut Judge, metric: &mut Metric, position: &TGame, scope: &TScope, cut: Eval) -> Eval where TGame : Game, TScope : Scope {
-  if cut <= MIN_EVAL { return MIN_EVAL }
+pub fn makes_cut<TGame, TScope>(judge: &mut Judge, metric: &mut Metric, position: &TGame, scope: &TScope, cut: Eval) -> SearchResult where TGame : Game, TScope : Scope {
+  if cut <= MIN_EVAL { return SearchResult::evaluation(MIN_EVAL) }
 
   if let Some(eval) = judge.recall(position, scope.depth()) {
-    if eval >= cut { return eval }
+    if eval >= cut { return SearchResult::evaluation(eval) }
   }
 
   let moves = judge.moves(position);
   metric.add_nodes(moves.len());
-  if moves.len() == 0 { return MIN_EVAL }
+  if moves.len() == 0 { return SearchResult::evaluation(MIN_EVAL) }
 
   let quiet = judge.quiet_position(position, &moves);
   let current_score = judge.evaluate(position);
 
   match scope.next(quiet, cut - current_score) {
-    None => current_score,
+    None => SearchResult::evaluation(current_score),
     Some(_) => {
       let mut best = MIN_EVAL;
+      let mut pending = None;
       for mv in moves {
         let quiet = judge.quiet_move(position, &mv);
         let score =
@@ -32,19 +34,23 @@ pub fn makes_cut<TGame, TScope>(judge: &mut Judge, metric: &mut Metric, position
                 metric,
                 &position.go(&mv),
                 &next,
-                -cut+1)
+                -cut+1).evaluation
             }
           };
         if score > best {
           best = score;
+          pending = Some(mv);
           if best >= cut { break; }
         }
       }
 
       if best >= cut {
         judge.remember(position, scope.depth(), best);
+        SearchResult::with_move(pending.unwrap(), best)
       }
-      best
+      else {
+        SearchResult::evaluation(best)
+      }
     }
   }
 }

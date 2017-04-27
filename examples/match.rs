@@ -51,7 +51,7 @@ fn game(white: &mut Judge, black: &mut Judge, initial: &Position, nodes: usize) 
       spent = spent + bns.meta.get_nodes();
       cut = bns.cut;
 
-      if spent < nodes && depth < 10 {
+      if spent < nodes {
         depth = depth + 1;
         continue
       }

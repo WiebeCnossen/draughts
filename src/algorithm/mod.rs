@@ -3,3 +3,4 @@ pub mod bns;
 pub mod metric;
 pub mod mtdf;
 pub mod scope;
+pub mod search;

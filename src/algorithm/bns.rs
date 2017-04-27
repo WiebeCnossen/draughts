@@ -66,7 +66,7 @@ pub fn best_node_search<TGame, TScope>(judge: &mut Judge, position: &TGame, scop
     let mut better_count = 0u8;
     let beta = -state.cut - 1;
     for mv in &moves[..] {
-      let score = makes_cut(judge, &mut meta, &position.go(mv), scope, beta);
+      let score = makes_cut(judge, &mut meta, &position.go(mv), scope, beta).evaluation;
       if score < beta {
         best_move = Some(mv);
         better_count = better_count + 1;
