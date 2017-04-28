@@ -50,11 +50,7 @@ pub struct MtdResult {
 
 impl MtdResult {
   fn create(mv: Move, evaluation: Eval, meta: Meta) -> MtdResult {
-    MtdResult {
-      mv: mv,
-      evaluation: evaluation,
-      meta: meta
-    }
+    MtdResult { mv, evaluation, meta }
   }
 }
 

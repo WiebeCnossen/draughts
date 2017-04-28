@@ -128,7 +128,7 @@ impl Judge for Slonenok {
     if let Some(found) = self.hash.get(&bitboard) {
       if found.depth > depth || (found.depth == depth && found.evaluation >= evaluation) { return }
     }
-    self.hash.insert(bitboard, HashEval { depth: depth, evaluation: evaluation });
+    self.hash.insert(bitboard, HashEval { depth, evaluation });
   }
   fn evaluate(&self, position: &Position) -> Eval {
     let stats = PositionStats::for_position(position);

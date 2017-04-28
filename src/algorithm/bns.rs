@@ -42,13 +42,7 @@ impl BnsState {
         if mid < temp { mid } else { temp }
       };
     let cut = if up { lower + step } else { upper - step };
-    BnsState {
-      lower: lower,
-      upper: upper,
-      cut: cut,
-      step: step,
-      up: up
-    }
+    BnsState { lower, upper, cut, step, up }
   }
 }
 
@@ -80,11 +74,7 @@ pub fn best_node_search<TGame, TScope>(judge: &mut Judge, position: &TGame, scop
     match (better_count, next.lower + 1 >= next.upper, best_move) {
       (1, _, Some(mv)) |
       (_, true, Some(mv)) => {
-        return BnsResult {
-          cut: state.cut,
-          meta: meta,
-          mv: mv.clone()
-        }
+        return BnsResult { cut: state.cut, meta, mv: mv.clone() }
       },
       _ => state = next
     }
