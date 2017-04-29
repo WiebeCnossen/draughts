@@ -1,6 +1,7 @@
 use std::cmp::{min,max};
 
 use algorithm::scope::Scope;
+use algorithm::search::SearchResult;
 use algorithm::alphabeta::makes_cut;
 use algorithm::metric::Meta;
 use board::mv::Move;
@@ -17,70 +18,55 @@ struct BnsState {
   pub lower: Eval,
   pub upper: Eval,
   pub cut: Eval,
-  pub step: Eval,
-  pub up: bool
+  pub mv: Option<Move>,
+  pub count: u8
 }
 
 impl BnsState {
-  fn initial(cut: Eval) -> BnsState {
+  fn initial(cut: Eval, mv: Move) -> BnsState {
     BnsState {
       lower: MIN_EVAL,
       upper: MAX_EVAL + 1,
-      cut: cut,
-      step: 0,
-      up: false
+      cut,
+      mv: Some(mv),
+      count: 2
     }
   }
 
-  fn next(&self, better_count: u8, score: Eval) -> BnsState {
+  fn next(&self, better_count: u8, search_result: SearchResult) -> BnsState {
     let up = better_count > 0;
-    let lower = if up { score } else { self.lower };
-    let upper = if up { self.upper } else { min(self.cut, score + 1) };
-    let step =
-      if self.step == 0 { 4 }
-      else {
-        let mid = (lower + upper) / 2 - lower;
-        let temp = if self.up == up { self.step * 2 } else { self.step / 2 };
-        if mid < temp { mid } else { temp }
-      };
-    let cut = if up { lower + step } else { upper - step };
-    BnsState { lower, upper, cut, step, up }
+    let lower = if up { max(search_result.evaluation, self.lower + 1) } else { self.lower };
+    let upper = if up { self.upper } else { min(self.cut, search_result.evaluation + 1) };
+    let cut = if up { lower + 1 } else { upper - 1 };
+    let mv = if up { search_result.mv } else { self.mv.clone() };
+    let count =
+      if upper - lower <= 1 && mv.is_some() { 0 }
+      else if upper - cut <= 1 { 1 }
+      else { 2 };
+    BnsState { lower, upper, cut, mv, count }
   }
 }
 
 pub fn best_node_search<TGame, TScope>(judge: &mut Judge, position: &TGame, scope: &TScope, initial_cut: Eval) -> BnsResult where TGame : Game, TScope : Scope {
   let moves = judge.moves(position);
-  let mut best_move = None;
-  let mut state = BnsState::initial(initial_cut);
+  let mut state = BnsState::initial(initial_cut, moves[0]);
   let mut meta = Meta::create();
   loop {
-    /*
-    if state.lower >= state.upper { panic!("Lower must be smaller than upper") }
-    if state.lower > state.cut { panic!("Cut must be at least lower") }
-    if state.upper <= state.cut { panic!("Cut must be smaller than upper") }
-    */
     let mut better_count = 0u8;
-    let mut best_eval = MIN_EVAL;
-    let beta = -state.cut - 1;
+    let mut best = SearchResult::evaluation(MIN_EVAL);
+    let beta = state.cut + 1;
     for mv in &moves[..] {
-      let score = makes_cut(judge, &mut meta, &position.go(mv), scope, beta).evaluation;
-      best_eval = max(best_eval, -score);
-      if score < beta {
-        best_move = Some(mv);
+      let score = -makes_cut(judge, &mut meta, &position.go(mv), scope, -beta).evaluation;
+      if score >= best.evaluation { best = SearchResult::with_move(mv.clone(), score); }
+
+      if score > beta {
         better_count = better_count + 1;
-        if state.lower + 1 >= state.upper  || better_count > 1 {
-          break;
-        }
+        if better_count >= state.count { break; }
       }
     }
 
-    let next = state.next(better_count, best_eval);
-    match (better_count, next.lower + 1 >= next.upper, best_move) {
-      (1, _, Some(mv)) |
-      (_, true, Some(mv)) => {
-        return BnsResult { cut: state.cut, meta, mv: mv.clone() }
-      },
-      _ => state = next
-    }
+    let next = state.next(better_count, best);
+    if next.count == 0 { return BnsResult { cut: state.cut, meta, mv: next.mv.unwrap() } }
+    state = next;
   }
 }
