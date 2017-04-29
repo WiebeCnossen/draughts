@@ -1,3 +1,5 @@
+use std::cmp::{min,max};
+
 use algorithm::scope::Scope;
 use algorithm::alphabeta::makes_cut;
 use algorithm::metric::Meta;
@@ -30,10 +32,10 @@ impl BnsState {
     }
   }
 
-  fn next(&self, better_count: u8) -> BnsState {
+  fn next(&self, better_count: u8, score: Eval) -> BnsState {
     let up = better_count > 0;
-    let lower = if up { self.cut } else { self.lower };
-    let upper = if up { self.upper } else { self.cut };
+    let lower = if up { score } else { self.lower };
+    let upper = if up { self.upper } else { min(self.cut, score + 1) };
     let step =
       if self.step == 0 { 4 }
       else {
@@ -58,9 +60,11 @@ pub fn best_node_search<TGame, TScope>(judge: &mut Judge, position: &TGame, scop
     if state.upper <= state.cut { panic!("Cut must be smaller than upper") }
     */
     let mut better_count = 0u8;
+    let mut best_eval = MIN_EVAL;
     let beta = -state.cut - 1;
     for mv in &moves[..] {
       let score = makes_cut(judge, &mut meta, &position.go(mv), scope, beta).evaluation;
+      best_eval = max(best_eval, -score);
       if score < beta {
         best_move = Some(mv);
         better_count = better_count + 1;
@@ -70,7 +74,7 @@ pub fn best_node_search<TGame, TScope>(judge: &mut Judge, position: &TGame, scop
       }
     }
 
-    let next = state.next(better_count);
+    let next = state.next(better_count, best_eval);
     match (better_count, next.lower + 1 >= next.upper, best_move) {
       (1, _, Some(mv)) |
       (_, true, Some(mv)) => {
