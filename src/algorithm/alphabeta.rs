@@ -7,8 +7,10 @@ use engine::judge::{Eval, MIN_EVAL, Judge};
 pub fn makes_cut<TGame, TScope>(judge: &mut Judge, metric: &mut Metric, position: &TGame, scope: &TScope, cut: Eval) -> SearchResult where TGame : Game, TScope : Scope {
   if cut <= MIN_EVAL { return SearchResult::evaluation(MIN_EVAL) }
 
-  if let Some(eval) = judge.recall(position, scope.depth()) {
-    if eval >= cut { return SearchResult::evaluation(eval) }
+  match judge.recall(position, scope.depth()) {
+    (evaluation, _) if evaluation >= cut => return SearchResult::evaluation(evaluation),
+    (_, evaluation) if evaluation < cut => return SearchResult::evaluation(evaluation),
+    _ => ()
   }
 
   let moves = judge.moves(position);
@@ -39,7 +41,7 @@ pub fn makes_cut<TGame, TScope>(judge: &mut Judge, metric: &mut Metric, position
 
     if best >= cut {
       if let Some(mv) = pending {
-        judge.remember(position, scope.depth(), best, mv, false);
+        judge.remember(position, scope.depth(), best, Some(mv.clone()), false);
         SearchResult::with_move(mv, best)
       }
       else {
@@ -47,9 +49,7 @@ pub fn makes_cut<TGame, TScope>(judge: &mut Judge, metric: &mut Metric, position
       }
     }
     else {
-      if let Some(mv) = pending {
-        judge.remember(position, scope.depth(), best, mv, true);
-      }
+      judge.remember(position, scope.depth(), best, pending, true);
       SearchResult::evaluation(best)
     }
   }

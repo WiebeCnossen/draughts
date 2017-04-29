@@ -7,7 +7,7 @@ use board::piece::Color::White;
 use board::mv::Move;
 use board::position::{Game, Position};
 use board::bitboard::BitboardPosition;
-use engine::judge::{ZERO_EVAL, Eval, Judge};
+use engine::judge::{ZERO_EVAL, MIN_EVAL, MAX_EVAL, Eval, Judge};
 
 struct PositionStats {
   pub piece_count: [Eval; 5],
@@ -63,7 +63,8 @@ const BALANCE : [Eval; 10] = [-6, -5, -4, -3, -2, 2, 3, 4, 5, 6];
 const KILLERS : usize = 20;
 
 struct HashEval {
-  pub evaluation: Eval,
+  pub lower: Eval,
+  pub upper: Eval,
   pub depth: u8
 }
 
@@ -102,33 +103,57 @@ impl Slonenok {
 }
 
 impl Judge for Slonenok {
-  fn recall(&self, position: &Position, depth: u8) -> Option<Eval> {
+  fn recall(&self, position: &Position, depth: u8) -> (Eval, Eval) {
     let bitboard = BitboardPosition::clone(position);
     match self.hash.get(&bitboard) {
-      Some(found) if found.depth >= depth => Some(found.evaluation),
-      _ => None
+      Some(found) if found.depth >= depth => (found.lower, found.upper),
+      _ => (MIN_EVAL, MAX_EVAL)
     }
   }
-  fn remember(&mut self, position: &Position, depth: u8, evaluation: Eval, mv: Move, low: bool) {
-    if position.side_to_move() == White {
-      if !self.white_killer_moves.contains(&mv) {
-        self.white_killer_moves[self.white_killer_cursor] = mv;
-        self.white_killer_cursor = (self.white_killer_cursor + 1) % KILLERS;
+  fn remember(&mut self, position: &Position, depth: u8, evaluation: Eval, mv: Option<Move>, low: bool) {
+    if let Some(mv) = mv {
+      if position.side_to_move() == White {
+        if !self.white_killer_moves.contains(&mv) {
+          self.white_killer_moves[self.white_killer_cursor] = mv;
+          self.white_killer_cursor = (self.white_killer_cursor + 1) % KILLERS;
+        }
       }
-    }
-    else {
-      if !self.black_killer_moves.contains(&mv) {
-        self.black_killer_moves[self.black_killer_cursor] = mv;
-        self.black_killer_cursor = (self.black_killer_cursor + 1) % KILLERS;
+      else {
+        if !self.black_killer_moves.contains(&mv) {
+          self.black_killer_moves[self.black_killer_cursor] = mv;
+          self.black_killer_cursor = (self.black_killer_cursor + 1) % KILLERS;
+        }
       }
     }
 
-    if low { return }
     let bitboard = BitboardPosition::clone(position);
-    if let Some(found) = self.hash.get(&bitboard) {
-      if found.depth > depth || (found.depth == depth && found.evaluation >= evaluation) { return }
-    }
-    self.hash.insert(bitboard, HashEval { depth, evaluation });
+    let hash_eval =
+      if let Some(found) = self.hash.get(&bitboard) {
+        if found.depth > depth { return }
+        if found.depth == depth {
+          if !low && evaluation <= found.lower || low && found.upper >= evaluation { return }
+          HashEval {
+            depth,
+            lower: if low { found.lower } else { evaluation },
+            upper: if low { evaluation } else { found.upper }
+          }
+        }
+        else {
+          HashEval {
+            depth,
+            lower: if low { MIN_EVAL } else { evaluation },
+            upper: if low { evaluation } else { MAX_EVAL }
+          }
+        }
+      }
+      else {
+        HashEval {
+          depth,
+          lower: if low { MIN_EVAL } else { evaluation },
+          upper: if low { evaluation } else { MAX_EVAL }
+        }
+      };
+    self.hash.insert(bitboard, hash_eval);
   }
   fn evaluate(&self, position: &Position) -> Eval {
     let stats = PositionStats::for_position(position);
