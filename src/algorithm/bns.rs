@@ -19,7 +19,7 @@ struct BnsState {
   pub upper: Eval,
   pub cut: Eval,
   pub mv: Move,
-  pub count: usize
+  pub count: u8
 }
 
 impl BnsState {
@@ -33,14 +33,14 @@ impl BnsState {
     }
   }
 
-  fn next(&self, better_count: usize, search_result: SearchResult) -> BnsState {
+  fn next(&self, better_count: u8, search_result: SearchResult) -> BnsState {
     let up = better_count > 0;
-    let lower = if up { max(search_result.evaluation, self.lower + 1) } else { self.lower };
+    let lower = if up { max(search_result.evaluation, self.lower) } else { self.lower };
     let upper = if up { self.upper } else { min(self.cut, search_result.evaluation + 1) };
     let cut = if up { lower + 1 } else { upper - 1 };
     let mv = if up { search_result.mv.unwrap() } else { self.mv.clone() };
     let count =
-      if upper - lower <= 1 { 0 }
+      if upper - lower <= 1 || better_count == 1 { 0 }
       else if upper - cut <= 1 { 1 }
       else { 2 };
     BnsState { lower, upper, cut, mv, count }
@@ -93,35 +93,28 @@ fn down() {
 }
 
 pub fn best_node_search<TGame, TScope>(judge: &mut Judge, position: &TGame, scope: &TScope, initial_cut: Eval) -> BnsResult where TGame : Game, TScope : Scope {
-  let mut moves = judge.moves(position);
+  let moves = judge.moves(position);
   let mut state = BnsState::initial(initial_cut, moves[0]);
   let mut meta = Meta::create();
   loop {
-    let mut better_count = 0;
+    let mut better_count = 0u8;
     let mut best = SearchResult::evaluation(MIN_EVAL);
-    let beta = state.cut + 1;
-    let mut dropped = 0;
-    for i in 0..moves.len() {
-      let score;
-      let single_best;
-      {
-        let mv = &moves[i - dropped];
-        score = -makes_cut(judge, &mut meta, &position.go(mv), scope, -beta).evaluation;
-        single_best = score > best.evaluation;
-        if score >= best.evaluation { best = SearchResult::with_move(mv.clone(), score); }
-      }
+    let mut beta = state.cut - 1;
+    for mv in &moves[..] {
+      let score = -makes_cut(judge, &mut meta, &position.go(mv), scope, -beta).evaluation;
+      if score >= best.evaluation { best = SearchResult::with_move(mv.clone(), score); }
 
       if score > beta {
-        let from = if single_best { 0 } else { better_count };
-        dropped += i - from;
-        for _ in from..i { moves.remove(better_count); }
         better_count = better_count + 1;
         if better_count >= state.count { break; }
+        beta = score - 1;
       }
     }
 
     let next = state.next(better_count, best);
-    if next.count == 0 { return BnsResult { cut: state.cut, meta, mv: next.mv } }
+    if next.count == 0 {
+      return BnsResult { cut: state.cut, meta, mv: next.mv }
+    }
     state = next;
   }
 }

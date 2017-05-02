@@ -178,6 +178,9 @@ impl Judge for Slonenok {
     let balance_black = (0..10).fold(0, |b,i| b + BALANCE[i] * stats.hoffset_black[i]);
 
     let mut structure = 0;
+    if position.piece_at(4) == BLACK_MAN {
+      structure += 15;
+    }
     for start in 10..14 {
       if position.piece_at(start) == BLACK_MAN &&
          position.piece_at(start + 1) == BLACK_MAN &&
@@ -213,6 +216,9 @@ impl Judge for Slonenok {
          position.piece_at(start + 11) == EMPTY {
         structure -= 100;
       }
+    }
+    if position.piece_at(45) == WHITE_MAN {
+      structure -= 15;
     }
 
     let score = beans

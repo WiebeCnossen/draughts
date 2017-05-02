@@ -7,7 +7,7 @@ pub trait Scope : Sized {
 
 pub struct DepthScope {
   depth: u8,
-  quiet_moves: u8,
+  forcing: bool,
   forced: u8,
   unforced: u8
 }
@@ -16,7 +16,7 @@ impl DepthScope {
   pub fn from_depth(depth: u8) -> DepthScope {
     DepthScope {
       depth: depth,
-      quiet_moves: 1,
+      forcing: false,
       forced: 0,
       unforced: 0
     }
@@ -28,23 +28,23 @@ impl Scope for DepthScope {
     if !quiet {
       Some(DepthScope {
         depth: self.depth,
-        quiet_moves: 0,
+        forcing: true,
         forced: self.forced + 1,
         unforced: self.unforced
       })
     }
-    else if self.quiet_moves == 0 && self.depth > 2 * self.unforced {
+    else if self.forcing && self.depth > 2 * self.unforced {
       Some(DepthScope {
         depth: self.depth,
-        quiet_moves: 1,
+        forcing: false,
         forced: self.forced,
         unforced: self.unforced + 1
       })
     }
-    else if gap < 500 * self.depth as Eval && self.depth > self.forced + self.unforced {
+    else if self.depth > self.forced + self.unforced && gap < 100 + 500 * ((self.depth - self.forced - self.unforced - 1) / 5) as Eval {
       Some(DepthScope {
         depth: self.depth - self.forced - self.unforced - 1,
-        quiet_moves: self.quiet_moves + 1,
+        forcing: false,
         forced: 0,
         unforced: 0
       })
