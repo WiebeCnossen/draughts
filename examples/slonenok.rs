@@ -1,6 +1,7 @@
 extern crate draughts;
 
 use draughts::algorithm::bns::best_node_search;
+use draughts::algorithm::search::SearchResult;
 use draughts::algorithm::metric::Metric;
 use draughts::algorithm::mtdf::mtd_f;
 use draughts::algorithm::scope::DepthScope;
@@ -13,12 +14,12 @@ use draughts::uci::io::{read_stdin};
 
 fn bns(judge: &mut Slonenok, position: &BitboardPosition) {
   let mut depth = 0u8;
-  let mut cut = 0;
+  let mut start = SearchResult::evaluation(0);
   judge.reset();
   loop {
-    let bns = best_node_search(judge, position, &DepthScope::from_depth(depth), cut);
-    cut = bns.cut;
-    println!("BNS {} @ {} | {} @ {} ({} nodes)", judge.display_name(), depth, bns.mv, cut, bns.meta.get_nodes());
+    let bns = best_node_search(judge, position, &DepthScope::from_depth(depth), start);
+    start = SearchResult::with_move(bns.mv, bns.lower);
+    println!("BNS {} @ {} | {} @ {} ({} nodes)", judge.display_name(), depth, bns.mv, bns.lower, bns.meta.get_nodes());
     if depth >= 63 || bns.meta.get_nodes() > 1_000_000 { break }
     depth = depth + 1;
   }

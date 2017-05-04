@@ -65,10 +65,7 @@ pub fn mtd_f<TGame, TScope>(judge: &mut Judge, position: &TGame, scope: &TScope,
     if state.finished() {
       let mv = match mv {
         Some(mv) => mv,
-        None => {
-          if scope.depth() > 0 { println!("No move?!"); }
-          judge.moves(position)[0].clone()
-        }
+        None => judge.moves(position)[0].clone()
       };
       return MtdResult::create(mv, state.lower, meta)
     }

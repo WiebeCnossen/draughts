@@ -178,16 +178,19 @@ impl Judge for Slonenok {
     let balance_black = (0..10).fold(0, |b,i| b + BALANCE[i] * stats.hoffset_black[i]);
 
     let mut structure = 0;
-    if position.piece_at(4) == BLACK_MAN {
-      structure += 15;
-    }
+
+    // hanging piece penalty
     for start in 10..14 {
       if position.piece_at(start) == BLACK_MAN &&
          position.piece_at(start + 1) == BLACK_MAN &&
          position.piece_at(start - 5) == BLACK_MAN &&
-         position.piece_at(start - 10) == EMPTY &&
-         position.piece_at(start - 9) == EMPTY {
-        structure += 100;
+         position.piece_at(start - 10) == EMPTY{
+        if position.piece_at(start - 9) == EMPTY {
+          structure += 100;
+        }
+        else if start == 13 {
+          structure += if position.piece_at(24) == WHITE_MAN { 100 } else { 20 };
+        }
       }
     }
     for start in 15..19 {
@@ -212,13 +215,50 @@ impl Judge for Slonenok {
       if position.piece_at(start) == WHITE_MAN &&
          position.piece_at(start + 1) == WHITE_MAN &&
          position.piece_at(start + 5) == WHITE_MAN &&
-         position.piece_at(start + 10) == EMPTY &&
-         position.piece_at(start + 11) == EMPTY {
-        structure -= 100;
+         position.piece_at(start + 10) == EMPTY {
+        if position.piece_at(start + 11) == EMPTY {
+          structure -= 100;
+        }
+        else if start == 35 {
+          structure -= if position.piece_at(25) == BLACK_MAN { 100 } else { 20 };
+        }
       }
+    }
+
+    // corner penalty
+    if position.piece_at(4) == BLACK_MAN {
+      structure += 15;
     }
     if position.piece_at(45) == WHITE_MAN {
       structure -= 15;
+    }
+
+    // fork locks
+    for row in 1..4 {
+      for start in 10 * row - 5..10 * row - 1 {
+        if position.piece_at(start) == BLACK_MAN &&
+          position.piece_at(start + 1) == BLACK_MAN &&
+          position.piece_at(start + 10) == WHITE_MAN &&
+          position.piece_at(start + 11) == WHITE_MAN {
+          match position.piece_at(start + 5) {
+            WHITE_MAN => structure -= 100,
+            BLACK_MAN => structure += 100,
+            _ => ()
+          };
+        }
+      }
+      for start in 10 * row..10 * row + 4 {
+        if position.piece_at(start) == BLACK_MAN &&
+          position.piece_at(start + 1) == BLACK_MAN &&
+          position.piece_at(start + 10) == WHITE_MAN &&
+          position.piece_at(start + 11) == WHITE_MAN {
+          match position.piece_at(start + 6) {
+            WHITE_MAN => structure -= 100,
+            BLACK_MAN => structure += 100,
+            _ => ()
+          };
+        }
+      }
     }
 
     let score = beans

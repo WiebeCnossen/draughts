@@ -5,7 +5,6 @@ use board::position::Game;
 use engine::judge::{Eval, MIN_EVAL, Judge};
 
 pub fn makes_cut<TGame, TScope>(judge: &mut Judge, metric: &mut Metric, position: &TGame, scope: &TScope, cut: Eval) -> SearchResult where TGame : Game, TScope : Scope {
-  metric.add_nodes(1);
   if cut <= MIN_EVAL { return SearchResult::evaluation(MIN_EVAL) }
 
   match judge.recall(position, scope.depth()) {
@@ -13,6 +12,8 @@ pub fn makes_cut<TGame, TScope>(judge: &mut Judge, metric: &mut Metric, position
     (_, evaluation) if evaluation < cut => return SearchResult::evaluation(evaluation),
     _ => ()
   }
+
+  metric.add_nodes(1);
 
   let moves = judge.moves(position);
   if moves.len() == 0 { return SearchResult::evaluation(MIN_EVAL) }
