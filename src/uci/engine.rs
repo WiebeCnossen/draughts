@@ -1,2 +1,1 @@
-pub trait Engine {
-}
+pub trait Engine {}
