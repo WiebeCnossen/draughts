@@ -1,9 +1,9 @@
 use algorithm::alphabeta::makes_cut;
+use algorithm::judge::{Eval, MIN_EVAL, MAX_EVAL, Judge};
 use algorithm::metric::Meta;
 use algorithm::scope::Scope;
 use board::mv::Move;
 use board::position::Game;
-use engine::judge::{Eval, MIN_EVAL, MAX_EVAL, Judge};
 
 struct MtdState {
     lower: Eval,
@@ -59,12 +59,13 @@ impl MtdResult {
 
 pub fn mtd_f<TGame, TScope>(judge: &mut Judge,
                             position: &TGame,
-                            scope: &TScope,
+                            depth: u8,
                             guess: Eval)
                             -> MtdResult
     where TGame: Game,
           TScope: Scope
 {
+    let scope = &TScope::from_depth(depth);
     let mut state = MtdState::initial(guess);
     let mut meta = Meta::create();
     let mut mv = None;

@@ -1,14 +1,14 @@
 use std::cmp::min;
 use std::cmp::Ordering::{Less, Greater, Equal};
 
-use algorithm::scope::{DepthScope, Scope};
-use algorithm::search::SearchResult;
 use algorithm::alphabeta::makes_cut;
+use algorithm::judge::{Eval, MIN_EVAL, MAX_EVAL, Judge};
 use algorithm::metric::{Metric, Meta};
 use algorithm::mtdf::mtd_f;
+use algorithm::scope::Scope;
+use algorithm::search::SearchResult;
 use board::mv::Move;
 use board::position::Game;
-use engine::judge::{Eval, MIN_EVAL, MAX_EVAL, Judge};
 
 pub struct BnsResult {
     pub lower: Eval,
@@ -117,7 +117,7 @@ fn down() {
 
 pub fn best_node_search<TGame, TScope>(judge: &mut Judge,
                                        position: &TGame,
-                                       scope: &TScope,
+                                       depth: u8,
                                        initial: SearchResult)
                                        -> BnsResult
     where TGame: Game,
@@ -126,11 +126,9 @@ pub fn best_node_search<TGame, TScope>(judge: &mut Judge,
     let mut moves = judge.moves(position);
     let mut meta = Meta::create();
     let mut state = match initial.mv {
-        Some(mv) if scope.depth() > 2 => {
-            let mtd = mtd_f(judge,
-                            &position.go(&mv),
-                            &DepthScope::from_depth(scope.depth() - 2),
-                            -initial.evaluation);
+        Some(mv) if depth > 2 => {
+            let mtd =
+                mtd_f::<TGame, TScope>(judge, &position.go(&mv), depth - 2, -initial.evaluation);
             //println!("MTD: {} {}", mtd.meta.get_nodes(), -mtd.evaluation);
             meta.add_nodes(mtd.meta.get_nodes() + 1);
             moves.sort_by(|&mv1, &mv2| match (mv1 == mv, mv2 == mv) {
@@ -143,6 +141,7 @@ pub fn best_node_search<TGame, TScope>(judge: &mut Judge,
         _ => BnsState::initial(initial.evaluation, moves[0]),
     };
     loop {
+        let scope = &TScope::from_depth(depth);
         let mut better_count = 0u8;
         let mut best = SearchResult::evaluation(MIN_EVAL - 1);
         let mut beta = state.cut - 1;

@@ -1,8 +1,8 @@
+use algorithm::judge::{Eval, MIN_EVAL, MAX_EVAL, Judge};
 use algorithm::metric::Metric;
 use algorithm::scope::Scope;
 use algorithm::search::SearchResult;
 use board::position::Game;
-use engine::judge::{Eval, MIN_EVAL, Judge};
 
 pub fn makes_cut<TGame, TScope>(judge: &mut Judge,
                                 metric: &mut Metric,
@@ -15,6 +15,10 @@ pub fn makes_cut<TGame, TScope>(judge: &mut Judge,
 {
     if cut <= MIN_EVAL {
         return SearchResult::evaluation(MIN_EVAL);
+    }
+
+    if cut > MAX_EVAL {
+        return SearchResult::evaluation(MAX_EVAL);
     }
 
     match judge.recall(position, scope.depth()) {

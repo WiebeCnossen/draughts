@@ -1,13 +1,18 @@
 use std::cmp::Ordering::{Less, Greater};
 use std::collections::HashMap;
 
+use algorithm::adaptive::AdaptiveScope;
+use algorithm::bns::best_node_search;
+use algorithm::judge::{ZERO_EVAL, MIN_EVAL, MAX_EVAL, Eval, Judge};
+use algorithm::metric::Metric;
+use algorithm::search::SearchResult;
+use board::bitboard::BitboardPosition;
 use board::generator::Generator;
+use board::mv::Move;
 use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
 use board::piece::Color::White;
-use board::mv::Move;
 use board::position::{Game, Position};
-use board::bitboard::BitboardPosition;
-use engine::judge::{ZERO_EVAL, MIN_EVAL, MAX_EVAL, Eval, Judge};
+use engine::Engine;
 
 struct PositionStats {
     pub piece_count: [Eval; 5],
@@ -68,7 +73,7 @@ struct HashEval {
     pub depth: u8,
 }
 
-pub struct Slonenok {
+pub struct SlonenokJudge {
     generator: Generator,
     hash: HashMap<BitboardPosition, HashEval>,
     white_killer_moves: [Move; KILLERS],
@@ -77,9 +82,9 @@ pub struct Slonenok {
     black_killer_cursor: usize,
 }
 
-impl Slonenok {
-    pub fn create(generator: Generator) -> Slonenok {
-        Slonenok {
+impl SlonenokJudge {
+    pub fn create(generator: Generator) -> SlonenokJudge {
+        SlonenokJudge {
             generator: generator,
             hash: HashMap::new(),
             white_killer_moves: [Move::Shift(0, 0); KILLERS],
@@ -102,7 +107,7 @@ impl Slonenok {
     }
 }
 
-impl Judge for Slonenok {
+impl Judge for SlonenokJudge {
     fn recall(&self, position: &Position, depth: u8) -> (Eval, Eval) {
         let bitboard = BitboardPosition::clone(position);
         match self.hash.get(&bitboard) {
@@ -325,6 +330,46 @@ impl Judge for Slonenok {
             mv.to() >= 10 || position.piece_at(mv.from()) != WHITE_MAN
         } else {
             mv.to() <= 39 || position.piece_at(mv.from()) != BLACK_MAN
+        }
+    }
+
+    fn display_name(&self) -> &str {
+        "Slonënok"
+    }
+}
+
+pub struct Slonenok {
+    max_nodes: usize,
+    slonenok: SlonenokJudge,
+}
+
+impl Slonenok {
+    pub fn create(max_nodes: usize) -> Slonenok {
+        Slonenok {
+            max_nodes,
+            slonenok: SlonenokJudge::create(Generator::create()),
+        }
+    }
+}
+
+impl Engine for Slonenok {
+    fn suggest(&mut self, position: &Position) -> SearchResult {
+        let position = &BitboardPosition::clone(position);
+        let mut depth = 0u8;
+        let mut search_result = SearchResult::evaluation(0);
+        let mut spent = 0;
+        self.slonenok.reset();
+        loop {
+            let bns = best_node_search::<BitboardPosition, AdaptiveScope>(&mut self.slonenok,
+                                                                          position,
+                                                                          depth,
+                                                                          search_result);
+            search_result = SearchResult::with_move(bns.mv, bns.lower);
+            depth = depth + 1;
+            spent += bns.meta.get_nodes();
+            if depth > 63 || bns.lower >= MAX_EVAL || spent >= self.max_nodes {
+                return search_result;
+            }
         }
     }
 

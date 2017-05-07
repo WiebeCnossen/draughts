@@ -1,59 +1,15 @@
 extern crate draughts;
 
-use draughts::algorithm::bns::best_node_search;
-use draughts::algorithm::search::SearchResult;
-use draughts::algorithm::metric::Metric;
-use draughts::algorithm::mtdf::mtd_f;
-use draughts::algorithm::scope::DepthScope;
 use draughts::board::bitboard::BitboardPosition;
-use draughts::board::generator::Generator;
 use draughts::board::position::Game;
-use draughts::engine::judge::Judge;
+use draughts::engine::Engine;
 use draughts::engine::slonenok::Slonenok;
 use draughts::uci::io::read_stdin;
 
-fn bns(judge: &mut Slonenok, position: &BitboardPosition) {
-    let mut depth = 0u8;
-    let mut start = SearchResult::evaluation(0);
-    judge.reset();
-    loop {
-        let bns = best_node_search(judge, position, &DepthScope::from_depth(depth), start);
-        start = SearchResult::with_move(bns.mv, bns.lower);
-        println!("BNS {} @ {} | {} @ {} ({} nodes)",
-                 judge.display_name(),
-                 depth,
-                 bns.mv,
-                 bns.lower,
-                 bns.meta.get_nodes());
-        if depth >= 63 || bns.meta.get_nodes() > 1_000_000 {
-            break;
-        }
-        depth = depth + 1;
-    }
-}
-
-fn mtd(judge: &mut Slonenok, position: &BitboardPosition) {
-    let mut depth = 0u8;
-    let mut cut = 0;
-    judge.reset();
-    loop {
-        let mtd = mtd_f(judge, position, &DepthScope::from_depth(depth), cut);
-        cut = mtd.evaluation;
-        println!("MTD {} @ {} | {} @ {} ({} nodes)",
-                 judge.display_name(),
-                 depth,
-                 mtd.mv,
-                 mtd.evaluation,
-                 mtd.meta.get_nodes());
-        if depth >= 63 || mtd.meta.get_nodes() > 1_000_000 {
-            break;
-        }
-        depth = depth + 1;
-    }
-}
+const MAX_NODES: usize = 1_000_000;
 
 pub fn main() {
-    let judge = &mut Slonenok::create(Generator::create());
+    let mut slonenok = Slonenok::create(MAX_NODES);
     loop {
         let line = read_stdin();
         if line == "quit" {
@@ -66,7 +22,7 @@ pub fn main() {
             }
             Ok(pos) => pos,
         };
-        bns(judge, &position);
-        //mtd(judge, &position);
+        let result = slonenok.suggest(&position);
+        println!("{} {}", result.mv.unwrap(), result.evaluation);
     }
 }

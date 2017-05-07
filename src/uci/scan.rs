@@ -1,4 +1,4 @@
-use uci::engine::Engine;
+use engine::Engine;
 
 pub struct Scan {}
 
