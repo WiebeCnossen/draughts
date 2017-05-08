@@ -341,6 +341,8 @@ impl Judge for SlonenokJudge {
 pub struct Slonenok {
     max_nodes: usize,
     slonenok: SlonenokJudge,
+    previous: EngineResult,
+    position: BitboardPosition,
 }
 
 impl Slonenok {
@@ -348,35 +350,51 @@ impl Slonenok {
         Slonenok {
             max_nodes,
             slonenok: SlonenokJudge::create(Generator::create()),
+            previous: EngineResult::create(Move::Shift(0, 0), ZERO_EVAL, Meta::create()),
+            position: BitboardPosition::initial(),
         }
     }
 }
 
-impl Engine for Slonenok {
-    fn suggest(&mut self, position: &Position) -> EngineResult {
-        let position = &BitboardPosition::clone(position);
-        let mut depth = 0u8;
-        let mut search_result = SearchResult::evaluation(0);
-        let mut meta = Meta::create();
-        self.slonenok.reset();
-        loop {
-            meta.put_depth(depth);
-            let bns = best_node_search::<BitboardPosition, AdaptiveScope>(&mut self.slonenok,
-                                                                          position,
-                                                                          depth,
-                                                                          search_result);
-            search_result = SearchResult::with_move(bns.mv, bns.lower);
-            depth = depth + 1;
-            meta.add_nodes(bns.meta.get_nodes());
-            if depth > 63 || bns.lower >= MAX_EVAL || meta.get_nodes() >= self.max_nodes {
-                return EngineResult::create(search_result.mv.unwrap(),
-                                            search_result.evaluation,
-                                            meta);
-            }
+impl Iterator for Slonenok {
+    type Item = EngineResult;
+    fn next(&mut self) -> Option<EngineResult> {
+        if self.previous.meta.get_nodes() >= self.max_nodes ||
+           self.previous.meta.get_depth() > 63 ||
+           self.previous.evaluation == MIN_EVAL || self.previous.evaluation == MAX_EVAL {
+            return None;
         }
-    }
 
+        let mut meta = self.previous.meta.clone();
+        let search_result = if meta.get_depth() == 0 {
+            SearchResult::evaluation(self.previous.evaluation)
+        } else {
+            SearchResult::with_move(self.previous.mv, self.previous.evaluation)
+        };
+        let depth = if meta.get_nodes() == 0 {
+            0
+        } else {
+            meta.get_depth() + 1
+        };
+        meta.put_depth(depth);
+        meta.put_depth(depth);
+        let bns = best_node_search::<BitboardPosition, AdaptiveScope>(&mut self.slonenok,
+                                                                      &self.position,
+                                                                      depth,
+                                                                      search_result);
+        meta.add_nodes(bns.meta.get_nodes());
+        self.previous = EngineResult::create(bns.mv, bns.lower, meta);
+        Some(self.previous.clone())
+    }
+}
+
+impl Engine for Slonenok {
     fn display_name(&self) -> &str {
         "Slonënok"
+    }
+    fn set_position(&mut self, position: &Position) {
+        self.slonenok.reset();
+        self.position = BitboardPosition::clone(position);
+        self.previous = EngineResult::empty();
     }
 }

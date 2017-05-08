@@ -23,11 +23,14 @@ pub fn main() {
             }
             Ok(pos) => pos,
         };
-        let result = slonenok.suggest(&position);
-        println!("{} {} | {} @ {}",
-                 result.mv,
-                 result.evaluation,
-                 result.meta.get_nodes(),
-                 result.meta.get_depth());
+        slonenok.set_position(&position);
+        while let Some(result) = slonenok.next() {
+            println!("{}: {} {} | {} @ {}",
+                     slonenok.display_name(),
+                     result.mv,
+                     result.evaluation,
+                     result.meta.get_nodes(),
+                     result.meta.get_depth());
+        }
     }
 }

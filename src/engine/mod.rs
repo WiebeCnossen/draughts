@@ -1,11 +1,14 @@
 pub mod randaap;
 pub mod slonenok;
 
-use algorithm::judge::Eval;
+use std::iter::Iterator;
+
+use algorithm::judge::{Eval, ZERO_EVAL};
 use algorithm::metric::Meta;
 use board::mv::Move;
 use board::position::Position;
 
+#[derive(Clone)]
 pub struct EngineResult {
     pub mv: Move,
     pub evaluation: Eval,
@@ -20,9 +23,12 @@ impl EngineResult {
             meta,
         }
     }
+    pub fn empty() -> EngineResult {
+        EngineResult::create(Move::Shift(0, 0), ZERO_EVAL, Meta::create())
+    }
 }
 
-pub trait Engine {
-    fn suggest(&mut self, position: &Position) -> EngineResult;
+pub trait Engine: Iterator<Item = EngineResult> {
     fn display_name(&self) -> &str;
+    fn set_position(&mut self, position: &Position);
 }

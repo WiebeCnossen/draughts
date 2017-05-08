@@ -1,4 +1,4 @@
-use algorithm::judge::{ZERO_EVAL, MAX_EVAL, Eval, Judge};
+use algorithm::judge::{MIN_EVAL, ZERO_EVAL, MAX_EVAL, Eval, Judge};
 use algorithm::metric::{Meta, Metric};
 use algorithm::mtdf::mtd_f;
 use algorithm::depth::DepthScope;
@@ -76,6 +76,8 @@ impl Judge for RandAapJudge {
 pub struct RandAap {
     max_nodes: usize,
     judge: RandAapJudge,
+    previous: EngineResult,
+    position: BitboardPosition,
 }
 
 impl RandAap {
@@ -83,26 +85,42 @@ impl RandAap {
         RandAap {
             max_nodes,
             judge: RandAapJudge::create(),
+            previous: EngineResult::create(Move::Shift(0, 0), ZERO_EVAL, Meta::create()),
+            position: BitboardPosition::initial(),
         }
     }
 }
 
-impl Engine for RandAap {
-    fn suggest(&mut self, position: &Position) -> EngineResult {
-        let position = &BitboardPosition::clone(position);
-        let mut depth = 0u8;
-        let mut cut = 0;
-        let mut meta = Meta::create();
-        loop {
-            meta.put_depth(depth);
-            let mtd = mtd_f::<BitboardPosition, DepthScope>(&mut self.judge, position, depth, cut);
-            cut = mtd.evaluation;
-            depth = depth + 1;
-            meta.add_nodes(mtd.meta.get_nodes());
-            if depth > 63 || mtd.evaluation >= MAX_EVAL || meta.get_nodes() >= self.max_nodes {
-                return EngineResult::create(mtd.mv, mtd.evaluation, meta);
-            }
+impl Iterator for RandAap {
+    type Item = EngineResult;
+    fn next(&mut self) -> Option<EngineResult> {
+        if self.previous.meta.get_nodes() >= self.max_nodes ||
+           self.previous.meta.get_depth() > 63 ||
+           self.previous.evaluation == MIN_EVAL || self.previous.evaluation == MAX_EVAL {
+            return None;
         }
+
+        let mut meta = self.previous.meta.clone();
+        let depth = if meta.get_nodes() == 0 {
+            0
+        } else {
+            meta.get_depth() + 1
+        };
+        meta.put_depth(depth);
+        let mtd = mtd_f::<BitboardPosition, DepthScope>(&mut self.judge,
+                                                        &self.position,
+                                                        depth,
+                                                        self.previous.evaluation);
+        meta.add_nodes(mtd.meta.get_nodes());
+        self.previous = EngineResult::create(mtd.mv, mtd.evaluation, meta);
+        Some(self.previous.clone())
+    }
+}
+
+impl Engine for RandAap {
+    fn set_position(&mut self, position: &Position) {
+        self.position = BitboardPosition::clone(position);
+        self.previous = EngineResult::empty();
     }
 
     fn display_name(&self) -> &str {

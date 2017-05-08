@@ -5,6 +5,7 @@ pub trait Metric {
     fn put_depth(&mut self, depth: u8);
 }
 
+#[derive(Clone)]
 pub struct Meta {
     depth: u8,
     nodes: usize,

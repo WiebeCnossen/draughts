@@ -1,14 +1,19 @@
 extern crate draughts;
 
+use draughts::algorithm::metric::Metric;
 use draughts::board::bitboard::BitboardPosition;
 use draughts::board::generator::Generator;
 use draughts::board::piece::Color;
 use draughts::board::position::{Position, Game};
-use draughts::engine::Engine;
+use draughts::engine::{Engine, EngineResult};
 use draughts::engine::randaap::RandAap;
 use draughts::engine::slonenok::Slonenok;
 
-fn game(white: &mut Engine, black: &mut Engine, initial: &Position, nodes: usize) -> (u8, u8) {
+fn game(white: &mut Engine<Item = EngineResult>,
+        black: &mut Engine<Item = EngineResult>,
+        initial: &Position,
+        nodes: usize)
+        -> (u8, u8) {
     let generator = Generator::create();
     let mut position = BitboardPosition::clone(initial);
     let mut prev = vec![];
@@ -39,23 +44,39 @@ fn game(white: &mut Engine, black: &mut Engine, initial: &Position, nodes: usize
         }
 
         let white_to_move = position.side_to_move() == Color::White;
-        let result = if white_to_move {
-            white.suggest(&position)
+        let mut result = EngineResult::empty();
+        if white_to_move {
+            white.set_position(&position);
+            while let Some(next) = white.next() {
+                result = next;
+                if show {
+                    println!("{}: {} {} | {} @ {}",
+                             white.display_name(),
+                             result.mv,
+                             result.evaluation,
+                             result.meta.get_nodes(),
+                             result.meta.get_depth());
+                }
+            }
         } else {
-            black.suggest(&position)
+            black.set_position(&position);
+            while let Some(next) = black.next() {
+                result = next;
+                if show {
+                    println!("{}: {} {} | {} @ {}",
+                             black.display_name(),
+                             result.mv,
+                             -result.evaluation,
+                             result.meta.get_nodes(),
+                             result.meta.get_depth());
+                }
+            }
         };
-        let next = position.go(&result.mv.unwrap());
+        let next = position.go(&result.mv);
         prev.push(position);
         position = next;
 
         if show {
-            println!("{} {}",
-                     result.mv.unwrap(),
-                     if white_to_move {
-                         result.evaluation
-                     } else {
-                         -result.evaluation
-                     });
             println!("{}", black.display_name());
             println!("{}{}", position.ascii(), white.display_name());
         }
@@ -71,7 +92,7 @@ pub fn main() {
         println!("Level {}\r\n----", level);
         let nodes = 100 << level;
         let one = &mut Slonenok::create(nodes);
-        let two = &mut RandAap::create(nodes);
+        let two = &mut RandAap::create(2 * nodes);
         let mut ss = 0;
         let mut sr = 0;
         for fen in &positions[..] {
