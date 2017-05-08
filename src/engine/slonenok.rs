@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use algorithm::adaptive::AdaptiveScope;
 use algorithm::bns::best_node_search;
 use algorithm::judge::{ZERO_EVAL, MIN_EVAL, MAX_EVAL, Eval, Judge};
-use algorithm::metric::Metric;
+use algorithm::metric::{Meta, Metric};
 use algorithm::search::SearchResult;
 use board::bitboard::BitboardPosition;
 use board::generator::Generator;
@@ -12,7 +12,7 @@ use board::mv::Move;
 use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
 use board::piece::Color::White;
 use board::position::{Game, Position};
-use engine::Engine;
+use engine::{Engine, EngineResult};
 
 struct PositionStats {
     pub piece_count: [Eval; 5],
@@ -353,22 +353,25 @@ impl Slonenok {
 }
 
 impl Engine for Slonenok {
-    fn suggest(&mut self, position: &Position) -> SearchResult {
+    fn suggest(&mut self, position: &Position) -> EngineResult {
         let position = &BitboardPosition::clone(position);
         let mut depth = 0u8;
         let mut search_result = SearchResult::evaluation(0);
-        let mut spent = 0;
+        let mut meta = Meta::create();
         self.slonenok.reset();
         loop {
+            meta.put_depth(depth);
             let bns = best_node_search::<BitboardPosition, AdaptiveScope>(&mut self.slonenok,
                                                                           position,
                                                                           depth,
                                                                           search_result);
             search_result = SearchResult::with_move(bns.mv, bns.lower);
             depth = depth + 1;
-            spent += bns.meta.get_nodes();
-            if depth > 63 || bns.lower >= MAX_EVAL || spent >= self.max_nodes {
-                return search_result;
+            meta.add_nodes(bns.meta.get_nodes());
+            if depth > 63 || bns.lower >= MAX_EVAL || meta.get_nodes() >= self.max_nodes {
+                return EngineResult::create(search_result.mv.unwrap(),
+                                            search_result.evaluation,
+                                            meta);
             }
         }
     }

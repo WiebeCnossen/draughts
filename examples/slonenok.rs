@@ -1,5 +1,6 @@
 extern crate draughts;
 
+use draughts::algorithm::metric::Metric;
 use draughts::board::bitboard::BitboardPosition;
 use draughts::board::position::Game;
 use draughts::engine::Engine;
@@ -23,6 +24,10 @@ pub fn main() {
             Ok(pos) => pos,
         };
         let result = slonenok.suggest(&position);
-        println!("{} {}", result.mv.unwrap(), result.evaluation);
+        println!("{} {} | {} @ {}",
+                 result.mv,
+                 result.evaluation,
+                 result.meta.get_nodes(),
+                 result.meta.get_depth());
     }
 }

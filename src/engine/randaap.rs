@@ -1,7 +1,6 @@
 use algorithm::judge::{ZERO_EVAL, MAX_EVAL, Eval, Judge};
-use algorithm::metric::Metric;
+use algorithm::metric::{Meta, Metric};
 use algorithm::mtdf::mtd_f;
-use algorithm::search::SearchResult;
 use algorithm::depth::DepthScope;
 use board::bitboard::BitboardPosition;
 use board::generator::Generator;
@@ -9,7 +8,7 @@ use board::piece::{WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
 use board::piece::Color::White;
 use board::mv::Move;
 use board::position::{Game, Position};
-use engine::Engine;
+use engine::{Engine, EngineResult};
 
 struct RandAapJudge {
     generator: Generator,
@@ -89,18 +88,19 @@ impl RandAap {
 }
 
 impl Engine for RandAap {
-    fn suggest(&mut self, position: &Position) -> SearchResult {
+    fn suggest(&mut self, position: &Position) -> EngineResult {
         let position = &BitboardPosition::clone(position);
         let mut depth = 0u8;
         let mut cut = 0;
-        let mut spent = 0;
+        let mut meta = Meta::create();
         loop {
+            meta.put_depth(depth);
             let mtd = mtd_f::<BitboardPosition, DepthScope>(&mut self.judge, position, depth, cut);
             cut = mtd.evaluation;
             depth = depth + 1;
-            spent += mtd.meta.get_nodes();
-            if depth > 63 || mtd.evaluation >= MAX_EVAL || spent >= self.max_nodes {
-                return SearchResult::with_move(mtd.mv, mtd.evaluation);
+            meta.add_nodes(mtd.meta.get_nodes());
+            if depth > 63 || mtd.evaluation >= MAX_EVAL || meta.get_nodes() >= self.max_nodes {
+                return EngineResult::create(mtd.mv, mtd.evaluation, meta);
             }
         }
     }
