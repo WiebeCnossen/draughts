@@ -33,8 +33,7 @@ impl Scope for AdaptiveScope {
                      forced: self.forced,
                      unforced: self.unforced + 1,
                  })
-        } else if self.depth > self.forced + self.unforced &&
-                  gap < 100 + 500 * ((self.depth - self.forced - self.unforced - 1) / 5) as Eval {
+        } else if self.depth > self.forced + self.unforced && gap < 500 {
             Some(AdaptiveScope::from_depth(self.depth - self.forced - self.unforced - 1))
         } else {
             None

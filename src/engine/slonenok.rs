@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use algorithm::adaptive::AdaptiveScope;
 use algorithm::bns::best_node_search;
-use algorithm::judge::{ZERO_EVAL, MIN_EVAL, MAX_EVAL, Eval, Judge};
+use algorithm::judge::{ZERO_EVAL, MIN_EVAL, MAX_EVAL, Eval, Judge, PositionMemory};
 use algorithm::metric::{Meta, Metric};
 use algorithm::search::SearchResult;
 use board::bitboard::BitboardPosition;
@@ -68,9 +68,21 @@ const BALANCE: [Eval; 10] = [-6, -5, -4, -3, -2, 2, 3, 4, 5, 6];
 const KILLERS: usize = 20;
 
 struct HashEval {
-    pub lower: Eval,
-    pub upper: Eval,
-    pub depth: u8,
+    lower: Eval,
+    upper: Eval,
+    depth: u8,
+    from: u8,
+    to: u8,
+}
+
+impl HashEval {
+    fn as_memory(&self) -> PositionMemory {
+        PositionMemory::create(self.depth,
+                               self.lower,
+                               self.upper,
+                               self.from as usize,
+                               self.to as usize)
+    }
 }
 
 pub struct SlonenokJudge {
@@ -108,11 +120,11 @@ impl SlonenokJudge {
 }
 
 impl Judge for SlonenokJudge {
-    fn recall(&self, position: &Position, depth: u8) -> (Eval, Eval) {
+    fn recall(&self, position: &Position) -> PositionMemory {
         let bitboard = BitboardPosition::clone(position);
         match self.hash.get(&bitboard) {
-            Some(found) if found.depth >= depth => (found.lower, found.upper),
-            _ => (MIN_EVAL, MAX_EVAL),
+            Some(found) => found.as_memory(),
+            _ => PositionMemory::empty(),
         }
     }
     fn remember(&mut self,
@@ -121,7 +133,7 @@ impl Judge for SlonenokJudge {
                 evaluation: Eval,
                 mv: Option<Move>,
                 low: bool) {
-        if let Some(mv) = mv {
+        let (has_move, from, to) = if let Some(mv) = mv {
             if position.side_to_move() == White {
                 if !self.white_killer_moves.contains(&mv) {
                     self.white_killer_moves[self.white_killer_cursor] = mv;
@@ -133,7 +145,10 @@ impl Judge for SlonenokJudge {
                     self.black_killer_cursor = (self.black_killer_cursor + 1) % KILLERS;
                 }
             }
-        }
+            (true, mv.from() as u8, mv.to() as u8)
+        } else {
+            (false, 0, 0)
+        };
 
         let bitboard = BitboardPosition::clone(position);
         let hash_eval = if let Some(found) = self.hash.get(&bitboard) {
@@ -148,12 +163,16 @@ impl Judge for SlonenokJudge {
                     depth,
                     lower: if low { found.lower } else { evaluation },
                     upper: if low { evaluation } else { found.upper },
+                    from: if has_move { from } else { found.from },
+                    to: if has_move { to } else { found.to },
                 }
             } else {
                 HashEval {
                     depth,
                     lower: if low { MIN_EVAL } else { evaluation },
                     upper: if low { evaluation } else { MAX_EVAL },
+                    from,
+                    to,
                 }
             }
         } else {
@@ -161,6 +180,8 @@ impl Judge for SlonenokJudge {
                 depth,
                 lower: if low { MIN_EVAL } else { evaluation },
                 upper: if low { evaluation } else { MAX_EVAL },
+                from,
+                to,
             }
         };
         self.hash.insert(bitboard, hash_eval);

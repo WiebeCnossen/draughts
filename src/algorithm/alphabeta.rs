@@ -1,3 +1,5 @@
+use std::cmp::{min, max};
+
 use algorithm::judge::{Eval, MIN_EVAL, MAX_EVAL, Judge};
 use algorithm::metric::Metric;
 use algorithm::scope::Scope;
@@ -21,21 +23,39 @@ pub fn makes_cut<TGame, TScope>(judge: &mut Judge,
         return SearchResult::evaluation(MAX_EVAL);
     }
 
-    match judge.recall(position, scope.depth()) {
-        (evaluation, _) if evaluation >= cut => return SearchResult::evaluation(evaluation),
-        (_, evaluation) if evaluation < cut => return SearchResult::evaluation(evaluation),
-        _ => (),
+    let memory = judge.recall(position);
+    if memory.depth >= scope.depth() {
+        if memory.lower >= cut {
+            return SearchResult::evaluation(memory.lower);
+        }
+        if memory.upper < cut {
+            return SearchResult::evaluation(memory.upper);
+        }
     }
 
     metric.add_nodes(1);
 
-    let moves = judge.moves(position);
+    let mut moves = judge.moves(position);
     if moves.len() == 0 {
         return SearchResult::evaluation(MIN_EVAL);
     }
 
     let quiet = judge.quiet_position(position, &moves);
-    let current_score = judge.evaluate(position);
+    let len = moves.len();
+    if !quiet && len > 1 && memory.has_move() {
+        for i in 0..len {
+            if moves[i].from() == memory.from && moves[i].to() == memory.to {
+                if i > 0 {
+                    let mv = moves[i].clone();
+                    moves.remove(i);
+                    moves.insert(0, mv);
+                }
+                break;
+            }
+        }
+    }
+
+    let current_score = min(max(judge.evaluate(position), memory.lower), memory.upper);
 
     if let Some(_) = scope.next(quiet, cut - current_score) {
         let mut best = MIN_EVAL;
