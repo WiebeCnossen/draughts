@@ -6,8 +6,8 @@ use draughts::board::generator::Generator;
 use draughts::board::piece::Color;
 use draughts::board::position::{Position, Game};
 use draughts::engine::{Engine, EngineResult};
-use draughts::engine::randaap::RandAap;
 use draughts::engine::slonenok::Slonenok;
+use draughts::uci::slagzet::Slagzet;
 
 fn game(white: &mut Engine<Item = EngineResult>,
         black: &mut Engine<Item = EngineResult>,
@@ -92,7 +92,7 @@ pub fn main() {
         println!("Level {}\r\n----", level);
         let nodes = 100 << level;
         let one = &mut Slonenok::create(nodes);
-        let two = &mut RandAap::create(2 * nodes);
+        let two = &mut Slagzet::create(nodes * 8);
         let mut ss = 0;
         let mut sr = 0;
         for fen in &positions[..] {

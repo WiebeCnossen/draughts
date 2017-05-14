@@ -21,7 +21,7 @@ pub fn read_stdin() -> String {
     trim_eol(line)
 }
 
-fn read_stdout(reader: &mut BufReader<ChildStdout>) -> String {
+pub fn read_stdout(reader: &mut BufReader<ChildStdout>) -> String {
     let mut line = String::new();
     reader.read_line(&mut line).ok();
     trim_eol(line)
