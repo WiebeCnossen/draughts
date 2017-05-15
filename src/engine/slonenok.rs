@@ -5,6 +5,7 @@ use algorithm::adaptive::AdaptiveScope;
 use algorithm::bns::best_node_search;
 use algorithm::judge::{ZERO_EVAL, MIN_EVAL, MAX_EVAL, Eval, Judge, PositionMemory};
 use algorithm::metric::{Meta, Metric};
+use algorithm::scope::Depth;
 use algorithm::search::SearchResult;
 use board::bitboard::BitboardPosition;
 use board::generator::Generator;
@@ -22,12 +23,13 @@ const VOFFSET_EMPTY: [Eval; 10] = [-15, -23, -7, 1, 5, 7, 8, 9, 10, 11];
 const BALANCE: [Eval; 10] = [-6, -5, -4, -3, -2, 2, 3, 4, 5, 6];
 const KILLERS: usize = 20;
 
+type SmallField = u8;
 struct HashEval {
     lower: Eval,
     upper: Eval,
-    depth: u8,
-    from: u8,
-    to: u8,
+    depth: Depth,
+    from: SmallField,
+    to: SmallField,
 }
 
 impl HashEval {
@@ -84,7 +86,7 @@ impl Judge for SlonenokJudge {
     }
     fn remember(&mut self,
                 position: &Position,
-                depth: u8,
+                depth: Depth,
                 evaluation: Eval,
                 mv: Option<Move>,
                 low: bool) {
@@ -100,7 +102,7 @@ impl Judge for SlonenokJudge {
                     self.black_killer_cursor = (self.black_killer_cursor + 1) % KILLERS;
                 }
             }
-            (true, mv.from() as u8, mv.to() as u8)
+            (true, mv.from() as SmallField, mv.to() as SmallField)
         } else {
             (false, 0, 0)
         };

@@ -1,15 +1,15 @@
 use algorithm::judge::Eval;
-use algorithm::scope::Scope;
+use algorithm::scope::{Depth, Scope};
 
 pub struct AdaptiveScope {
-    depth: u8,
+    depth: Depth,
     forcing: bool,
-    forced: u8,
-    unforced: u8,
+    forced: Depth,
+    unforced: Depth,
 }
 
 impl Scope for AdaptiveScope {
-    fn from_depth(depth: u8) -> AdaptiveScope {
+    fn from_depth(depth: Depth) -> AdaptiveScope {
         AdaptiveScope {
             depth: depth,
             forcing: false,
@@ -40,7 +40,7 @@ impl Scope for AdaptiveScope {
         }
     }
 
-    fn depth(&self) -> u8 {
+    fn depth(&self) -> Depth {
         self.depth
     }
 }

@@ -5,7 +5,7 @@ use algorithm::alphabeta::makes_cut;
 use algorithm::judge::{Eval, MIN_EVAL, MAX_EVAL, Judge};
 use algorithm::metric::{Metric, Meta};
 use algorithm::mtdf::mtd_f;
-use algorithm::scope::Scope;
+use algorithm::scope::{Depth, Scope};
 use algorithm::search::SearchResult;
 use board::mv::Move;
 use board::position::Game;
@@ -16,12 +16,13 @@ pub struct BnsResult {
     pub mv: Move,
 }
 
+type MoveCount = u8;
 struct BnsState {
     pub lower: Eval,
     pub upper: Eval,
     pub cut: Eval,
     pub mv: Move,
-    pub count: u8,
+    pub count: MoveCount,
 }
 
 impl BnsState {
@@ -35,7 +36,7 @@ impl BnsState {
         }
     }
 
-    fn next(&self, better_count: u8, search_result: SearchResult) -> BnsState {
+    fn next(&self, better_count: MoveCount, search_result: SearchResult) -> BnsState {
         let up = better_count > 0;
         let lower = if up { self.cut } else { self.lower };
         let upper = if up {
@@ -117,7 +118,7 @@ fn down() {
 
 pub fn best_node_search<TGame, TScope>(judge: &mut Judge,
                                        position: &TGame,
-                                       depth: u8,
+                                       depth: Depth,
                                        initial: SearchResult)
                                        -> BnsResult
     where TGame: Game,
@@ -142,7 +143,7 @@ pub fn best_node_search<TGame, TScope>(judge: &mut Judge,
     };
     loop {
         let scope = &TScope::from_depth(depth);
-        let mut better_count = 0u8;
+        let mut better_count = 0;
         let mut best = SearchResult::evaluation(MIN_EVAL - 1);
         let mut beta = state.cut - 1;
         for mv in &moves[..] {

@@ -1,7 +1,7 @@
 use algorithm::alphabeta::makes_cut;
 use algorithm::judge::{Eval, MIN_EVAL, MAX_EVAL, Judge};
 use algorithm::metric::Meta;
-use algorithm::scope::Scope;
+use algorithm::scope::{Depth, Scope};
 use board::mv::Move;
 use board::position::Game;
 
@@ -59,7 +59,7 @@ impl MtdResult {
 
 pub fn mtd_f<TGame, TScope>(judge: &mut Judge,
                             position: &TGame,
-                            depth: u8,
+                            depth: Depth,
                             guess: Eval)
                             -> MtdResult
     where TGame: Game,

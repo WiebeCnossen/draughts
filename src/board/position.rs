@@ -1,12 +1,12 @@
 use std::hash::Hash;
 
 use board::mv::Move;
-use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, Color};
+use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, Color, Piece};
 
 #[cfg(test)]
 use board::bitboard::BitboardPosition;
 
-fn promote(field: usize, piece: u8) -> u8 {
+fn promote(field: usize, piece: Piece) -> Piece {
     if piece == WHITE_MAN && field < 5 {
         WHITE_KING
     } else if piece == BLACK_MAN && field >= 45 {
@@ -21,7 +21,7 @@ const ASCII_CHARS: [char; 5] = ['.', 'w', 'W', 'b', 'B'];
 
 pub trait Position {
     fn side_to_move(&self) -> Color;
-    fn piece_at(&self, field: usize) -> u8;
+    fn piece_at(&self, field: usize) -> Piece;
 
     fn fen(&self) -> String {
         let mut fen = String::from(if self.side_to_move() == Color::White {
@@ -101,7 +101,7 @@ impl fmt::Display for Position {
 pub trait Game: Position + Hash + Sized {
     fn create() -> Self;
     fn toggle_side(&self) -> Self;
-    fn put_piece(&self, field: usize, piece: u8) -> Self;
+    fn put_piece(&self, field: usize, piece: Piece) -> Self;
 
     fn initial() -> Self {
         let black = (0..20).fold(Self::create(), |pos, field| pos.put_piece(field, BLACK_MAN));

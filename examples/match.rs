@@ -9,11 +9,12 @@ use draughts::engine::{Engine, EngineResult};
 use draughts::engine::slonenok::Slonenok;
 use draughts::uci::slagzet::Slagzet;
 
+type Score = u8;
 fn game(white: &mut Engine<Item = EngineResult>,
         black: &mut Engine<Item = EngineResult>,
         initial: &Position,
         nodes: usize)
-        -> (u8, u8) {
+        -> (Score, Score) {
     let generator = Generator::create();
     let mut position = BitboardPosition::clone(initial);
     let mut prev = vec![];

@@ -1,5 +1,6 @@
-use board::position::Position;
+use algorithm::scope::Depth;
 use board::mv::Move;
+use board::position::Position;
 
 pub type Eval = i16;
 pub const MAX_EVAL: Eval = 15000;
@@ -8,7 +9,7 @@ pub const DRAW_EVAL: Eval = 0;
 pub const MIN_EVAL: Eval = -15000;
 
 pub struct PositionMemory {
-    pub depth: u8,
+    pub depth: Depth,
     pub lower: Eval,
     pub upper: Eval,
     pub from: usize,
@@ -26,7 +27,12 @@ impl PositionMemory {
         }
     }
 
-    pub fn create(depth: u8, lower: Eval, upper: Eval, from: usize, to: usize) -> PositionMemory {
+    pub fn create(depth: Depth,
+                  lower: Eval,
+                  upper: Eval,
+                  from: usize,
+                  to: usize)
+                  -> PositionMemory {
         PositionMemory {
             depth,
             lower,
@@ -45,7 +51,7 @@ pub trait Judge {
     fn recall(&self, _: &Position) -> PositionMemory {
         PositionMemory::empty()
     }
-    fn remember(&mut self, _: &Position, _: u8, _: Eval, _: Option<Move>, _: bool) {}
+    fn remember(&mut self, _: &Position, _: Depth, _: Eval, _: Option<Move>, _: bool) {}
     fn evaluate(&self, position: &Position) -> Eval;
     fn moves(&self, position: &Position) -> Vec<Move>;
     fn display_name(&self) -> &str;

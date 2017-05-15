@@ -1,12 +1,12 @@
 use algorithm::judge::Eval;
-use algorithm::scope::Scope;
+use algorithm::scope::{Depth, Scope};
 
 pub struct DepthScope {
-    depth: u8,
+    depth: Depth,
 }
 
 impl Scope for DepthScope {
-    fn from_depth(depth: u8) -> DepthScope {
+    fn from_depth(depth: Depth) -> DepthScope {
         DepthScope { depth: depth }
     }
 
@@ -18,7 +18,7 @@ impl Scope for DepthScope {
         }
     }
 
-    fn depth(&self) -> u8 {
+    fn depth(&self) -> Depth {
         self.depth
     }
 }

@@ -1,10 +1,10 @@
+use algorithm::depth::DepthScope;
 use algorithm::judge::{MIN_EVAL, ZERO_EVAL, MAX_EVAL, Eval, Judge};
 use algorithm::metric::{Meta, Metric};
 use algorithm::mtdf::mtd_f;
-use algorithm::depth::DepthScope;
 use board::bitboard::BitboardPosition;
 use board::generator::Generator;
-use board::piece::{WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
+use board::piece::{WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, Piece};
 use board::piece::Color::White;
 use board::mv::Move;
 use board::position::{Game, Position};
@@ -24,7 +24,7 @@ impl RandAapJudge {
         RandAapJudge { generator: Generator::create() }
     }
 
-    fn evaluate(&self, piece: u8, field: usize) -> Eval {
+    fn evaluate(&self, piece: Piece, field: usize) -> Eval {
         PIECES[piece as usize] +
         match piece {
             WHITE_MAN => FIELDS[field],

@@ -1,7 +1,8 @@
 use algorithm::judge::Eval;
 
+pub type Depth = u8;
 pub trait Scope: Sized {
-    fn from_depth(depth: u8) -> Self;
+    fn from_depth(depth: Depth) -> Self;
     fn next(&self, quiet: bool, gap: Eval) -> Option<Self>;
-    fn depth(&self) -> u8;
+    fn depth(&self) -> Depth;
 }

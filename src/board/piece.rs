@@ -1,8 +1,9 @@
-pub const EMPTY: u8 = 0u8;
-pub const WHITE_MAN: u8 = 1u8;
-pub const WHITE_KING: u8 = 2u8;
-pub const BLACK_MAN: u8 = 3u8;
-pub const BLACK_KING: u8 = 4u8;
+pub type Piece = u8;
+pub const EMPTY: Piece = 0;
+pub const WHITE_MAN: Piece = 1;
+pub const WHITE_KING: Piece = 2;
+pub const BLACK_MAN: Piece = 3;
+pub const BLACK_KING: Piece = 4;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -13,7 +14,7 @@ pub enum Color {
     Black,
 }
 
-pub fn color(piece: u8) -> Option<Color> {
+pub fn color(piece: Piece) -> Option<Color> {
     match piece {
         WHITE_MAN | WHITE_KING => Some(Color::White),
         BLACK_MAN | BLACK_KING => Some(Color::Black),
@@ -21,10 +22,10 @@ pub fn color(piece: u8) -> Option<Color> {
     }
 }
 
-pub fn piece_own(piece: u8, c: Color) -> Option<bool> {
+pub fn piece_own(piece: Piece, c: Color) -> Option<bool> {
     color(piece).map(|p| p == c)
 }
 
-pub fn piece_is(piece: u8, c: Color) -> bool {
+pub fn piece_is(piece: Piece, c: Color) -> bool {
     piece_own(piece, c).unwrap_or_default()
 }

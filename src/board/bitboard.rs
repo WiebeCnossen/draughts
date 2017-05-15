@@ -1,5 +1,5 @@
 use board::position::{Position, Game};
-use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, Color};
+use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, Color, Piece};
 
 #[derive(PartialEq)]
 #[derive(Eq)]
@@ -37,7 +37,7 @@ impl Position for BitboardPosition {
         }
     }
 
-    fn piece_at(&self, field: usize) -> u8 {
+    fn piece_at(&self, field: usize) -> Piece {
         if self.empty & BITS[field] != 0 {
             EMPTY
         } else if self.white_man & BITS[field] != 0 {
@@ -71,7 +71,7 @@ impl Game for BitboardPosition {
         }
     }
 
-    fn put_piece(&self, field: usize, piece: u8) -> BitboardPosition {
+    fn put_piece(&self, field: usize, piece: Piece) -> BitboardPosition {
         BitboardPosition {
             empty: if piece == EMPTY {
                 set(self.empty, field)

@@ -1,10 +1,10 @@
 use std;
 
-use board::piece::Color;
+use board::piece::{Color, Piece};
 use board::position::{Position, Game};
 
 #[cfg(test)]
-use board::piece::{EMPTY, WHITE_MAN, BLACK_MAN};
+use board::piece::{EMPTY, WHITE_MAN, BLACK_MAN, Piece};
 
 #[derive(PartialEq)]
 #[derive(Eq)]
@@ -29,12 +29,12 @@ const AFTER_MASK: [u64; ROW_FIELDS] = [std::u64::MAX - (1 << PIECE_BITS[1]) + 1,
                                        std::u64::MAX - (1 << PIECE_BITS[4]) + 1,
                                        std::u64::MAX - (1 << PIECE_BITS[5]) + 1];
 
-fn piece_at(bits: u64, field: usize) -> u8 {
+fn piece_at(bits: u64, field: usize) -> Piece {
     let row = (bits >> PIECE_BITS[field / ROW_FIELDS]) & BEFORE_MASK[1];
-    (row / COL_POW[field % ROW_FIELDS] % ROW_FIELDS as u64) as u8
+    (row / COL_POW[field % ROW_FIELDS] % ROW_FIELDS as u64) as Piece
 }
 
-fn put_piece(bits: u64, field: usize, piece: u8) -> u64 {
+fn put_piece(bits: u64, field: usize, piece: Piece) -> u64 {
     let row = field / ROW_FIELDS;
     let other = bits & (BEFORE_MASK[row] | AFTER_MASK[row]);
     let cr = bits >> PIECE_BITS[row] & BEFORE_MASK[1];
@@ -54,7 +54,7 @@ impl Position for CodedPosition {
         }
     }
 
-    fn piece_at(&self, field: usize) -> u8 {
+    fn piece_at(&self, field: usize) -> Piece {
         if field < 25 {
             piece_at(self.upper, field)
         } else {
@@ -78,7 +78,7 @@ impl Game for CodedPosition {
         }
     }
 
-    fn put_piece(&self, field: usize, piece: u8) -> CodedPosition {
+    fn put_piece(&self, field: usize, piece: Piece) -> CodedPosition {
         if field < 25 {
             CodedPosition {
                 upper: put_piece(self.upper, field, piece),
