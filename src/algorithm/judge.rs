@@ -2,10 +2,10 @@ use board::position::Position;
 use board::mv::Move;
 
 pub type Eval = i16;
-pub const MAX_EVAL: Eval = 15000i16;
-pub const ZERO_EVAL: Eval = 0i16;
-pub const DRAW_EVAL: Eval = 0i16;
-pub const MIN_EVAL: Eval = -15000i16;
+pub const MAX_EVAL: Eval = 15000;
+pub const ZERO_EVAL: Eval = 0;
+pub const DRAW_EVAL: Eval = 0;
+pub const MIN_EVAL: Eval = -15000;
 
 pub struct PositionMemory {
     pub depth: u8,
