@@ -12,53 +12,8 @@ use board::mv::Move;
 use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
 use board::piece::Color::White;
 use board::position::{Game, Position};
+use board::stats::PositionStats;
 use engine::{Engine, EngineResult};
-
-struct PositionStats {
-    pub piece_count: [Eval; 5],
-    pub voffset_white: [Eval; 10],
-    pub voffset_black: [Eval; 10],
-    pub hoffset_white: [Eval; 10],
-    pub hoffset_black: [Eval; 10],
-}
-
-impl PositionStats {
-    pub fn for_position(position: &Position) -> PositionStats {
-        let mut piece_count = [0; 5];
-        let mut voffset_white = [0; 10];
-        let mut voffset_black = [0; 10];
-        let mut hoffset_white = [0; 10];
-        let mut hoffset_black = [0; 10];
-
-        for field in 0..50 {
-            let piece = position.piece_at(field);
-            piece_count[piece as usize] = piece_count[piece as usize] + 1;
-            match piece {
-                WHITE_MAN => {
-                    let x = 1 + 2 * (field % 5) - field / 5 % 2;
-                    hoffset_white[x] = hoffset_white[x] + 1;
-                    let y = 9 - field / 5;
-                    voffset_white[y] = voffset_white[y] + 1;
-                }
-                BLACK_MAN => {
-                    let x = 8 - 2 * (field % 5) + field / 5 % 2;
-                    hoffset_black[x] = hoffset_white[x] + 1;
-                    let y = field / 5;
-                    voffset_black[y] = voffset_black[y] + 1;
-                }
-                _ => (),
-            };
-        }
-
-        PositionStats {
-            piece_count: piece_count,
-            voffset_white: voffset_white,
-            voffset_black: voffset_black,
-            hoffset_white: hoffset_white,
-            hoffset_black: hoffset_black,
-        }
-    }
-}
 
 const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1500, -500, -1500];
 const HOFFSET: [Eval; 10] = [0, 1, 3, 7, 15, 15, 7, 3, 1, 0];

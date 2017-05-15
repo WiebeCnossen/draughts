@@ -6,4 +6,5 @@ pub mod generator;
 pub mod mv;
 pub mod piece;
 pub mod position;
+pub mod stats;
 mod steps;
