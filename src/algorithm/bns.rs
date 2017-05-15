@@ -73,10 +73,10 @@ fn up_zero() {
     let next =
         initial.next(2,
                      SearchResult::with_move(Move::Shift(1, 5), initial.upper - 1));
-    assert_eq!(next.lower, initial.upper - 1);
+    assert_eq!(next.lower, initial.cut);
     assert_eq!(next.upper, initial.upper);
     assert!(next.mv == Move::Shift(1, 5));
-    assert_eq!(next.count, 0);
+    assert_eq!(next.count, 1);
 }
 
 #[test]
@@ -85,7 +85,7 @@ fn up_one() {
     let next =
         initial.next(2,
                      SearchResult::with_move(Move::Shift(1, 5), initial.upper - 2));
-    assert_eq!(next.lower, initial.upper - 2);
+    assert_eq!(next.lower, initial.cut);
     assert_eq!(next.upper, initial.upper);
     assert!(next.mv == Move::Shift(1, 5));
     assert_eq!(next.count, 1);
@@ -96,10 +96,10 @@ fn up_one() {
 fn up_two() {
     let initial = BnsState::initial(0, Move::Shift(0, 5));
     let next = initial.next(2, SearchResult::with_move(Move::Shift(1, 5), 5));
-    assert_eq!(next.lower, 5);
+    assert_eq!(next.lower, initial.cut);
     assert_eq!(next.upper, initial.upper);
     assert!(next.mv == Move::Shift(1, 5));
-    assert_eq!(next.count, 2);
+    assert_eq!(next.count, 1);
     assert!(next.lower < next.cut);
     assert!(next.cut < next.upper);
 }
