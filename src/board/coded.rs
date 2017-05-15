@@ -1,10 +1,10 @@
 use std;
 
 use board::piece::{Color, Piece};
-use board::position::{Position, Game};
+use board::position::{Field, Position, Game};
 
 #[cfg(test)]
-use board::piece::{EMPTY, WHITE_MAN, BLACK_MAN, Piece};
+use board::piece::{EMPTY, WHITE_MAN, BLACK_MAN};
 
 #[derive(PartialEq)]
 #[derive(Eq)]
@@ -14,8 +14,9 @@ pub struct CodedPosition {
     lower: u64,
 }
 
-const PIECE_BITS: [usize; 6] = [0, 12, 24, 36, 48, 60];
-const ROW_FIELDS: usize = 5;
+type Index = usize;
+const PIECE_BITS: [Index; 6] = [0, 12, 24, 36, 48, 60];
+const ROW_FIELDS: Index = 5;
 const COL_POW: [u64; ROW_FIELDS + 1] = [1, 5, 25, 125, 625, 3125];
 const SIDE_BIT: u64 = 1 << 63;
 const BEFORE_MASK: [u64; ROW_FIELDS] = [(1 << PIECE_BITS[0]) - 1,
@@ -29,12 +30,12 @@ const AFTER_MASK: [u64; ROW_FIELDS] = [std::u64::MAX - (1 << PIECE_BITS[1]) + 1,
                                        std::u64::MAX - (1 << PIECE_BITS[4]) + 1,
                                        std::u64::MAX - (1 << PIECE_BITS[5]) + 1];
 
-fn piece_at(bits: u64, field: usize) -> Piece {
+fn piece_at(bits: u64, field: Field) -> Piece {
     let row = (bits >> PIECE_BITS[field / ROW_FIELDS]) & BEFORE_MASK[1];
     (row / COL_POW[field % ROW_FIELDS] % ROW_FIELDS as u64) as Piece
 }
 
-fn put_piece(bits: u64, field: usize, piece: Piece) -> u64 {
+fn put_piece(bits: u64, field: Field, piece: Piece) -> u64 {
     let row = field / ROW_FIELDS;
     let other = bits & (BEFORE_MASK[row] | AFTER_MASK[row]);
     let cr = bits >> PIECE_BITS[row] & BEFORE_MASK[1];
@@ -54,7 +55,7 @@ impl Position for CodedPosition {
         }
     }
 
-    fn piece_at(&self, field: usize) -> Piece {
+    fn piece_at(&self, field: Field) -> Piece {
         if field < 25 {
             piece_at(self.upper, field)
         } else {
@@ -78,7 +79,7 @@ impl Game for CodedPosition {
         }
     }
 
-    fn put_piece(&self, field: usize, piece: Piece) -> CodedPosition {
+    fn put_piece(&self, field: Field, piece: Piece) -> CodedPosition {
         if field < 25 {
             CodedPosition {
                 upper: put_piece(self.upper, field, piece),

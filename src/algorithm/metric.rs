@@ -1,8 +1,9 @@
 use algorithm::scope::Depth;
 
+pub type Nodes = usize;
 pub trait Metric {
-    fn get_nodes(&self) -> usize;
-    fn add_nodes(&mut self, increment: usize);
+    fn get_nodes(&self) -> Nodes;
+    fn add_nodes(&mut self, increment: Nodes);
     fn get_depth(&self) -> Depth;
     fn put_depth(&mut self, depth: Depth);
 }
@@ -10,7 +11,7 @@ pub trait Metric {
 #[derive(Clone)]
 pub struct Meta {
     depth: Depth,
-    nodes: usize,
+    nodes: Nodes,
 }
 
 impl Meta {
@@ -20,10 +21,10 @@ impl Meta {
 }
 
 impl Metric for Meta {
-    fn get_nodes(&self) -> usize {
+    fn get_nodes(&self) -> Nodes {
         self.nodes
     }
-    fn add_nodes(&mut self, increment: usize) {
+    fn add_nodes(&mut self, increment: Nodes) {
         self.nodes = self.nodes + increment
     }
     fn get_depth(&self) -> Depth {

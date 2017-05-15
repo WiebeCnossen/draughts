@@ -1,3 +1,5 @@
+use board::position::Field;
+
 #[derive(Debug)]
 pub struct Coords {
     pub x: i8,
@@ -53,24 +55,24 @@ fn partial_eq() {
     assert!(Coords { x: 1, y: 2 } != Coords { x: 2, y: 1 });
 }
 
-impl From<Coords> for usize {
-    fn from(c: Coords) -> usize {
-        (45 - (5 * (c.x + c.y)) - ((c.y - c.x) / 2)) as usize
+impl From<Coords> for Field {
+    fn from(c: Coords) -> Field {
+        (45 - (5 * (c.x + c.y)) - ((c.y - c.x) / 2)) as Field
     }
 }
 
 #[test]
-fn into_usize() {
-    assert_eq!(usize::from(Coords { x: 0, y: 0 }), 45);
-    assert_eq!(usize::from(Coords { x: 1, y: 0 }), 40);
-    assert_eq!(usize::from(Coords { x: 1, y: 1 }), 35);
-    assert_eq!(usize::from(Coords { x: 5, y: 4 }), 0);
-    assert_eq!(usize::from(Coords { x: 4, y: -4 }), 49);
-    assert_eq!(usize::from(Coords { x: 9, y: 0 }), 4);
+fn into_field() {
+    assert_eq!(Field::from(Coords { x: 0, y: 0 }), 45);
+    assert_eq!(Field::from(Coords { x: 1, y: 0 }), 40);
+    assert_eq!(Field::from(Coords { x: 1, y: 1 }), 35);
+    assert_eq!(Field::from(Coords { x: 5, y: 4 }), 0);
+    assert_eq!(Field::from(Coords { x: 4, y: -4 }), 49);
+    assert_eq!(Field::from(Coords { x: 9, y: 0 }), 4);
 }
 
-impl From<usize> for Coords {
-    fn from(n: usize) -> Coords {
+impl From<Field> for Coords {
+    fn from(n: Field) -> Coords {
         let n = n as i8;
         let ny = (49 - n) / 5; // rows from bottom
         let nx = (ny % 2) + (2 * (n % 5)); // columns from left
@@ -82,14 +84,14 @@ impl From<usize> for Coords {
 }
 
 #[test]
-fn from_usize() {
-    assert_eq!(Coords::from(45usize), Coords { x: 0, y: 0 });
-    assert_eq!(Coords::from(40usize), Coords { x: 1, y: 0 });
-    assert_eq!(Coords::from(35usize), Coords { x: 1, y: 1 });
-    assert_eq!(Coords::from(30usize), Coords { x: 2, y: 1 });
-    assert_eq!(Coords::from(0usize), Coords { x: 5, y: 4 });
-    assert_eq!(Coords::from(49usize), Coords { x: 4, y: -4 });
-    assert_eq!(Coords::from(4usize), Coords { x: 9, y: 0 });
+fn from_field() {
+    assert_eq!(Coords::from(45), Coords { x: 0, y: 0 });
+    assert_eq!(Coords::from(40), Coords { x: 1, y: 0 });
+    assert_eq!(Coords::from(35), Coords { x: 1, y: 1 });
+    assert_eq!(Coords::from(30), Coords { x: 2, y: 1 });
+    assert_eq!(Coords::from(0), Coords { x: 5, y: 4 });
+    assert_eq!(Coords::from(49), Coords { x: 4, y: -4 });
+    assert_eq!(Coords::from(4), Coords { x: 9, y: 0 });
 }
 
 #[test]

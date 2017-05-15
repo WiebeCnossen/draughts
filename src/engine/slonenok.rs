@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use algorithm::adaptive::AdaptiveScope;
 use algorithm::bns::best_node_search;
 use algorithm::judge::{ZERO_EVAL, MIN_EVAL, MAX_EVAL, Eval, Judge, PositionMemory};
-use algorithm::metric::{Meta, Metric};
+use algorithm::metric::{Nodes, Meta, Metric};
 use algorithm::scope::Depth;
 use algorithm::search::SearchResult;
 use board::bitboard::BitboardPosition;
@@ -12,7 +12,7 @@ use board::generator::Generator;
 use board::mv::Move;
 use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING};
 use board::piece::Color::White;
-use board::position::{Game, Position};
+use board::position::{Field, Game, Position};
 use board::stats::PositionStats;
 use engine::{Engine, EngineResult};
 
@@ -37,8 +37,8 @@ impl HashEval {
         PositionMemory::create(self.depth,
                                self.lower,
                                self.upper,
-                               self.from as usize,
-                               self.to as usize)
+                               self.from as Field,
+                               self.to as Field)
     }
 }
 
@@ -317,14 +317,14 @@ impl Judge for SlonenokJudge {
 }
 
 pub struct Slonenok {
-    max_nodes: usize,
+    max_nodes: Nodes,
     slonenok: SlonenokJudge,
     previous: EngineResult,
     position: BitboardPosition,
 }
 
 impl Slonenok {
-    pub fn create(max_nodes: usize) -> Slonenok {
+    pub fn create(max_nodes: Nodes) -> Slonenok {
         Slonenok {
             max_nodes,
             slonenok: SlonenokJudge::create(Generator::create()),

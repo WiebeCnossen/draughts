@@ -6,7 +6,8 @@ use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, Color, P
 #[cfg(test)]
 use board::bitboard::BitboardPosition;
 
-fn promote(field: usize, piece: Piece) -> Piece {
+pub type Field = usize;
+fn promote(field: Field, piece: Piece) -> Piece {
     if piece == WHITE_MAN && field < 5 {
         WHITE_KING
     } else if piece == BLACK_MAN && field >= 45 {
@@ -21,7 +22,7 @@ const ASCII_CHARS: [char; 5] = ['.', 'w', 'W', 'b', 'B'];
 
 pub trait Position {
     fn side_to_move(&self) -> Color;
-    fn piece_at(&self, field: usize) -> Piece;
+    fn piece_at(&self, field: Field) -> Piece;
 
     fn fen(&self) -> String {
         let mut fen = String::from(if self.side_to_move() == Color::White {
@@ -30,7 +31,7 @@ pub trait Position {
                                        "b"
                                    });
         for i in 1..51 {
-            fen.push(FEN_CHARS[self.piece_at(i - 1) as usize]);
+            fen.push(FEN_CHARS[self.piece_at(i - 1) as Field]);
         }
         fen
     }
@@ -42,7 +43,7 @@ pub trait Position {
                                        "b"
                                    });
         let mut num_empty = 0;
-        fn flush(fen: &mut String, num_empty: usize) -> usize {
+        fn flush(fen: &mut String, num_empty: Field) -> Field {
             match num_empty {
                 0 => (),
                 1 => fen.push('e'),
@@ -51,7 +52,7 @@ pub trait Position {
             0
         };
         for i in 1..51 {
-            match self.piece_at(i - 1) as usize {
+            match self.piece_at(i - 1) as Field {
                 0 => num_empty += 1,
                 n => {
                     num_empty = flush(&mut fen, num_empty);
@@ -71,7 +72,7 @@ pub trait Position {
             let c = if (field + (field / 10)) % 2 == 0 {
                 ' '
             } else {
-                ASCII_CHARS[self.piece_at(field / 2) as usize]
+                ASCII_CHARS[self.piece_at(field / 2) as Field]
             };
             ascii.push(c);
             ascii.push(c);
@@ -101,7 +102,7 @@ impl fmt::Display for Position {
 pub trait Game: Position + Hash + Sized {
     fn create() -> Self;
     fn toggle_side(&self) -> Self;
-    fn put_piece(&self, field: usize, piece: Piece) -> Self;
+    fn put_piece(&self, field: Field, piece: Piece) -> Self;
 
     fn initial() -> Self {
         let black = (0..20).fold(Self::create(), |pos, field| pos.put_piece(field, BLACK_MAN));

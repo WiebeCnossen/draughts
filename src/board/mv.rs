@@ -1,3 +1,7 @@
+use board::position::Field;
+
+pub type Captures = u8;
+
 #[derive(Clone)]
 #[derive(Copy)]
 #[derive(PartialEq)]
@@ -5,48 +9,48 @@
 #[derive(PartialOrd)]
 #[derive(Ord)]
 pub enum Move {
-    Shift(usize, usize),
-    Take1(usize, usize, usize),
-    Take2(usize, usize, usize, usize),
-    Take3(usize, usize, usize, usize, usize),
-    Take4(usize, usize, usize, usize, usize, usize),
-    Take5(usize, usize, usize, usize, usize, usize, usize),
-    Take6(usize, usize, usize, usize, usize, usize, usize, usize),
-    Take7(usize, usize, usize, usize, usize, usize, usize, usize, usize),
-    Take8(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize),
-    Take9(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize),
-    Take10(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize),
-    Take11(usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize),
-    Take12(usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize,
-           usize),
+    Shift(Field, Field),
+    Take1(Field, Field, Field),
+    Take2(Field, Field, Field, Field),
+    Take3(Field, Field, Field, Field, Field),
+    Take4(Field, Field, Field, Field, Field, Field),
+    Take5(Field, Field, Field, Field, Field, Field, Field),
+    Take6(Field, Field, Field, Field, Field, Field, Field, Field),
+    Take7(Field, Field, Field, Field, Field, Field, Field, Field, Field),
+    Take8(Field, Field, Field, Field, Field, Field, Field, Field, Field, Field),
+    Take9(Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field),
+    Take10(Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field),
+    Take11(Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field),
+    Take12(Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field,
+           Field),
 }
 
 impl Move {
-    pub fn from(&self) -> usize {
+    pub fn from(&self) -> Field {
         match self {
             &Move::Shift(from, ..) |
             &Move::Take1(from, ..) |
@@ -64,7 +68,7 @@ impl Move {
         }
     }
 
-    pub fn to(&self) -> usize {
+    pub fn to(&self) -> Field {
         match self {
             &Move::Shift(_, to) |
             &Move::Take1(_, to, ..) |
@@ -82,7 +86,7 @@ impl Move {
         }
     }
 
-    pub fn num_taken(&self) -> usize {
+    pub fn num_taken(&self) -> Captures {
         match self {
             &Move::Shift(..) => 0,
             &Move::Take1(..) => 1,
@@ -100,7 +104,7 @@ impl Move {
         }
     }
 
-    pub fn goes_via(&self, via: usize) -> bool {
+    pub fn goes_via(&self, via: Field) -> bool {
         match self {
             &Move::Shift(..) => false,
             &Move::Take1(_, _, via0) => via0 == via,

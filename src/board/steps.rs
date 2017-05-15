@@ -1,8 +1,9 @@
 use std::ops::Range;
 use board::coords::{Coords, MinXY};
+use board::position::Field;
 
 fn all<F, G>(generator: F) -> Vec<G>
-    where F: Fn(usize) -> G
+    where F: Fn(Field) -> G
 {
     let mut result = Vec::with_capacity(50);
     for field in 0..50 {
@@ -11,17 +12,17 @@ fn all<F, G>(generator: F) -> Vec<G>
     result
 }
 
-fn path<F>(len: i8, generator: F) -> Vec<usize>
+fn path<F>(len: i8, generator: F) -> Vec<Field>
     where F: Fn(i8) -> Coords
 {
     let mut result = vec![];
     for d in 1..len + 1 {
-        result.push(usize::from(generator(d)));
+        result.push(Field::from(generator(d)));
     }
     result
 }
 
-fn paths(field: usize) -> [Vec<usize>; 4] {
+fn paths(field: Field) -> [Vec<Field>; 4] {
     let coords = Coords::from(field);
     [path(coords.max_x() - coords.x, |d| {
         Coords {
@@ -49,7 +50,7 @@ fn paths(field: usize) -> [Vec<usize>; 4] {
     })]
 }
 
-fn steps(field: usize, range: Range<usize>) -> Vec<usize> {
+fn steps(field: Field, range: Range<Field>) -> Vec<Field> {
     let mut result = vec![];
     let paths = paths(field);
     for i in range {
@@ -60,7 +61,7 @@ fn steps(field: usize, range: Range<usize>) -> Vec<usize> {
     result
 }
 
-fn white_steps(field: usize) -> Vec<usize> {
+fn white_steps(field: Field) -> Vec<Field> {
     steps(field, 0..2)
 }
 
@@ -88,7 +89,7 @@ fn white_steps_center() {
     }
 }
 
-fn black_steps(field: usize) -> Vec<usize> {
+fn black_steps(field: Field) -> Vec<Field> {
     steps(field, 2..4)
 }
 
@@ -116,7 +117,7 @@ fn black_steps_center() {
     }
 }
 
-fn short_jumps(field: usize) -> Vec<(usize, usize)> {
+fn short_jumps(field: Field) -> Vec<(Field, Field)> {
     let mut result = vec![];
     let paths = paths(field);
     for i in 0..paths.len() {
@@ -152,7 +153,7 @@ fn short_jumps_center() {
 }
 
 #[cfg(test)]
-fn long_steps(field: usize) -> Vec<usize> {
+fn long_steps(field: Field) -> Vec<Field> {
     let mut v = vec![];
     let paths = paths(field);
     for i in 0..4 {
@@ -188,10 +189,10 @@ fn long_steps_center() {
 }
 
 pub struct Steps {
-    all_white_steps: Vec<Vec<usize>>,
-    all_black_steps: Vec<Vec<usize>>,
-    all_short_jumps: Vec<Vec<(usize, usize)>>,
-    all_paths: Vec<[Vec<usize>; 4]>,
+    all_white_steps: Vec<Vec<Field>>,
+    all_black_steps: Vec<Vec<Field>>,
+    all_short_jumps: Vec<Vec<(Field, Field)>>,
+    all_paths: Vec<[Vec<Field>; 4]>,
 }
 
 impl Steps {
@@ -204,16 +205,16 @@ impl Steps {
         }
     }
 
-    pub fn white_steps(&self, field: usize) -> &[usize] {
+    pub fn white_steps(&self, field: Field) -> &[Field] {
         &self.all_white_steps[field][..]
     }
-    pub fn black_steps(&self, field: usize) -> &[usize] {
+    pub fn black_steps(&self, field: Field) -> &[Field] {
         &self.all_black_steps[field][..]
     }
-    pub fn short_jumps(&self, field: usize) -> &[(usize, usize)] {
+    pub fn short_jumps(&self, field: Field) -> &[(Field, Field)] {
         &self.all_short_jumps[field][..]
     }
-    pub fn paths(&self, field: usize) -> [&[usize]; 4] {
+    pub fn paths(&self, field: Field) -> [&[Field]; 4] {
         let ref vecs = self.all_paths[field];
         [&vecs[0][..], &vecs[1][..], &vecs[2][..], &vecs[3][..]]
     }

@@ -1,13 +1,13 @@
 use algorithm::depth::DepthScope;
 use algorithm::judge::{MIN_EVAL, ZERO_EVAL, MAX_EVAL, Eval, Judge};
-use algorithm::metric::{Meta, Metric};
+use algorithm::metric::{Nodes, Meta, Metric};
 use algorithm::mtdf::mtd_f;
 use board::bitboard::BitboardPosition;
 use board::generator::Generator;
 use board::piece::{WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, Piece};
 use board::piece::Color::White;
 use board::mv::Move;
-use board::position::{Game, Position};
+use board::position::{Field, Game, Position};
 use engine::{Engine, EngineResult};
 
 struct RandAapJudge {
@@ -24,7 +24,7 @@ impl RandAapJudge {
         RandAapJudge { generator: Generator::create() }
     }
 
-    fn evaluate(&self, piece: Piece, field: usize) -> Eval {
+    fn evaluate(&self, piece: Piece, field: Field) -> Eval {
         PIECES[piece as usize] +
         match piece {
             WHITE_MAN => FIELDS[field],
@@ -36,7 +36,7 @@ impl RandAapJudge {
 
 impl Judge for RandAapJudge {
     fn evaluate(&self, position: &Position) -> Eval {
-        let eval = (0usize..50usize).fold((0, 0, 0), |(white, black, score), i| {
+        let eval = (0..50).fold((0, 0, 0), |(white, black, score), i| {
             let piece = position.piece_at(i);
             (match piece {
                  WHITE_MAN | WHITE_KING => white + 1,
@@ -74,14 +74,14 @@ impl Judge for RandAapJudge {
 }
 
 pub struct RandAap {
-    max_nodes: usize,
+    max_nodes: Nodes,
     judge: RandAapJudge,
     previous: EngineResult,
     position: BitboardPosition,
 }
 
 impl RandAap {
-    pub fn create(max_nodes: usize) -> RandAap {
+    pub fn create(max_nodes: Nodes) -> RandAap {
         RandAap {
             max_nodes,
             judge: RandAapJudge::create(),

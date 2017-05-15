@@ -1,6 +1,6 @@
 extern crate draughts;
 
-use draughts::algorithm::metric::Metric;
+use draughts::algorithm::metric::{Metric, Nodes};
 use draughts::board::bitboard::BitboardPosition;
 use draughts::board::generator::Generator;
 use draughts::board::piece::Color;
@@ -13,7 +13,7 @@ type Score = u8;
 fn game(white: &mut Engine<Item = EngineResult>,
         black: &mut Engine<Item = EngineResult>,
         initial: &Position,
-        nodes: usize)
+        nodes: Nodes)
         -> (Score, Score) {
     let generator = Generator::create();
     let mut position = BitboardPosition::clone(initial);

@@ -1,6 +1,6 @@
 use std::hash::{Hash, Hasher};
 
-use board::position::{Position, Game};
+use board::position::{Field, Position, Game};
 use board::piece::{EMPTY, Color, Piece};
 
 #[cfg(test)]
@@ -29,7 +29,7 @@ impl Hash for ArrayPosition {
     }
 }
 
-fn clone(pieces: [Piece; 50], field: usize, piece: Piece) -> [Piece; 50] {
+fn clone(pieces: [Piece; 50], field: Field, piece: Piece) -> [Piece; 50] {
     [if field == 0 { piece } else { pieces[0] },
      if field == 1 { piece } else { pieces[1] },
      if field == 2 { piece } else { pieces[2] },
@@ -91,7 +91,7 @@ impl Position for ArrayPosition {
         }
     }
 
-    fn piece_at(&self, field: usize) -> Piece {
+    fn piece_at(&self, field: Field) -> Piece {
         self.pieces[field]
     }
 }
@@ -111,7 +111,7 @@ impl Game for ArrayPosition {
         }
     }
 
-    fn put_piece(&self, field: usize, piece: Piece) -> ArrayPosition {
+    fn put_piece(&self, field: Field, piece: Piece) -> ArrayPosition {
         ArrayPosition {
             white_to_move: self.white_to_move,
             pieces: clone(self.pieces, field, piece),

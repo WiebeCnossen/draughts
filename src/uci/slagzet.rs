@@ -1,7 +1,7 @@
 use std::io::{BufReader, Write};
 use std::process::{ChildStdin, ChildStdout, Command, Stdio};
 
-use algorithm::metric::Meta;
+use algorithm::metric::{Nodes, Meta};
 use board::bitboard::BitboardPosition;
 use board::generator::Generator;
 use board::position::{Game, Position};
@@ -16,7 +16,7 @@ pub struct Slagzet {
 }
 
 impl Slagzet {
-    pub fn create(max_nodes: usize) -> Slagzet {
+    pub fn create(max_nodes: Nodes) -> Slagzet {
         let mut child = Command::new("node")
             .arg("/mnt/c/develop/extern/slagzet/slagzet.js")
             .stdin(Stdio::piped())

@@ -1,13 +1,13 @@
 use board::bitboard::BitboardPosition;
 use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, piece_own, piece_is, Color};
 use board::piece::Color::{White, Black};
-use board::position::{Game, Position};
-use board::mv::Move;
+use board::position::{Field, Game, Position};
+use board::mv::{Captures, Move};
 use board::mv::Move::{Shift, Take1, Take2, Take3, Take4, Take5, Take6, Take7, Take8, Take9,
                       Take10, Take11, Take12};
 use board::steps::Steps;
 
-fn take_more(mv: &Move, via: usize, to: usize, position: &Position) -> Move {
+fn take_more(mv: &Move, via: Field, to: Field, position: &Position) -> Move {
     match mv {
         &Shift(..) => panic!("Taking more after Shift is prohibited"),
         &Take1(from, _, via0) => Take2(from, to, via0, via),
@@ -102,7 +102,7 @@ impl Generator {
         }
     }
 
-    fn trim_result(mut result: Vec<Move>, min_captures: usize) -> Vec<Move> {
+    fn trim_result(mut result: Vec<Move>, min_captures: Captures) -> Vec<Move> {
         if result.len() == 0 {
             return result;
         }
@@ -155,7 +155,7 @@ impl Generator {
     fn explode_short_jumps(&self,
                            position: &Position,
                            mv: Move,
-                           min_captures: usize,
+                           min_captures: Captures,
                            color_to_capture: Color)
                            -> Vec<Move> {
         let mut result = vec![];
@@ -165,9 +165,9 @@ impl Generator {
 
     fn add_short_jumps(&self,
                        position: &Position,
-                       field: usize,
+                       field: Field,
                        result: &mut Vec<Move>,
-                       captures: &mut usize,
+                       captures: &mut Captures,
                        color_to_capture: Color) {
         for &(via, to) in self.steps.short_jumps(field).into_iter() {
             if position.piece_at(to) == EMPTY &&
@@ -199,7 +199,7 @@ impl Generator {
         let mut exploded = false;
         let paths = self.steps.paths(mv.to());
         for dir in 0..4 {
-            let mut via: Option<usize> = None;
+            let mut via: Option<Field> = None;
             for &to in paths[dir] {
                 match (piece_own(position.piece_at(to), color_to_capture.clone()), via) {
                     (Some(false), _) |
@@ -229,7 +229,7 @@ impl Generator {
     fn explode_long_jumps(&self,
                           position: &Position,
                           mv: Move,
-                          min_captures: usize,
+                          min_captures: Captures,
                           color_to_capture: Color)
                           -> Vec<Move> {
         let mut result = vec![];
@@ -239,14 +239,14 @@ impl Generator {
 
     fn add_king_moves(&self,
                       position: &Position,
-                      field: usize,
+                      field: Field,
                       mut result: &mut Vec<Move>,
-                      captures: &mut usize,
+                      captures: &mut Captures,
                       color_to_capture: Color) {
         let paths = self.steps.paths(field);
         let without_king = &BitboardPosition::clone(position).put_piece(field, EMPTY);
         for dir in 0..4 {
-            let mut via: Option<usize> = None;
+            let mut via: Option<Field> = None;
             for &to in paths[dir] {
                 match (piece_own(position.piece_at(to), color_to_capture.clone()), via) {
                     (Some(false), _) |

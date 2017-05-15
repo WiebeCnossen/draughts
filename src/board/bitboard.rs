@@ -1,4 +1,4 @@
-use board::position::{Position, Game};
+use board::position::{Field, Position, Game};
 use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, Color, Piece};
 
 #[derive(PartialEq)]
@@ -11,6 +11,7 @@ pub struct BitboardPosition {
     white_king: u64,
 }
 
+type Index = usize;
 const SIDE_BIT: u64 = 1 << 50;
 const ALL_BITS: u64 = SIDE_BIT - 1;
 const BITS: [u64; 50] =
@@ -20,11 +21,11 @@ const BITS: [u64; 50] =
      1 << 31, 1 << 32, 1 << 33, 1 << 34, 1 << 35, 1 << 36, 1 << 37, 1 << 38, 1 << 39, 1 << 40,
      1 << 41, 1 << 42, 1 << 43, 1 << 44, 1 << 45, 1 << 46, 1 << 47, 1 << 48, 1 << 49];
 
-fn set(mask: u64, bit: usize) -> u64 {
+fn set(mask: u64, bit: Index) -> u64 {
     mask | BITS[bit]
 }
 
-fn clear(mask: u64, bit: usize) -> u64 {
+fn clear(mask: u64, bit: Index) -> u64 {
     mask ^ (mask & BITS[bit])
 }
 
@@ -37,7 +38,7 @@ impl Position for BitboardPosition {
         }
     }
 
-    fn piece_at(&self, field: usize) -> Piece {
+    fn piece_at(&self, field: Field) -> Piece {
         if self.empty & BITS[field] != 0 {
             EMPTY
         } else if self.white_man & BITS[field] != 0 {
@@ -71,7 +72,7 @@ impl Game for BitboardPosition {
         }
     }
 
-    fn put_piece(&self, field: usize, piece: Piece) -> BitboardPosition {
+    fn put_piece(&self, field: Field, piece: Piece) -> BitboardPosition {
         BitboardPosition {
             empty: if piece == EMPTY {
                 set(self.empty, field)
