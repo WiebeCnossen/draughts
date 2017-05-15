@@ -84,15 +84,20 @@ fn game(white: &mut Engine<Item = EngineResult>,
 }
 
 pub fn main() {
-    let positions = vec!["w kkka22beb/3hhewerrr",
-                         "w kkka24b/4biewrrr",
-                         "w kcekaeb2b2/5rweirr",
-                         "w kkbeak2b2/2w2riewrr"];
+    let positions = vec!["w kcekaeb2b2/5rweirr", //20449
+                         "w kbeakk2b2/eh2ethehrr", //2010
+                         "w kkka22beb/3hhehterr", //890
+                         "w kcekk2b2/3werrter", //4388
+                         "w kbeakkeb3/2w2rrweir", //1034
+                         "w kkkeaeb4/2wewwewewiewrr", //1599
+                         "w kcekk2b2/w4rretr", //1265
+                         "w kkcece3l4wrrter" //354
+                         ];
     for level in 0..15 {
         println!("Level {}\r\n----", level);
         let nodes = 100 << level;
         let one = &mut Slonenok::create(nodes);
-        let two = &mut Slagzet::create(nodes * 8);
+        let two = &mut Slagzet::create(nodes * 5);
         let mut ss = 0;
         let mut sr = 0;
         for fen in &positions[..] {
