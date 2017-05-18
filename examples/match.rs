@@ -7,7 +7,7 @@ use draughts::board::piece::Color;
 use draughts::board::position::{Position, Game};
 use draughts::engine::{Engine, EngineResult};
 use draughts::engine::slonenok::Slonenok;
-use draughts::uci::slagzet::Slagzet;
+use draughts::engine::sherlock::Sherlock;
 
 type Score = u8;
 fn game(white: &mut Engine<Item = EngineResult>,
@@ -98,7 +98,7 @@ pub fn main() {
         println!("Level {}\r\n----", level);
         let nodes = 100 << level;
         let one = &mut Slonenok::create(nodes);
-        let two = &mut Slagzet::create(nodes * 5);
+        let two = &mut Sherlock::create(nodes);
         let mut ss = 0;
         let mut sr = 0;
         for fen in &positions[..] {

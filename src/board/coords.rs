@@ -1,42 +1,44 @@
 use board::position::Field;
 
+pub type Coord = i8;
+
 #[derive(Debug)]
 pub struct Coords {
-    pub x: i8,
-    pub y: i8,
+    pub x: Coord,
+    pub y: Coord,
 }
 
 pub trait MinXY {
-    fn min_x(&self) -> i8;
-    fn max_x(&self) -> i8;
-    fn min_y(&self) -> i8;
-    fn max_y(&self) -> i8;
+    fn min_x(&self) -> Coord;
+    fn max_x(&self) -> Coord;
+    fn min_y(&self) -> Coord;
+    fn max_y(&self) -> Coord;
 }
 
-fn min_x(y: i8) -> i8 {
+fn min_x(y: Coord) -> Coord {
     y.abs()
 }
-fn max_x(y: i8) -> i8 {
+fn max_x(y: Coord) -> Coord {
     9 - y.abs()
 }
-fn min_y(x: i8) -> i8 {
+fn min_y(x: Coord) -> Coord {
     -max_y(x)
 }
-fn max_y(x: i8) -> i8 {
+fn max_y(x: Coord) -> Coord {
     if x > 4 { 9 - x } else { x }
 }
 
 impl MinXY for Coords {
-    fn min_x(&self) -> i8 {
+    fn min_x(&self) -> Coord {
         min_x(self.y)
     }
-    fn max_x(&self) -> i8 {
+    fn max_x(&self) -> Coord {
         max_x(self.y)
     }
-    fn min_y(&self) -> i8 {
+    fn min_y(&self) -> Coord {
         min_y(self.x)
     }
-    fn max_y(&self) -> i8 {
+    fn max_y(&self) -> Coord {
         max_y(self.x)
     }
 }
@@ -73,7 +75,7 @@ fn into_field() {
 
 impl From<Field> for Coords {
     fn from(n: Field) -> Coords {
-        let n = n as i8;
+        let n = n as Coord;
         let ny = (49 - n) / 5; // rows from bottom
         let nx = (ny % 2) + (2 * (n % 5)); // columns from left
         Coords {

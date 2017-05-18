@@ -1,4 +1,5 @@
 pub mod randaap;
+pub mod sherlock;
 pub mod slonenok;
 
 use std::iter::Iterator;
