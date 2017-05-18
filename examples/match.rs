@@ -1,5 +1,8 @@
 extern crate draughts;
 
+use std::io;
+use std::io::Write;
+
 use draughts::algorithm::metric::{Metric, Nodes};
 use draughts::board::bitboard::BitboardPosition;
 use draughts::board::generator::Generator;
@@ -51,12 +54,14 @@ fn game(white: &mut Engine<Item = EngineResult>,
             while let Some(next) = white.next() {
                 result = next;
                 if show {
-                    println!("{}: {} {} | {} @ {}",
-                             white.display_name(),
-                             result.mv,
-                             result.evaluation,
-                             result.meta.get_nodes(),
-                             result.meta.get_depth());
+                    print!("\r                                                  \r");
+                    print!("{}: {} {} | {} @ {}",
+                           white.display_name(),
+                           result.mv,
+                           result.evaluation,
+                           result.meta.get_nodes(),
+                           result.meta.get_depth());
+                    io::stdout().flush().expect("no flush");
                 }
             }
         } else {
@@ -64,15 +69,21 @@ fn game(white: &mut Engine<Item = EngineResult>,
             while let Some(next) = black.next() {
                 result = next;
                 if show {
-                    println!("{}: {} {} | {} @ {}",
-                             black.display_name(),
-                             result.mv,
-                             -result.evaluation,
-                             result.meta.get_nodes(),
-                             result.meta.get_depth());
+                    print!("\r                                                  \r");
+                    print!("{}: {} {} | {} @ {}",
+                           black.display_name(),
+                           result.mv,
+                           -result.evaluation,
+                           result.meta.get_nodes(),
+                           result.meta.get_depth());
+                    io::stdout().flush().expect("no flush");
                 }
             }
         };
+        if show {
+            println!("")
+        }
+
         let next = position.go(&result.mv);
         prev.push(position);
         position = next;

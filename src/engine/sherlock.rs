@@ -18,10 +18,7 @@ use board::stars::Stars;
 use engine::{Engine, EngineResult};
 
 const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1500, -500, -1500];
-const HOFFSET: [Eval; 10] = [0, 1, 3, 7, 15, 15, 7, 3, 1, 0];
-const VOFFSET_FULL: [Eval; 10] = [8, 7, 5, 1, -7, -23, -7, 1, 5, 7];
-const VOFFSET_EMPTY: [Eval; 10] = [-15, -23, -7, 1, 5, 7, 8, 9, 10, 11];
-const BALANCE: [Eval; 10] = [-6, -5, -4, -3, -2, 2, 3, 4, 5, 6];
+const BALANCE: [Eval; 10] = [-5, -5, -5, -5, -3, 3, 5, 5, 5, 5];
 const THREES: [usize; 5] = [1, 3, 9, 27, 81];
 const TL: usize = 0;
 const TR: usize = 1;
@@ -79,10 +76,9 @@ impl SherlockJudge {
                             for i in 0..4 {
                                 let one = corners[i];
                                 if mm == one {
-                                    evals[star] += sign * 2;
                                     for &two in &corners[i + 1..] {
                                         if mm == two {
-                                            evals[star] += sign * 5;
+                                            evals[star] += sign * 13;
                                         }
                                     }
                                 }
@@ -204,30 +200,13 @@ impl Judge for SherlockJudge {
 
         let men = stats.piece_count[WHITE_MAN as usize] + stats.piece_count[BLACK_MAN as usize];
 
-        let hoffset_white = (0..10).fold(0, |b, i| b + HOFFSET[i] * stats.hoffset_white[i]);
-        let hoffset_black = (0..10).fold(0, |b, i| b + HOFFSET[i] * stats.hoffset_black[i]);
-        let voffset_white_full =
-            (0..10).fold(0, |b, i| b + VOFFSET_FULL[i] * stats.voffset_white[i]);
-        let voffset_white_empty =
-            (0..10).fold(0, |b, i| b + VOFFSET_EMPTY[i] * stats.voffset_white[i]);
-        let voffset_black_full =
-            (0..10).fold(0, |b, i| b + VOFFSET_FULL[i] * stats.voffset_black[i]);
-        let voffset_black_empty =
-            (0..10).fold(0, |b, i| b + VOFFSET_EMPTY[i] * stats.voffset_black[i]);
-        let voffset_white = if men >= 30 {
-            voffset_white_full
-        } else if men <= 10 {
-            voffset_white_empty
-        } else {
-            ((men - 30) * voffset_white_full + (30 - men) * voffset_white_empty) / 20
-        };
-        let voffset_black = if men >= 30 {
-            voffset_black_full
-        } else if men <= 10 {
-            voffset_black_empty
-        } else {
-            ((men - 30) * voffset_black_full + (30 - men) * voffset_black_empty) / 20
-        };
+        let dev_white: Eval = (1..10)
+            .map(|i| i as Eval * stats.voffset_white[i] as Eval)
+            .sum();
+        let dev_black: Eval = (1..10)
+            .map(|i| i as Eval * stats.voffset_black[i] as Eval)
+            .sum();
+
         let balance_white = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_white[i]);
         let balance_black = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_black[i]);
 
@@ -248,9 +227,8 @@ impl Judge for SherlockJudge {
             stars.iter().map(|&star| self.evals[star]).sum()
         };
 
-        let score = beans + structure + (hoffset_white - hoffset_black) +
-                    (voffset_white - voffset_black) -
-                    2 * (balance_white.abs() - balance_black.abs());
+        let score = beans + structure + 10 * (dev_white - dev_black) -
+                    5 * (balance_white.abs() - balance_black.abs());
         let scaled = if self.drawish(&stats) {
             score / 10
         } else {
@@ -299,7 +277,7 @@ impl Judge for SherlockJudge {
     }
 
     fn display_name(&self) -> &str {
-        "Slonënok"
+        "Sherlock"
     }
 }
 
