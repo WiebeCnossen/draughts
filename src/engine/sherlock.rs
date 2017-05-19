@@ -254,7 +254,7 @@ impl Judge for SherlockJudge {
             stars.iter().map(|&star| self.evals[star]).sum()
         };
 
-        let score = beans + structure + (40 - men) * (dev_white - dev_black) +
+        let score = beans + structure + (28 - men) * (dev_white - dev_black) +
                     (hole_white - hole_black) -
                     (balance_white.abs() - balance_black.abs());
         let scaled = if self.drawish(&stats) {
