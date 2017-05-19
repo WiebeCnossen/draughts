@@ -14,7 +14,6 @@ fn trim_eol(mut s: String) -> String {
 }
 
 pub fn read_stdin() -> String {
-    print!("[user] ");
     io::stdout().flush().ok();
     let mut line = String::new();
     io::stdin().read_line(&mut line).ok();

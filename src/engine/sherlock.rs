@@ -18,7 +18,7 @@ use board::stars::Stars;
 use engine::{Engine, EngineResult};
 
 const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1500, -500, -1500];
-const BALANCE: [Eval; 10] = [-5, -5, -5, -5, -3, 3, 5, 5, 5, 5];
+const BALANCE: [Eval; 10] = [-27, -26, -24, -21, -15, 15, 21, 24, 26, 27];
 const THREES: [usize; 5] = [1, 3, 9, 27, 81];
 const TL: usize = 0;
 const TR: usize = 1;
@@ -67,39 +67,44 @@ impl SherlockJudge {
                 for mm in 1..3 {
                     // 0 is not interesting
                     let star = star + mm * THREES[MM];
-                    let sign = if mm == 1 { 1 } else { -1 };
+                    let (sign, op) = if mm == 1 { (1, 2) } else { (-1, 1) };
                     for bl in 0..3 {
                         let star = star + bl * THREES[BL];
                         for br in 0..3 {
                             let star = star + br * THREES[BR];
-                            let corners = [tl, tr, bl, br];
-                            for i in 0..4 {
-                                let one = corners[i];
-                                if mm == one {
-                                    for &two in &corners[i + 1..] {
-                                        if mm == two {
-                                            evals[star] += sign * 13;
-                                        }
-                                    }
-                                }
-                            }
+                            let supporters = if mm == 1 {
+                                (if mm == bl { 1 } else { 0 }) + (if mm == br { 1 } else { 0 })
+                            } else {
+                                (if mm == tl { 1 } else { 0 }) + (if mm == tr { 1 } else { 0 })
+                            };
+                            let blockers = if mm == 1 {
+                                (if mm == tl { 1 } else { 0 }) + (if mm == tr { 1 } else { 0 })
+                            } else {
+                                (if mm == bl { 1 } else { 0 }) + (if mm == br { 1 } else { 0 })
+                            };
+                            let lockers = if mm == 1 {
+                                (if op == tl { 1 } else { 0 }) + (if op == tr { 1 } else { 0 })
+                            } else {
+                                (if op == bl { 1 } else { 0 }) + (if op == br { 1 } else { 0 })
+                            };
+                            evals[star] = sign *
+                                          match (supporters, blockers, lockers) {
+                                              (2, _, 2) => -150,        // locked
+                                              (_, _, 2) => -100,        // ?!
+                                              (_, _, 1) => -50,         // semi-locked
+                                              (0, 2, 0) => -25,         // hanging
+                                              (0, 0, _) => -20,         // isolated
+                                              (1, 2, 0) => -5,          // semi -hanging
+                                              (2, 0, 0) => 19,
+                                              (2, b, 0) => 23 + 8 * b,
+                                              (s, b, 0) => 8 * (s + b),
+                                              _ => 0,
+                                          };
                         }
                     }
                 }
             }
         }
-
-        // Lone piece
-        evals[1 * THREES[2]] = -15;
-        evals[2 * THREES[2]] = 15;
-
-        // Hanging piece
-        evals[1 * THREES[0] + 1 * THREES[1] + 1 * THREES[2]] = -15;
-        evals[2 * THREES[2] + 2 * THREES[3] + 2 * THREES[4]] = 15;
-
-        // Fork lock
-        evals[2 * THREES[0] + 2 * THREES[1] + 1 * THREES[2] + 1 * THREES[3] + 1 * THREES[4]] = 100;
-        evals[2 * THREES[0] + 2 * THREES[1] + 2 * THREES[2] + 1 * THREES[3] + 1 * THREES[4]] = -100;
 
         SherlockJudge {
             generator: generator,
@@ -227,8 +232,8 @@ impl Judge for SherlockJudge {
             stars.iter().map(|&star| self.evals[star]).sum()
         };
 
-        let score = beans + structure + 10 * (dev_white - dev_black) -
-                    5 * (balance_white.abs() - balance_black.abs());
+        let score = beans + structure + (40 - men) * (dev_white - dev_black) -
+                    (balance_white.abs() - balance_black.abs());
         let scaled = if self.drawish(&stats) {
             score / 10
         } else {

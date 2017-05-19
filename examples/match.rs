@@ -9,12 +9,16 @@ use draughts::board::generator::Generator;
 use draughts::board::piece::Color;
 use draughts::board::position::{Position, Game};
 use draughts::engine::{Engine, EngineResult};
-use draughts::engine::slonenok::Slonenok;
+//use draughts::engine::randaap::RandAap;
 use draughts::engine::sherlock::Sherlock;
+use draughts::engine::slonenok::Slonenok;
+//use draughts::uci::slagzet::Slagzet;
 
 type Score = u8;
 fn game(white: &mut Engine<Item = EngineResult>,
         black: &mut Engine<Item = EngineResult>,
+        white_score: Score,
+        black_score: Score,
         initial: &Position,
         nodes: Nodes)
         -> (Score, Score) {
@@ -39,8 +43,11 @@ fn game(white: &mut Engine<Item = EngineResult>,
                 position = next;
                 if show {
                     println!("{}", moves[0]);
-                    println!("{}", black.display_name());
-                    println!("{}{}", position.ascii(), white.display_name());
+                    println!("{} ({})", black.display_name(), black_score);
+                    println!("{}{} ({})",
+                             position.ascii(),
+                             white.display_name(),
+                             white_score);
                 }
                 continue;
             }
@@ -89,8 +96,11 @@ fn game(white: &mut Engine<Item = EngineResult>,
         position = next;
 
         if show {
-            println!("{}", black.display_name());
-            println!("{}{}", position.ascii(), white.display_name());
+            println!("{} ({})", black.display_name(), black_score);
+            println!("{}{} ({})",
+                     position.ascii(),
+                     white.display_name(),
+                     white_score);
         }
     }
 }
@@ -105,17 +115,19 @@ pub fn main() {
                          "w kcekk2b2/w4rretr", //1265
                          "w kkcece3l4wrrter" //354
                          ];
+    let mut ss = 0;
+    let mut sr = 0;
     for level in 0..15 {
         println!("Level {}\r\n----", level);
         let nodes = 100 << level;
+        //let one = &mut RandAap::create(5 * nodes);
+        //let one = &mut Slagzet::create(nodes / 2);
         let one = &mut Slonenok::create(nodes);
         let two = &mut Sherlock::create(nodes);
-        let mut ss = 0;
-        let mut sr = 0;
         for fen in &positions[..] {
             let position = &BitboardPosition::parse(fen).unwrap();
             {
-                let (ds, dr) = game(one, two, position, nodes);
+                let (ds, dr) = game(one, two, ss, sr, position, nodes);
                 ss = ss + ds;
                 sr = sr + dr;
                 println!("{}-{} / {} - {} : {} - {}",
@@ -127,7 +139,7 @@ pub fn main() {
                          sr);
             }
             {
-                let (dr, ds) = game(two, one, position, nodes);
+                let (dr, ds) = game(two, one, sr, ss, position, nodes);
                 ss = ss + ds;
                 sr = sr + dr;
                 println!("{}-{} / {} - {} : {} - {}",
