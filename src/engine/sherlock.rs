@@ -19,7 +19,7 @@ use engine::{Engine, EngineResult};
 
 const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1500, -500, -1500];
 const BALANCE: [Eval; 10] = [-27, -26, -24, -21, -15, 15, 21, 24, 26, 27];
-const HOLE: [Eval; 10] = [0, 0, -15, -40, -100, -100, -100, -100, -100, -100];
+const HOLE: [Eval; 10] = [0, 0, -35, -60, -100, -100, -100, -100, -100, -100];
 const THREES: [usize; 5] = [1, 3, 9, 27, 81];
 const TL: usize = 0;
 const TR: usize = 1;
@@ -216,7 +216,7 @@ impl Judge for SherlockJudge {
         let balance_white = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_white[i]);
         let balance_black = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_black[i]);
 
-        let hole_white = HOLE[(0..10)
+        let hole_white = HOLE[(1..9)
             .scan(0, |&mut hole, i| {
                 Some(if stats.hoffset_white[i] == 0 {
                          hole + 1
@@ -226,7 +226,7 @@ impl Judge for SherlockJudge {
             })
             .max()
             .unwrap()];
-        let hole_black = HOLE[(0..10)
+        let hole_black = HOLE[(1..9)
             .scan(0, |&mut hole, i| {
                 Some(if stats.hoffset_black[i] == 0 {
                          hole + 1
