@@ -12,6 +12,7 @@ use draughts::engine::{Engine, EngineResult};
 //use draughts::engine::randaap::RandAap;
 use draughts::engine::sherlock::Sherlock;
 use draughts::engine::slonenok::Slonenok;
+//use draughts::uci::scan::Scan;
 //use draughts::uci::slagzet::Slagzet;
 
 type Score = u8;
@@ -121,6 +122,7 @@ pub fn main() {
         println!("Level {}\r\n----", level);
         let nodes = 100 << level;
         //let one = &mut RandAap::create(5 * nodes);
+        //let one = &mut Scan::create(0);
         //let one = &mut Slagzet::create(nodes / 2);
         let one = &mut Slonenok::create(nodes);
         let two = &mut Sherlock::create(nodes);
