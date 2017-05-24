@@ -256,7 +256,7 @@ impl Judge for SherlockJudge {
 
         let score = beans + structure + (28 - men) * (dev_white - dev_black) +
                     (hole_white - hole_black) -
-                    (balance_white.abs() - balance_black.abs());
+                    2 * (balance_white.abs() - balance_black.abs());
         let scaled = if self.drawish(&stats) {
             score / 10
         } else {

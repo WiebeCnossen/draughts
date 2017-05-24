@@ -11,9 +11,10 @@ use draughts::board::position::{Position, Game};
 use draughts::engine::{Engine, EngineResult};
 //use draughts::engine::randaap::RandAap;
 use draughts::engine::sherlock::Sherlock;
-use draughts::engine::slonenok::Slonenok;
+//use draughts::engine::slonenok::Slonenok;
 //use draughts::uci::scan::Scan;
 //use draughts::uci::slagzet::Slagzet;
+use draughts::uci::user::User;
 
 type Score = u8;
 fn game(white: &mut Engine<Item = EngineResult>,
@@ -107,7 +108,8 @@ fn game(white: &mut Engine<Item = EngineResult>,
 }
 
 pub fn main() {
-    let positions = vec!["w kcekaeb2b2/5rweirr", //20449
+    let positions = vec![//"w kkkk5/5rrrr",
+                         "w kcekaeb2b2/5rweirr", //20449
                          "w kbeakk2b2/eh2ethehrr", //2010
                          "w kkka22beb/3hhehterr", //890
                          "w kcekk2b2/3werrter", //4388
@@ -118,13 +120,14 @@ pub fn main() {
                          ];
     let mut ss = 0;
     let mut sr = 0;
-    for level in 0..15 {
+    for level in 14..15 {
         println!("Level {}\r\n----", level);
         let nodes = 100 << level;
         //let one = &mut RandAap::create(5 * nodes);
         //let one = &mut Scan::create(0);
         //let one = &mut Slagzet::create(nodes / 2);
-        let one = &mut Slonenok::create(nodes);
+        //let one = &mut Slonenok::create(nodes);
+        let one = &mut User::create();
         let two = &mut Sherlock::create(nodes);
         for fen in &positions[..] {
             let position = &BitboardPosition::parse(fen).unwrap();
