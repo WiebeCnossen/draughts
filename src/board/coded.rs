@@ -19,16 +19,20 @@ const PIECE_BITS: [Index; 6] = [0, 12, 24, 36, 48, 60];
 const ROW_FIELDS: Index = 5;
 const COL_POW: [u64; ROW_FIELDS + 1] = [1, 5, 25, 125, 625, 3125];
 const SIDE_BIT: u64 = 1 << 63;
-const BEFORE_MASK: [u64; ROW_FIELDS] = [(1 << PIECE_BITS[0]) - 1,
-                                        (1 << PIECE_BITS[1]) - 1,
-                                        (1 << PIECE_BITS[2]) - 1,
-                                        (1 << PIECE_BITS[3]) - 1,
-                                        (1 << PIECE_BITS[4]) - 1];
-const AFTER_MASK: [u64; ROW_FIELDS] = [std::u64::MAX - (1 << PIECE_BITS[1]) + 1,
-                                       std::u64::MAX - (1 << PIECE_BITS[2]) + 1,
-                                       std::u64::MAX - (1 << PIECE_BITS[3]) + 1,
-                                       std::u64::MAX - (1 << PIECE_BITS[4]) + 1,
-                                       std::u64::MAX - (1 << PIECE_BITS[5]) + 1];
+const BEFORE_MASK: [u64; ROW_FIELDS] = [
+    (1 << PIECE_BITS[0]) - 1,
+    (1 << PIECE_BITS[1]) - 1,
+    (1 << PIECE_BITS[2]) - 1,
+    (1 << PIECE_BITS[3]) - 1,
+    (1 << PIECE_BITS[4]) - 1,
+];
+const AFTER_MASK: [u64; ROW_FIELDS] = [
+    std::u64::MAX - (1 << PIECE_BITS[1]) + 1,
+    std::u64::MAX - (1 << PIECE_BITS[2]) + 1,
+    std::u64::MAX - (1 << PIECE_BITS[3]) + 1,
+    std::u64::MAX - (1 << PIECE_BITS[4]) + 1,
+    std::u64::MAX - (1 << PIECE_BITS[5]) + 1,
+];
 
 fn piece_at(bits: u64, field: Field) -> Piece {
     let row = (bits >> PIECE_BITS[field / ROW_FIELDS]) & BEFORE_MASK[1];
@@ -118,9 +122,10 @@ fn put_one_piece() {
 
 #[test]
 fn put_pieces_in_same_row() {
-    let position = CodedPosition::create()
-        .put_piece(31, WHITE_MAN)
-        .put_piece(32, BLACK_MAN);
+    let position = CodedPosition::create().put_piece(31, WHITE_MAN).put_piece(
+        32,
+        BLACK_MAN,
+    );
     assert_eq!(position.side_to_move(), Color::White);
     assert_eq!(position.piece_at(25), EMPTY);
     assert_eq!(position.piece_at(30), EMPTY);

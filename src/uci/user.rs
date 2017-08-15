@@ -26,16 +26,15 @@ impl Iterator for User {
             let temp;
             loop {
                 let move_string = read_stdin();
-                match self.generator
-                          .legal_moves(position)
-                          .into_iter()
-                          .find(|m| m.as_full_string() == move_string) {
+                match self.generator.legal_moves(position).into_iter().find(|m| {
+                    m.as_full_string() == move_string
+                }) {
                     Some(mv) => {
                         temp = Some(EngineResult::create(mv, 0, Meta::create()));
                         break;
                     }
                     _ => {
-                        for mv in self.generator.legal_moves(position).into_iter() {
+                        for mv in self.generator.legal_moves(position) {
                             println!("Maybe {} ?", mv);
                         }
                     }

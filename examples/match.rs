@@ -17,20 +17,23 @@ use draughts::engine::sherlock::Sherlock;
 use draughts::uci::user::User;
 
 type Score = u8;
-fn game(white: &mut Engine<Item = EngineResult>,
-        black: &mut Engine<Item = EngineResult>,
-        white_score: Score,
-        black_score: Score,
-        initial: &Position,
-        nodes: Nodes)
-        -> (Score, Score) {
+fn game(
+    white: &mut Engine<Item = EngineResult>,
+    black: &mut Engine<Item = EngineResult>,
+    white_score: Score,
+    black_score: Score,
+    initial: &Position,
+    nodes: Nodes,
+) -> (Score, Score) {
     let generator = Generator::create();
     let mut position = BitboardPosition::clone(initial);
     let mut prev = vec![];
     let show = nodes > 10_000;
     loop {
-        let before = prev.iter()
-            .fold(0, |a, p| a + if *p == position { 1 } else { 0 });
+        let before = prev.iter().fold(
+            0,
+            |a, p| a + if *p == position { 1 } else { 0 },
+        );
         if before >= 1 {
             return (1, 1);
         }
@@ -46,10 +49,12 @@ fn game(white: &mut Engine<Item = EngineResult>,
                 if show {
                     println!("{}", moves[0]);
                     println!("{} ({})", black.display_name(), black_score);
-                    println!("{}{} ({})",
-                             position.ascii(),
-                             white.display_name(),
-                             white_score);
+                    println!(
+                        "{}{} ({})",
+                        position.ascii(),
+                        white.display_name(),
+                        white_score
+                    );
                 }
                 continue;
             }
@@ -64,12 +69,14 @@ fn game(white: &mut Engine<Item = EngineResult>,
                 result = next;
                 if show {
                     print!("\r                                                  \r");
-                    print!("{}: {} {} | {} @ {}",
-                           white.display_name(),
-                           result.mv,
-                           result.evaluation,
-                           result.meta.get_nodes(),
-                           result.meta.get_depth());
+                    print!(
+                        "{}: {} {} | {} @ {}",
+                        white.display_name(),
+                        result.mv,
+                        result.evaluation,
+                        result.meta.get_nodes(),
+                        result.meta.get_depth()
+                    );
                     io::stdout().flush().expect("no flush");
                 }
             }
@@ -79,12 +86,14 @@ fn game(white: &mut Engine<Item = EngineResult>,
                 result = next;
                 if show {
                     print!("\r                                                  \r");
-                    print!("{}: {} {} | {} @ {}",
-                           black.display_name(),
-                           result.mv,
-                           -result.evaluation,
-                           result.meta.get_nodes(),
-                           result.meta.get_depth());
+                    print!(
+                        "{}: {} {} | {} @ {}",
+                        black.display_name(),
+                        result.mv,
+                        -result.evaluation,
+                        result.meta.get_nodes(),
+                        result.meta.get_depth()
+                    );
                     io::stdout().flush().expect("no flush");
                 }
             }
@@ -99,10 +108,12 @@ fn game(white: &mut Engine<Item = EngineResult>,
 
         if show {
             println!("{} ({})", black.display_name(), black_score);
-            println!("{}{} ({})",
-                     position.ascii(),
-                     white.display_name(),
-                     white_score);
+            println!(
+                "{}{} ({})",
+                position.ascii(),
+                white.display_name(),
+                white_score
+            );
         }
     }
 }
@@ -133,27 +144,31 @@ pub fn main() {
             let position = &BitboardPosition::parse(fen).unwrap();
             {
                 let (ds, dr) = game(one, two, ss, sr, position, nodes);
-                ss = ss + ds;
-                sr = sr + dr;
-                println!("{}-{} / {} - {} : {} - {}",
-                         ds,
-                         dr,
-                         one.display_name(),
-                         two.display_name(),
-                         ss,
-                         sr);
+                ss += ds;
+                sr += dr;
+                println!(
+                    "{}-{} / {} - {} : {} - {}",
+                    ds,
+                    dr,
+                    one.display_name(),
+                    two.display_name(),
+                    ss,
+                    sr
+                );
             }
             {
                 let (dr, ds) = game(two, one, sr, ss, position, nodes);
-                ss = ss + ds;
-                sr = sr + dr;
-                println!("{}-{} / {} - {} : {} - {}",
-                         dr,
-                         ds,
-                         one.display_name(),
-                         two.display_name(),
-                         ss,
-                         sr);
+                ss += ds;
+                sr += dr;
+                println!(
+                    "{}-{} / {} - {} : {} - {}",
+                    dr,
+                    ds,
+                    one.display_name(),
+                    two.display_name(),
+                    ss,
+                    sr
+                );
             }
             println!("--");
         }

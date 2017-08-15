@@ -48,7 +48,7 @@ impl BnsState {
         let mv = if up {
             search_result.mv.unwrap()
         } else {
-            self.mv.clone()
+            self.mv
         };
         let count = if upper - lower <= 1 || better_count == 1 {
             0
@@ -70,9 +70,10 @@ impl BnsState {
 #[test]
 fn up_zero() {
     let initial = BnsState::initial(0, Move::Shift(0, 5));
-    let next =
-        initial.next(2,
-                     SearchResult::with_move(Move::Shift(1, 5), initial.upper - 1));
+    let next = initial.next(
+        2,
+        SearchResult::with_move(Move::Shift(1, 5), initial.upper - 1),
+    );
     assert_eq!(next.lower, initial.cut);
     assert_eq!(next.upper, initial.upper);
     assert!(next.mv == Move::Shift(1, 5));
@@ -82,9 +83,10 @@ fn up_zero() {
 #[test]
 fn up_one() {
     let initial = BnsState::initial(0, Move::Shift(0, 5));
-    let next =
-        initial.next(2,
-                     SearchResult::with_move(Move::Shift(1, 5), initial.upper - 2));
+    let next = initial.next(
+        2,
+        SearchResult::with_move(Move::Shift(1, 5), initial.upper - 2),
+    );
     assert_eq!(next.lower, initial.cut);
     assert_eq!(next.upper, initial.upper);
     assert!(next.mv == Move::Shift(1, 5));
@@ -116,13 +118,15 @@ fn down() {
     assert!(next.cut < next.upper);
 }
 
-pub fn best_node_search<TGame, TScope>(judge: &mut Judge,
-                                       position: &TGame,
-                                       depth: Depth,
-                                       initial: SearchResult)
-                                       -> BnsResult
-    where TGame: Game,
-          TScope: Scope
+pub fn best_node_search<TGame, TScope>(
+    judge: &mut Judge,
+    position: &TGame,
+    depth: Depth,
+    initial: &SearchResult,
+) -> BnsResult
+where
+    TGame: Game,
+    TScope: Scope,
 {
     let mut moves = judge.moves(position);
     let mut meta = Meta::create();
@@ -133,10 +137,10 @@ pub fn best_node_search<TGame, TScope>(judge: &mut Judge,
             //println!("MTD: {} {}", mtd.meta.get_nodes(), -mtd.evaluation);
             meta.add_nodes(mtd.meta.get_nodes() + 1);
             moves.sort_by(|&mv1, &mv2| match (mv1 == mv, mv2 == mv) {
-                              (true, false) => Less,
-                              (false, true) => Greater,
-                              _ => Equal,
-                          });
+                (true, false) => Less,
+                (false, true) => Greater,
+                _ => Equal,
+            });
             BnsState::initial(-mtd.evaluation, mv)
         }
         _ => BnsState::initial(initial.evaluation, moves[0]),
@@ -150,11 +154,11 @@ pub fn best_node_search<TGame, TScope>(judge: &mut Judge,
             let score = -makes_cut(judge, &mut meta, &position.go(mv), scope, -beta).evaluation;
             //println!("Score: {} {} {}", beta, score, mv.as_string());
             if score > best.evaluation {
-                best = SearchResult::with_move(mv.clone(), score);
+                best = SearchResult::with_move(*mv, score);
             }
 
             if score > beta {
-                better_count = better_count + 1;
+                better_count += 1;
                 if better_count >= state.count {
                     break;
                 }
@@ -170,10 +174,10 @@ pub fn best_node_search<TGame, TScope>(judge: &mut Judge,
         //  next.count, next.lower, next.cut, next.upper, next.mv.as_string());
         if next.count == 0 {
             return BnsResult {
-                       lower: next.lower,
-                       meta,
-                       mv: next.mv,
-                   };
+                lower: next.lower,
+                meta,
+                mv: next.mv,
+            };
         }
         state = next;
     }

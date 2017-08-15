@@ -22,10 +22,10 @@ pub fn color(piece: Piece) -> Option<Color> {
     }
 }
 
-pub fn piece_own(piece: Piece, c: Color) -> Option<bool> {
-    color(piece).map(|p| p == c)
+pub fn piece_own(piece: Piece, c: &Color) -> Option<bool> {
+    color(piece).map(|p| p == *c)
 }
 
-pub fn piece_is(piece: Piece, c: Color) -> bool {
+pub fn piece_is(piece: Piece, c: &Color) -> bool {
     piece_own(piece, c).unwrap_or_default()
 }

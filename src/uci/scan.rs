@@ -32,7 +32,7 @@ impl Scan {
         let mut stdout = BufReader::new(child.stdout.take().expect("No stdout on Scan"));
 
         read_stdout(&mut stdout);
-        stdin.write("init\n".as_bytes()).ok();
+        stdin.write(b"init\n").ok();
         loop {
             let line = read_stdout(&mut stdout);
             if line == "ready" {
@@ -58,9 +58,11 @@ impl Iterator for Scan {
                 .write(format!("pos {}\n", position.fen()).as_bytes())
                 .ok();
             self.stdin
-                .write(format!("level 1 {} 0\n", max(1, self.max_nodes / 30_000)).as_bytes())
+                .write(
+                    format!("level 1 {} 0\n", max(1, self.max_nodes / 30_000)).as_bytes(),
+                )
                 .ok();
-            self.stdin.write("analyse\n".as_bytes()).ok();
+            self.stdin.write(b"analyse\n").ok();
             let temp;
             loop {
                 let mut move_string = read_stdout(&mut self.stdout);

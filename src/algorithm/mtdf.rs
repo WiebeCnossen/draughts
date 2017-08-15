@@ -57,13 +57,15 @@ impl MtdResult {
     }
 }
 
-pub fn mtd_f<TGame, TScope>(judge: &mut Judge,
-                            position: &TGame,
-                            depth: Depth,
-                            guess: Eval)
-                            -> MtdResult
-    where TGame: Game,
-          TScope: Scope
+pub fn mtd_f<TGame, TScope>(
+    judge: &mut Judge,
+    position: &TGame,
+    depth: Depth,
+    guess: Eval,
+) -> MtdResult
+where
+    TGame: Game,
+    TScope: Scope,
 {
     let scope = &TScope::from_depth(depth);
     let mut state = MtdState::initial(guess);
@@ -78,7 +80,7 @@ pub fn mtd_f<TGame, TScope>(judge: &mut Judge,
         if state.finished() {
             let mv = match mv {
                 Some(mv) => mv,
-                None => judge.moves(position)[0].clone(),
+                None => judge.moves(position)[0],
             };
             return MtdResult::create(mv, state.lower, meta);
         }

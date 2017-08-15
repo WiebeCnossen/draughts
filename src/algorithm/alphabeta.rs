@@ -6,14 +6,16 @@ use algorithm::scope::Scope;
 use algorithm::search::SearchResult;
 use board::position::Game;
 
-pub fn makes_cut<TGame, TScope>(judge: &mut Judge,
-                                metric: &mut Metric,
-                                position: &TGame,
-                                scope: &TScope,
-                                cut: Eval)
-                                -> SearchResult
-    where TGame: Game,
-          TScope: Scope
+pub fn makes_cut<TGame, TScope>(
+    judge: &mut Judge,
+    metric: &mut Metric,
+    position: &TGame,
+    scope: &TScope,
+    cut: Eval,
+) -> SearchResult
+where
+    TGame: Game,
+    TScope: Scope,
 {
     if cut <= MIN_EVAL {
         return SearchResult::evaluation(MIN_EVAL);
@@ -36,7 +38,7 @@ pub fn makes_cut<TGame, TScope>(judge: &mut Judge,
     metric.add_nodes(1);
 
     let mut moves = judge.moves(position);
-    if moves.len() == 0 {
+    if moves.is_empty() {
         return SearchResult::evaluation(MIN_EVAL);
     }
 
@@ -46,7 +48,7 @@ pub fn makes_cut<TGame, TScope>(judge: &mut Judge,
         for i in 0..len {
             if moves[i].from() == memory.from && moves[i].to() == memory.to {
                 if i > 0 {
-                    let mv = moves[i].clone();
+                    let mv = moves[i];
                     moves.remove(i);
                     moves.insert(0, mv);
                 }
@@ -57,7 +59,7 @@ pub fn makes_cut<TGame, TScope>(judge: &mut Judge,
 
     let current_score = min(max(judge.evaluate(position), memory.lower), memory.upper);
 
-    if let Some(_) = scope.next(quiet, cut - current_score) {
+    if scope.next(quiet, cut - current_score).is_some() {
         let mut best = MIN_EVAL;
         let mut pending = None;
         for mv in moves {
@@ -78,7 +80,7 @@ pub fn makes_cut<TGame, TScope>(judge: &mut Judge,
 
         if best >= cut {
             if let Some(mv) = pending {
-                judge.remember(position, scope.depth(), best, Some(mv.clone()), false);
+                judge.remember(position, scope.depth(), best, Some(mv), false);
                 SearchResult::with_move(mv, best)
             } else {
                 panic!("No move pending");

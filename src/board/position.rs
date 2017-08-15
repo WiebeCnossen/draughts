@@ -26,10 +26,10 @@ pub trait Position {
 
     fn fen(&self) -> String {
         let mut fen = String::from(if self.side_to_move() == Color::White {
-                                       "w"
-                                   } else {
-                                       "b"
-                                   });
+            "w"
+        } else {
+            "b"
+        });
         for i in 1..51 {
             fen.push(FEN_CHARS[self.piece_at(i - 1) as Field]);
         }
@@ -38,10 +38,10 @@ pub trait Position {
 
     fn sfen(&self) -> String {
         let mut fen = String::from(if self.side_to_move() == Color::White {
-                                       "w"
-                                   } else {
-                                       "b"
-                                   });
+            "w"
+        } else {
+            "b"
+        });
         let mut num_empty = 0;
         fn flush(fen: &mut String, num_empty: Field) -> Field {
             match num_empty {
@@ -77,7 +77,8 @@ pub trait Position {
             ascii.push(c);
             ascii.push(c);
             if (field == 9 && self.side_to_move() == Color::Black) ||
-               (field == 99 && self.side_to_move() == Color::White) {
+                (field == 99 && self.side_to_move() == Color::White)
+            {
                 ascii.push_str("  *")
             }
             if field % 10 == 9 {
@@ -110,15 +111,17 @@ pub trait Game: Position + Hash + Sized {
     }
 
     fn clone(source: &Position) -> Self {
-        (0..50).fold(if source.side_to_move() == Color::White {
-                         Self::create()
-                     } else {
-                         Self::create().toggle_side()
-                     },
-                     |pos, field| pos.put_piece(field, source.piece_at(field)))
+        (0..50).fold(
+            if source.side_to_move() == Color::White {
+                Self::create()
+            } else {
+                Self::create().toggle_side()
+            },
+            |pos, field| pos.put_piece(field, source.piece_at(field)),
+        )
     }
 
-    fn parse<'a>(fen: &'a str) -> Result<Self, String> {
+    fn parse(fen: &str) -> Result<Self, String> {
         if fen.len() < 11 {
             return Err("Invalid length".into());
         }
@@ -167,7 +170,7 @@ pub trait Game: Position + Hash + Sized {
                     Some((piece, count)) => {
                         for _ in 0..count {
                             if field == 50 {
-                                return Err(format!("Too many fields"));
+                                return Err(String::from("Too many fields"));
                             }
                             position = position.put_piece(field, piece);
                             field += 1;
@@ -395,8 +398,10 @@ fn as_fen() {
         .put_piece(11, BLACK_KING)
         .put_piece(15, WHITE_KING)
         .toggle_side();
-    assert_eq!("bebeeeweeeeeBeeeWeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-               constructed.fen());
+    assert_eq!(
+        "bebeeeweeeeeBeeeWeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        constructed.fen()
+    );
 }
 
 #[test]

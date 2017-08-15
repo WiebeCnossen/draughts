@@ -3,10 +3,10 @@ use board::mv::Move;
 use board::position::{Field, Position};
 
 pub type Eval = i16;
-pub const MAX_EVAL: Eval = 15000;
+pub const MAX_EVAL: Eval = 15_000;
 pub const ZERO_EVAL: Eval = 0;
 pub const DRAW_EVAL: Eval = 0;
-pub const MIN_EVAL: Eval = -15000;
+pub const MIN_EVAL: Eval = -15_000;
 
 pub struct PositionMemory {
     pub depth: Depth,
@@ -27,12 +27,13 @@ impl PositionMemory {
         }
     }
 
-    pub fn create(depth: Depth,
-                  lower: Eval,
-                  upper: Eval,
-                  from: Field,
-                  to: Field)
-                  -> PositionMemory {
+    pub fn create(
+        depth: Depth,
+        lower: Eval,
+        upper: Eval,
+        from: Field,
+        to: Field,
+    ) -> PositionMemory {
         PositionMemory {
             depth,
             lower,

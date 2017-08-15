@@ -20,19 +20,19 @@ impl PositionStats {
 
         for field in 0..50 {
             let piece = position.piece_at(field);
-            piece_count[piece as usize] = piece_count[piece as usize] + 1;
+            piece_count[piece as usize] += 1;
             match piece {
                 WHITE_MAN => {
                     let x = 1 + 2 * (field % 5) - field / 5 % 2;
-                    hoffset_white[x] = hoffset_white[x] + 1;
+                    hoffset_white[x] += 1;
                     let y = 9 - field / 5;
-                    voffset_white[y] = voffset_white[y] + 1;
+                    voffset_white[y] += 1;
                 }
                 BLACK_MAN => {
                     let x = 8 - 2 * (field % 5) + field / 5 % 2;
-                    hoffset_black[x] = hoffset_white[x] + 1;
+                    hoffset_black[x] += 1;
                     let y = field / 5;
-                    voffset_black[y] = voffset_black[y] + 1;
+                    voffset_black[y] += 1;
                 }
                 _ => (),
             };

@@ -25,7 +25,7 @@ impl Metric for Meta {
         self.nodes
     }
     fn add_nodes(&mut self, increment: Nodes) {
-        self.nodes = self.nodes + increment
+        self.nodes += increment
     }
     fn get_depth(&self) -> Depth {
         self.depth

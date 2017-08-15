@@ -42,7 +42,7 @@ impl Iterator for Slagzet {
     fn next(&mut self) -> Option<EngineResult> {
         let result = if let Some(ref position) = self.position {
             self.stdin.write(position.fen().as_bytes()).ok();
-            self.stdin.write("\n".as_bytes()).ok();
+            self.stdin.write(b"\n").ok();
             let move_string = read_stdout(&mut self.stdout);
             let mv = self.generator
                 .legal_moves(position)

@@ -21,20 +21,22 @@ impl Scope for AdaptiveScope {
     fn next(&self, quiet: bool, gap: Eval) -> Option<AdaptiveScope> {
         if !quiet {
             Some(AdaptiveScope {
-                     depth: self.depth,
-                     forcing: true,
-                     forced: self.forced + 1,
-                     unforced: self.unforced,
-                 })
+                depth: self.depth,
+                forcing: true,
+                forced: self.forced + 1,
+                unforced: self.unforced,
+            })
         } else if self.forcing && self.depth > 2 * self.unforced {
             Some(AdaptiveScope {
-                     depth: self.depth,
-                     forcing: false,
-                     forced: self.forced,
-                     unforced: self.unforced + 1,
-                 })
+                depth: self.depth,
+                forcing: false,
+                forced: self.forced,
+                unforced: self.unforced + 1,
+            })
         } else if self.depth > self.forced + self.unforced && gap < 500 {
-            Some(AdaptiveScope::from_depth(self.depth - self.forced - self.unforced - 1))
+            Some(AdaptiveScope::from_depth(
+                self.depth - self.forced - self.unforced - 1,
+            ))
         } else {
             None
         }

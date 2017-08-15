@@ -34,11 +34,13 @@ struct HashEval {
 
 impl HashEval {
     fn as_memory(&self) -> PositionMemory {
-        PositionMemory::create(self.depth,
-                               self.lower,
-                               self.upper,
-                               self.from as Field,
-                               self.to as Field)
+        PositionMemory::create(
+            self.depth,
+            self.lower,
+            self.upper,
+            self.from as Field,
+            self.to as Field,
+        )
     }
 }
 
@@ -68,7 +70,7 @@ impl SlonenokJudge {
         let whites = stats.piece_count[WHITE_MAN as usize] + stats.piece_count[WHITE_KING as usize];
         let blacks = stats.piece_count[BLACK_MAN as usize] + stats.piece_count[BLACK_KING as usize];
         stats.piece_count[WHITE_KING as usize] > 0 &&
-        stats.piece_count[BLACK_KING as usize] > 0 && whites <= 3 && blacks <= 3
+            stats.piece_count[BLACK_KING as usize] > 0 && whites <= 3 && blacks <= 3
     }
 
     pub fn reset(&mut self) {
@@ -84,23 +86,23 @@ impl Judge for SlonenokJudge {
             _ => PositionMemory::empty(),
         }
     }
-    fn remember(&mut self,
-                position: &Position,
-                depth: Depth,
-                evaluation: Eval,
-                mv: Option<Move>,
-                low: bool) {
+    fn remember(
+        &mut self,
+        position: &Position,
+        depth: Depth,
+        evaluation: Eval,
+        mv: Option<Move>,
+        low: bool,
+    ) {
         let (has_move, from, to) = if let Some(mv) = mv {
             if position.side_to_move() == White {
                 if !self.white_killer_moves.contains(&mv) {
                     self.white_killer_moves[self.white_killer_cursor] = mv;
                     self.white_killer_cursor = (self.white_killer_cursor + 1) % KILLERS;
                 }
-            } else {
-                if !self.black_killer_moves.contains(&mv) {
-                    self.black_killer_moves[self.black_killer_cursor] = mv;
-                    self.black_killer_cursor = (self.black_killer_cursor + 1) % KILLERS;
-                }
+            } else if !self.black_killer_moves.contains(&mv) {
+                self.black_killer_moves[self.black_killer_cursor] = mv;
+                self.black_killer_cursor = (self.black_killer_cursor + 1) % KILLERS;
             }
             (true, mv.from() as SmallField, mv.to() as SmallField)
         } else {
@@ -180,8 +182,9 @@ impl Judge for SlonenokJudge {
         // hanging piece penalty
         for start in 10..14 {
             if position.piece_at(start) == BLACK_MAN && position.piece_at(start + 1) == BLACK_MAN &&
-               position.piece_at(start - 5) == BLACK_MAN &&
-               position.piece_at(start - 10) == EMPTY {
+                position.piece_at(start - 5) == BLACK_MAN &&
+                position.piece_at(start - 10) == EMPTY
+            {
                 if position.piece_at(start - 9) == EMPTY {
                     structure += 100;
                 } else if start == 13 {
@@ -195,24 +198,27 @@ impl Judge for SlonenokJudge {
         }
         for start in 15..19 {
             if position.piece_at(start) == BLACK_MAN && position.piece_at(start + 1) == BLACK_MAN &&
-               position.piece_at(start - 4) == BLACK_MAN &&
-               position.piece_at(start - 10) == EMPTY &&
-               position.piece_at(start - 9) == EMPTY {
+                position.piece_at(start - 4) == BLACK_MAN &&
+                position.piece_at(start - 10) == EMPTY &&
+                position.piece_at(start - 9) == EMPTY
+            {
                 structure += 100;
             }
         }
         for start in 30..34 {
             if position.piece_at(start) == WHITE_MAN && position.piece_at(start + 1) == WHITE_MAN &&
-               position.piece_at(start + 6) == WHITE_MAN &&
-               position.piece_at(start + 10) == EMPTY &&
-               position.piece_at(start + 11) == EMPTY {
+                position.piece_at(start + 6) == WHITE_MAN &&
+                position.piece_at(start + 10) == EMPTY &&
+                position.piece_at(start + 11) == EMPTY
+            {
                 structure -= 100;
             }
         }
         for start in 35..39 {
             if position.piece_at(start) == WHITE_MAN && position.piece_at(start + 1) == WHITE_MAN &&
-               position.piece_at(start + 5) == WHITE_MAN &&
-               position.piece_at(start + 10) == EMPTY {
+                position.piece_at(start + 5) == WHITE_MAN &&
+                position.piece_at(start + 10) == EMPTY
+            {
                 if position.piece_at(start + 11) == EMPTY {
                     structure -= 100;
                 } else if start == 35 {
@@ -237,9 +243,10 @@ impl Judge for SlonenokJudge {
         for row in 1..4 {
             for start in 10 * row - 5..10 * row - 1 {
                 if position.piece_at(start) == BLACK_MAN &&
-                   position.piece_at(start + 1) == BLACK_MAN &&
-                   position.piece_at(start + 10) == WHITE_MAN &&
-                   position.piece_at(start + 11) == WHITE_MAN {
+                    position.piece_at(start + 1) == BLACK_MAN &&
+                    position.piece_at(start + 10) == WHITE_MAN &&
+                    position.piece_at(start + 11) == WHITE_MAN
+                {
                     match position.piece_at(start + 5) {
                         WHITE_MAN => structure -= 100,
                         BLACK_MAN => structure += 100,
@@ -249,9 +256,10 @@ impl Judge for SlonenokJudge {
             }
             for start in 10 * row..10 * row + 4 {
                 if position.piece_at(start) == BLACK_MAN &&
-                   position.piece_at(start + 1) == BLACK_MAN &&
-                   position.piece_at(start + 10) == WHITE_MAN &&
-                   position.piece_at(start + 11) == WHITE_MAN {
+                    position.piece_at(start + 1) == BLACK_MAN &&
+                    position.piece_at(start + 10) == WHITE_MAN &&
+                    position.piece_at(start + 11) == WHITE_MAN
+                {
                     match position.piece_at(start + 6) {
                         WHITE_MAN => structure -= 100,
                         BLACK_MAN => structure += 100,
@@ -262,13 +270,14 @@ impl Judge for SlonenokJudge {
         }
 
         let score = beans + structure + (hoffset_white - hoffset_black) +
-                    (voffset_white - voffset_black) -
-                    2 * (balance_white.abs() - balance_black.abs());
+            (voffset_white - voffset_black) -
+            2 * (balance_white.abs() - balance_black.abs());
         let scaled = if self.drawish(&stats) {
             score / 10
         } else {
             let min_kings = if stats.piece_count[WHITE_KING as usize] <
-                               stats.piece_count[BLACK_KING as usize] {
+                stats.piece_count[BLACK_KING as usize]
+            {
                 stats.piece_count[WHITE_KING as usize]
             } else {
                 stats.piece_count[BLACK_KING as usize]
@@ -285,30 +294,34 @@ impl Judge for SlonenokJudge {
     fn moves(&self, position: &Position) -> Vec<Move> {
         let mut result = self.generator.legal_moves(position);
         if position.side_to_move() == White {
-            result.sort_by(|mv1, mv2| match (self.white_killer_moves.contains(&mv1),
-                                             self.white_killer_moves.contains(&mv2)) {
-                               (false, true) => Greater,
-                               (true, false) => Less,
-                               _ => mv1.to().cmp(&mv2.to()),
-                           })
+            result.sort_by(|mv1, mv2| match (
+                self.white_killer_moves.contains(mv1),
+                self.white_killer_moves.contains(mv2),
+            ) {
+                (false, true) => Greater,
+                (true, false) => Less,
+                _ => mv1.to().cmp(&mv2.to()),
+            })
         } else {
-            result.sort_by(|mv1, mv2| match (self.black_killer_moves.contains(&mv1),
-                                             self.black_killer_moves.contains(&mv2)) {
-                               (false, true) => Greater,
-                               (true, false) => Less,
-                               _ => mv2.to().cmp(&mv1.to()),
-                           })
+            result.sort_by(|mv1, mv2| match (
+                self.black_killer_moves.contains(mv1),
+                self.black_killer_moves.contains(mv2),
+            ) {
+                (false, true) => Greater,
+                (true, false) => Less,
+                _ => mv2.to().cmp(&mv1.to()),
+            })
         }
         result
     }
 
     fn quiet_move(&self, position: &Position, mv: &Move) -> bool {
         mv.num_taken() == 0 &&
-        if position.side_to_move() == White {
-            mv.to() >= 10 || position.piece_at(mv.from()) != WHITE_MAN
-        } else {
-            mv.to() <= 39 || position.piece_at(mv.from()) != BLACK_MAN
-        }
+            if position.side_to_move() == White {
+                mv.to() >= 10 || position.piece_at(mv.from()) != WHITE_MAN
+            } else {
+                mv.to() <= 39 || position.piece_at(mv.from()) != BLACK_MAN
+            }
     }
 
     fn display_name(&self) -> &str {
@@ -338,8 +351,10 @@ impl Iterator for Slonenok {
     type Item = EngineResult;
     fn next(&mut self) -> Option<EngineResult> {
         if self.previous.meta.get_nodes() >= self.max_nodes ||
-           self.previous.meta.get_depth() > 63 ||
-           self.previous.evaluation == MIN_EVAL || self.previous.evaluation == MAX_EVAL {
+            self.previous.meta.get_depth() > 63 ||
+            self.previous.evaluation == MIN_EVAL ||
+            self.previous.evaluation == MAX_EVAL
+        {
             return None;
         }
 
@@ -356,10 +371,12 @@ impl Iterator for Slonenok {
         };
         meta.put_depth(depth);
         meta.put_depth(depth);
-        let bns = best_node_search::<BitboardPosition, AdaptiveScope>(&mut self.slonenok,
-                                                                      &self.position,
-                                                                      depth,
-                                                                      search_result);
+        let bns = best_node_search::<BitboardPosition, AdaptiveScope>(
+            &mut self.slonenok,
+            &self.position,
+            depth,
+            &search_result,
+        );
         meta.add_nodes(bns.meta.get_nodes());
         self.previous = EngineResult::create(bns.mv, bns.lower, meta);
         Some(self.previous.clone())

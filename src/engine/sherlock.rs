@@ -39,11 +39,13 @@ struct HashEval {
 
 impl HashEval {
     fn as_memory(&self) -> PositionMemory {
-        PositionMemory::create(self.depth,
-                               self.lower,
-                               self.upper,
-                               self.from as Field,
-                               self.to as Field)
+        PositionMemory::create(
+            self.depth,
+            self.lower,
+            self.upper,
+            self.from as Field,
+            self.to as Field,
+        )
     }
 }
 
@@ -89,18 +91,18 @@ impl SherlockJudge {
                                 (if op == bl { 1 } else { 0 }) + (if op == br { 1 } else { 0 })
                             };
                             evals[star] = sign *
-                                          match (supporters, blockers, lockers) {
-                                              (2, _, 2) => -150,        // locked
-                                              (_, _, 2) => -100,        // ?!
-                                              (_, _, 1) => -50,         // semi-locked
-                                              (0, 2, 0) => -25,         // hanging
-                                              (0, 0, _) => -20,         // isolated
-                                              (1, 2, 0) => -5,          // semi -hanging
-                                              (2, 0, 0) => 19,
-                                              (2, b, 0) => 23 + 8 * b,
-                                              (s, b, 0) => 8 * (s + b),
-                                              _ => 0,
-                                          };
+                                match (supporters, blockers, lockers) {
+                                    (2, _, 2) => -150,        // locked
+                                    (_, _, 2) => -100,        // ?!
+                                    (_, _, 1) => -50,         // semi-locked
+                                    (0, 2, 0) => -25,         // hanging
+                                    (0, 0, _) => -20,         // isolated
+                                    (1, 2, 0) => -5,          // semi -hanging
+                                    (2, 0, 0) => 19,
+                                    (2, b, 0) => 23 + 8 * b,
+                                    (s, b, 0) => 8 * (s + b),
+                                    _ => 0,
+                                };
                         }
                     }
                 }
@@ -124,7 +126,7 @@ impl SherlockJudge {
         let whites = stats.piece_count[WHITE_MAN as usize] + stats.piece_count[WHITE_KING as usize];
         let blacks = stats.piece_count[BLACK_MAN as usize] + stats.piece_count[BLACK_KING as usize];
         stats.piece_count[WHITE_KING as usize] > 0 &&
-        stats.piece_count[BLACK_KING as usize] > 0 && whites <= 3 && blacks <= 3
+            stats.piece_count[BLACK_KING as usize] > 0 && whites <= 3 && blacks <= 3
     }
 
     pub fn reset(&mut self) {
@@ -140,23 +142,23 @@ impl Judge for SherlockJudge {
             _ => PositionMemory::empty(),
         }
     }
-    fn remember(&mut self,
-                position: &Position,
-                depth: Depth,
-                evaluation: Eval,
-                mv: Option<Move>,
-                low: bool) {
+    fn remember(
+        &mut self,
+        position: &Position,
+        depth: Depth,
+        evaluation: Eval,
+        mv: Option<Move>,
+        low: bool,
+    ) {
         let (has_move, from, to) = if let Some(mv) = mv {
             if position.side_to_move() == White {
                 if !self.white_killer_moves.contains(&mv) {
                     self.white_killer_moves[self.white_killer_cursor] = mv;
                     self.white_killer_cursor = (self.white_killer_cursor + 1) % KILLERS;
                 }
-            } else {
-                if !self.black_killer_moves.contains(&mv) {
-                    self.black_killer_moves[self.black_killer_cursor] = mv;
-                    self.black_killer_cursor = (self.black_killer_cursor + 1) % KILLERS;
-                }
+            } else if !self.black_killer_moves.contains(&mv) {
+                self.black_killer_moves[self.black_killer_cursor] = mv;
+                self.black_killer_cursor = (self.black_killer_cursor + 1) % KILLERS;
             }
             (true, mv.from() as SmallField, mv.to() as SmallField)
         } else {
@@ -217,25 +219,25 @@ impl Judge for SherlockJudge {
         let balance_black = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_black[i]);
 
         let hole_white = HOLE[(1..9)
-            .scan(0, |&mut hole, i| {
-                Some(if stats.hoffset_white[i] == 0 {
-                         hole + 1
-                     } else {
-                         0
-                     })
+                                  .scan(0, |&mut hole, i| {
+            Some(if stats.hoffset_white[i] == 0 {
+                hole + 1
+            } else {
+                0
             })
-            .max()
-            .unwrap()];
+        })
+                                  .max()
+                                  .unwrap()];
         let hole_black = HOLE[(1..9)
-            .scan(0, |&mut hole, i| {
-                Some(if stats.hoffset_black[i] == 0 {
-                         hole + 1
-                     } else {
-                         0
-                     })
+                                  .scan(0, |&mut hole, i| {
+            Some(if stats.hoffset_black[i] == 0 {
+                hole + 1
+            } else {
+                0
             })
-            .max()
-            .unwrap()];
+        })
+                                  .max()
+                                  .unwrap()];
 
         let structure = if men < 8 {
             0
@@ -255,13 +257,14 @@ impl Judge for SherlockJudge {
         };
 
         let score = beans + structure + (28 - men) * (dev_white - dev_black) +
-                    (hole_white - hole_black) -
-                    2 * (balance_white.abs() - balance_black.abs());
+            (hole_white - hole_black) -
+            2 * (balance_white.abs() - balance_black.abs());
         let scaled = if self.drawish(&stats) {
             score / 10
         } else {
             let min_kings = if stats.piece_count[WHITE_KING as usize] <
-                               stats.piece_count[BLACK_KING as usize] {
+                stats.piece_count[BLACK_KING as usize]
+            {
                 stats.piece_count[WHITE_KING as usize]
             } else {
                 stats.piece_count[BLACK_KING as usize]
@@ -278,30 +281,34 @@ impl Judge for SherlockJudge {
     fn moves(&self, position: &Position) -> Vec<Move> {
         let mut result = self.generator.legal_moves(position);
         if position.side_to_move() == White {
-            result.sort_by(|mv1, mv2| match (self.white_killer_moves.contains(&mv1),
-                                             self.white_killer_moves.contains(&mv2)) {
-                               (false, true) => Greater,
-                               (true, false) => Less,
-                               _ => mv1.to().cmp(&mv2.to()),
-                           })
+            result.sort_by(|mv1, mv2| match (
+                self.white_killer_moves.contains(mv1),
+                self.white_killer_moves.contains(mv2),
+            ) {
+                (false, true) => Greater,
+                (true, false) => Less,
+                _ => mv1.to().cmp(&mv2.to()),
+            })
         } else {
-            result.sort_by(|mv1, mv2| match (self.black_killer_moves.contains(&mv1),
-                                             self.black_killer_moves.contains(&mv2)) {
-                               (false, true) => Greater,
-                               (true, false) => Less,
-                               _ => mv2.to().cmp(&mv1.to()),
-                           })
+            result.sort_by(|mv1, mv2| match (
+                self.black_killer_moves.contains(mv1),
+                self.black_killer_moves.contains(mv2),
+            ) {
+                (false, true) => Greater,
+                (true, false) => Less,
+                _ => mv2.to().cmp(&mv1.to()),
+            })
         }
         result
     }
 
     fn quiet_move(&self, position: &Position, mv: &Move) -> bool {
         mv.num_taken() == 0 &&
-        if position.side_to_move() == White {
-            mv.to() >= 10 || position.piece_at(mv.from()) != WHITE_MAN
-        } else {
-            mv.to() <= 39 || position.piece_at(mv.from()) != BLACK_MAN
-        }
+            if position.side_to_move() == White {
+                mv.to() >= 10 || position.piece_at(mv.from()) != WHITE_MAN
+            } else {
+                mv.to() <= 39 || position.piece_at(mv.from()) != BLACK_MAN
+            }
     }
 
     fn display_name(&self) -> &str {
@@ -331,8 +338,10 @@ impl Iterator for Sherlock {
     type Item = EngineResult;
     fn next(&mut self) -> Option<EngineResult> {
         if self.previous.meta.get_nodes() >= self.max_nodes ||
-           self.previous.meta.get_depth() > 63 ||
-           self.previous.evaluation == MIN_EVAL || self.previous.evaluation == MAX_EVAL {
+            self.previous.meta.get_depth() > 63 ||
+            self.previous.evaluation == MIN_EVAL ||
+            self.previous.evaluation == MAX_EVAL
+        {
             return None;
         }
 
@@ -349,10 +358,12 @@ impl Iterator for Sherlock {
         };
         meta.put_depth(depth);
         meta.put_depth(depth);
-        let bns = best_node_search::<BitboardPosition, AdaptiveScope>(&mut self.sherlock,
-                                                                      &self.position,
-                                                                      depth,
-                                                                      search_result);
+        let bns = best_node_search::<BitboardPosition, AdaptiveScope>(
+            &mut self.sherlock,
+            &self.position,
+            depth,
+            &search_result,
+        );
         meta.add_nodes(bns.meta.get_nodes());
         self.previous = EngineResult::create(bns.mv, bns.lower, meta);
         Some(self.previous.clone())
