@@ -9,12 +9,12 @@ use draughts::board::generator::Generator;
 use draughts::board::piece::Color;
 use draughts::board::position::{Position, Game};
 use draughts::engine::{Engine, EngineResult};
-//use draughts::engine::randaap::RandAap;
+use draughts::engine::randaap::RandAap;
 use draughts::engine::sherlock::Sherlock;
 //use draughts::engine::slonenok::Slonenok;
 //use draughts::uci::scan::Scan;
 //use draughts::uci::slagzet::Slagzet;
-use draughts::uci::user::User;
+//use draughts::uci::user::User;
 
 type Score = u8;
 fn game(
@@ -131,14 +131,14 @@ pub fn main() {
                          ];
     let mut ss = 0;
     let mut sr = 0;
-    for level in 14..15 {
+    for level in 10..15 {
         println!("Level {}\r\n----", level);
         let nodes = 100 << level;
-        //let one = &mut RandAap::create(5 * nodes);
+        let one = &mut RandAap::create(5 * nodes);
         //let one = &mut Scan::create(0);
         //let one = &mut Slagzet::create(nodes / 2);
         //let one = &mut Slonenok::create(nodes);
-        let one = &mut User::create();
+        //let one = &mut User::create();
         let two = &mut Sherlock::create(nodes);
         for fen in &positions[..] {
             let position = &BitboardPosition::parse(fen).unwrap();

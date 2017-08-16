@@ -76,107 +76,8 @@ impl SlonenokJudge {
     pub fn reset(&mut self) {
         self.hash.clear()
     }
-}
 
-impl Judge for SlonenokJudge {
-    fn recall(&self, position: &Position) -> PositionMemory {
-        let bitboard = BitboardPosition::clone(position);
-        match self.hash.get(&bitboard) {
-            Some(found) => found.as_memory(),
-            _ => PositionMemory::empty(),
-        }
-    }
-    fn remember(
-        &mut self,
-        position: &Position,
-        depth: Depth,
-        evaluation: Eval,
-        mv: Option<Move>,
-        low: bool,
-    ) {
-        let (has_move, from, to) = if let Some(mv) = mv {
-            if position.side_to_move() == White {
-                if !self.white_killer_moves.contains(&mv) {
-                    self.white_killer_moves[self.white_killer_cursor] = mv;
-                    self.white_killer_cursor = (self.white_killer_cursor + 1) % KILLERS;
-                }
-            } else if !self.black_killer_moves.contains(&mv) {
-                self.black_killer_moves[self.black_killer_cursor] = mv;
-                self.black_killer_cursor = (self.black_killer_cursor + 1) % KILLERS;
-            }
-            (true, mv.from() as SmallField, mv.to() as SmallField)
-        } else {
-            (false, 0, 0)
-        };
-
-        let bitboard = BitboardPosition::clone(position);
-        let hash_eval = if let Some(found) = self.hash.get(&bitboard) {
-            if found.depth > depth {
-                return;
-            }
-            if found.depth == depth {
-                if !low && evaluation <= found.lower || low && found.upper >= evaluation {
-                    return;
-                }
-                HashEval {
-                    depth,
-                    lower: if low { found.lower } else { evaluation },
-                    upper: if low { evaluation } else { found.upper },
-                    from: if has_move { from } else { found.from },
-                    to: if has_move { to } else { found.to },
-                }
-            } else {
-                HashEval {
-                    depth,
-                    lower: if low { MIN_EVAL } else { evaluation },
-                    upper: if low { evaluation } else { MAX_EVAL },
-                    from,
-                    to,
-                }
-            }
-        } else {
-            HashEval {
-                depth,
-                lower: if low { MIN_EVAL } else { evaluation },
-                upper: if low { evaluation } else { MAX_EVAL },
-                from,
-                to,
-            }
-        };
-        self.hash.insert(bitboard, hash_eval);
-    }
-    fn evaluate(&self, position: &Position) -> Eval {
-        let stats = PositionStats::for_position(position);
-
-        let beans = (0..5).fold(0, |b, i| b + PIECES[i] * stats.piece_count[i]);
-        let men = stats.piece_count[WHITE_MAN as usize] + stats.piece_count[BLACK_MAN as usize];
-        let hoffset_white = (0..10).fold(0, |b, i| b + HOFFSET[i] * stats.hoffset_white[i]);
-        let hoffset_black = (0..10).fold(0, |b, i| b + HOFFSET[i] * stats.hoffset_black[i]);
-        let voffset_white_full =
-            (0..10).fold(0, |b, i| b + VOFFSET_FULL[i] * stats.voffset_white[i]);
-        let voffset_white_empty =
-            (0..10).fold(0, |b, i| b + VOFFSET_EMPTY[i] * stats.voffset_white[i]);
-        let voffset_black_full =
-            (0..10).fold(0, |b, i| b + VOFFSET_FULL[i] * stats.voffset_black[i]);
-        let voffset_black_empty =
-            (0..10).fold(0, |b, i| b + VOFFSET_EMPTY[i] * stats.voffset_black[i]);
-        let voffset_white = if men >= 30 {
-            voffset_white_full
-        } else if men <= 10 {
-            voffset_white_empty
-        } else {
-            ((men - 30) * voffset_white_full + (30 - men) * voffset_white_empty) / 20
-        };
-        let voffset_black = if men >= 30 {
-            voffset_black_full
-        } else if men <= 10 {
-            voffset_black_empty
-        } else {
-            ((men - 30) * voffset_black_full + (30 - men) * voffset_black_empty) / 20
-        };
-        let balance_white = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_white[i]);
-        let balance_black = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_black[i]);
-
+    fn evaluate_structure(&self, position: &Position) -> Eval {
         let mut structure = 0;
 
         // hanging piece penalty
@@ -268,6 +169,112 @@ impl Judge for SlonenokJudge {
                 }
             }
         }
+
+        structure
+    }
+}
+
+impl Judge for SlonenokJudge {
+    fn recall(&self, position: &Position) -> PositionMemory {
+        let bitboard = BitboardPosition::clone(position);
+        match self.hash.get(&bitboard) {
+            Some(found) => found.as_memory(),
+            _ => PositionMemory::empty(),
+        }
+    }
+    fn remember(
+        &mut self,
+        position: &Position,
+        depth: Depth,
+        evaluation: Eval,
+        mv: Option<Move>,
+        low: bool,
+    ) {
+        let (has_move, from, to) = if let Some(mv) = mv {
+            if position.side_to_move() == White {
+                if !self.white_killer_moves.contains(&mv) {
+                    self.white_killer_moves[self.white_killer_cursor] = mv;
+                    self.white_killer_cursor = (self.white_killer_cursor + 1) % KILLERS;
+                }
+            } else if !self.black_killer_moves.contains(&mv) {
+                self.black_killer_moves[self.black_killer_cursor] = mv;
+                self.black_killer_cursor = (self.black_killer_cursor + 1) % KILLERS;
+            }
+            (true, mv.from() as SmallField, mv.to() as SmallField)
+        } else {
+            (false, 0, 0)
+        };
+
+        let bitboard = BitboardPosition::clone(position);
+        let hash_eval = if let Some(found) = self.hash.get(&bitboard) {
+            if found.depth > depth {
+                return;
+            }
+            if found.depth == depth {
+                if !low && evaluation <= found.lower || low && found.upper >= evaluation {
+                    return;
+                }
+                HashEval {
+                    depth,
+                    lower: if low { found.lower } else { evaluation },
+                    upper: if low { evaluation } else { found.upper },
+                    from: if has_move { from } else { found.from },
+                    to: if has_move { to } else { found.to },
+                }
+            } else {
+                HashEval {
+                    depth,
+                    lower: if low { MIN_EVAL } else { evaluation },
+                    upper: if low { evaluation } else { MAX_EVAL },
+                    from,
+                    to,
+                }
+            }
+        } else {
+            HashEval {
+                depth,
+                lower: if low { MIN_EVAL } else { evaluation },
+                upper: if low { evaluation } else { MAX_EVAL },
+                from,
+                to,
+            }
+        };
+        self.hash.insert(bitboard, hash_eval);
+    }
+
+    fn evaluate(&self, position: &Position) -> Eval {
+        let stats = PositionStats::for_position(position);
+
+        let beans = (0..5).fold(0, |b, i| b + PIECES[i] * stats.piece_count[i]);
+        let men = stats.piece_count[WHITE_MAN as usize] + stats.piece_count[BLACK_MAN as usize];
+        let hoffset_white = (0..10).fold(0, |b, i| b + HOFFSET[i] * stats.hoffset_white[i]);
+        let hoffset_black = (0..10).fold(0, |b, i| b + HOFFSET[i] * stats.hoffset_black[i]);
+        let voffset_white_full =
+            (0..10).fold(0, |b, i| b + VOFFSET_FULL[i] * stats.voffset_white[i]);
+        let voffset_white_empty =
+            (0..10).fold(0, |b, i| b + VOFFSET_EMPTY[i] * stats.voffset_white[i]);
+        let voffset_black_full =
+            (0..10).fold(0, |b, i| b + VOFFSET_FULL[i] * stats.voffset_black[i]);
+        let voffset_black_empty =
+            (0..10).fold(0, |b, i| b + VOFFSET_EMPTY[i] * stats.voffset_black[i]);
+        let voffset_white = if men >= 30 {
+            voffset_white_full
+        } else if men <= 10 {
+            voffset_white_empty
+        } else {
+            ((men - 30) * voffset_white_full + (30 - men) * voffset_white_empty) / 20
+        };
+        let voffset_black = if men >= 30 {
+            voffset_black_full
+        } else if men <= 10 {
+            voffset_black_empty
+        } else {
+            ((men - 30) * voffset_black_full + (30 - men) * voffset_black_empty) / 20
+        };
+        let balance_white = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_white[i]);
+        let balance_black = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_black[i]);
+
+        let structure = self.evaluate_structure(position);
 
         let score = beans + structure + (hoffset_white - hoffset_black) +
             (voffset_white - voffset_black) -
