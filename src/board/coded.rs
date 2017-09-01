@@ -46,7 +46,7 @@ fn put_piece(bits: u64, field: Field, piece: Piece) -> u64 {
     let col = field % ROW_FIELDS;
     let cb = cr % COL_POW[col];
     let ca = cr / COL_POW[col + 1] * COL_POW[col + 1];
-    let nr = cb + piece as u64 * COL_POW[col] + ca;
+    let nr = cb + u64::from(piece) * COL_POW[col] + ca;
     other | (nr << PIECE_BITS[row])
 }
 
