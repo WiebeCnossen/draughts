@@ -1,5 +1,4 @@
 use std::cmp::max;
-use std::cmp::Ordering::{Less, Greater};
 use std::collections::HashMap;
 
 use algorithm::adaptive::AdaptiveScope;
@@ -28,7 +27,6 @@ const TR: usize = 1;
 const MM: usize = 2;
 const BL: usize = 3;
 const BR: usize = 4;
-const KILLERS: usize = 20;
 
 type SmallField = u8;
 struct HashEval {
@@ -56,10 +54,6 @@ pub struct SherlockJudge {
     stars: Stars,
     evals: [Eval; 243],
     hash: HashMap<BitboardPosition, HashEval>,
-    white_killer_moves: [Move; KILLERS],
-    white_killer_cursor: usize,
-    black_killer_moves: [Move; KILLERS],
-    black_killer_cursor: usize,
 }
 
 impl SherlockJudge {
@@ -116,10 +110,6 @@ impl SherlockJudge {
             evals,
             stars: Stars::create(),
             hash: HashMap::new(),
-            white_killer_moves: [Move::Shift(0, 0); KILLERS],
-            white_killer_cursor: 0,
-            black_killer_moves: [Move::Shift(0, 0); KILLERS],
-            black_killer_cursor: 0,
         }
     }
 
@@ -172,15 +162,6 @@ impl Judge for SherlockJudge {
         low: bool,
     ) {
         let (has_move, from, to) = if let Some(mv) = mv {
-            if position.side_to_move() == White {
-                if !self.white_killer_moves.contains(&mv) {
-                    self.white_killer_moves[self.white_killer_cursor] = mv;
-                    self.white_killer_cursor = (self.white_killer_cursor + 1) % KILLERS;
-                }
-            } else if !self.black_killer_moves.contains(&mv) {
-                self.black_killer_moves[self.black_killer_cursor] = mv;
-                self.black_killer_cursor = (self.black_killer_cursor + 1) % KILLERS;
-            }
             (true, mv.from() as SmallField, mv.to() as SmallField)
         } else {
             (false, 0, 0)
@@ -281,27 +262,7 @@ impl Judge for SherlockJudge {
     }
 
     fn moves(&self, position: &Position) -> Vec<Move> {
-        let mut result = self.generator.legal_moves(position);
-        if position.side_to_move() == White {
-            result.sort_by(|mv1, mv2| match (
-                self.white_killer_moves.contains(mv1),
-                self.white_killer_moves.contains(mv2),
-            ) {
-                (false, true) => Greater,
-                (true, false) => Less,
-                _ => mv1.to().cmp(&mv2.to()),
-            })
-        } else {
-            result.sort_by(|mv1, mv2| match (
-                self.black_killer_moves.contains(mv1),
-                self.black_killer_moves.contains(mv2),
-            ) {
-                (false, true) => Greater,
-                (true, false) => Less,
-                _ => mv2.to().cmp(&mv1.to()),
-            })
-        }
-        result
+        self.generator.legal_moves(position)
     }
 
     fn quiet_move(&self, position: &Position, mv: &Move) -> bool {
