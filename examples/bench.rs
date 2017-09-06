@@ -24,7 +24,7 @@ fn run(engine: &mut Engine<Item = EngineResult>) {
         let position = match BitboardPosition::parse(line.as_str()) {
             Err(msg) => {
                 println!("Invalid position: {}", msg);
-                continue;
+                (continue)
             }
             Ok(pos) => pos,
         };
