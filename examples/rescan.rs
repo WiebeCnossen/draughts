@@ -36,7 +36,7 @@ fn main() {
             Some(word) => word,
             None => {
                 println!("[error] Empty command");
-                continue;
+                (continue)
             }
         };
         if head == "quit" {
@@ -77,14 +77,14 @@ fn main() {
                 Some(word) => word,
                 None => {
                     println!("[error] Empty fen");
-                    continue;
+                    (continue)
                 }
             };
             current = match BitboardPosition::parse(fen) {
                 Ok(position) => position,
                 Err(msg) => {
                     println!("[error] {}", msg);
-                    continue;
+                    (continue)
                 }
             };
             moves = generator.legal_moves(&current);
@@ -111,7 +111,7 @@ fn main() {
                     Some(mv) => mv,
                     None => {
                         println!("[error] No suggestion");
-                        continue;
+                        (continue)
                     }
                 }
             } else {
@@ -119,7 +119,7 @@ fn main() {
                     Some(mv) => mv,
                     None => {
                         println!("[error] Unknown move");
-                        continue;
+                        (continue)
                     }
                 }
             };
