@@ -8,7 +8,6 @@ pub const BLACK_KING: Piece = 4;
 #[derive(Debug)]
 #[derive(PartialEq)]
 #[derive(Eq)]
-#[derive(Clone)]
 pub enum Color {
     White,
     Black,
