@@ -140,19 +140,19 @@ impl Generator {
         &self,
         position: &Position,
         mv: Move,
-        color_to_capture: Color,
+        color_to_capture: &Color,
         moves: &mut Vec<Move>,
     ) {
         let mut exploded = false;
         for &(via, to) in self.steps.short_jumps(mv.to()) {
-            if piece_is(position.piece_at(via), &color_to_capture) &&
+            if piece_is(position.piece_at(via), color_to_capture) &&
                 position.piece_at(to) == EMPTY && !mv.goes_via(via)
             {
                 exploded = true;
                 self.explode_short_jump(
                     position,
                     take_more(&mv, via, to, position),
-                    color_to_capture.clone(),
+                    color_to_capture,
                     moves,
                 );
             }
@@ -168,7 +168,7 @@ impl Generator {
         position: &Position,
         mv: Move,
         min_captures: Captures,
-        color_to_capture: Color,
+        color_to_capture: &Color,
     ) -> Vec<Move> {
         let mut result = vec![];
         self.explode_short_jump(position, mv, color_to_capture, &mut result);
@@ -181,17 +181,17 @@ impl Generator {
         field: Field,
         result: &mut Vec<Move>,
         captures: &mut Captures,
-        color_to_capture: Color,
+        color_to_capture: &Color,
     ) {
         for &(via, to) in self.steps.short_jumps(field) {
             if position.piece_at(to) == EMPTY &&
-                piece_is(position.piece_at(via), &color_to_capture)
+                piece_is(position.piece_at(via), color_to_capture)
             {
                 let mut moves = self.explode_short_jumps(
                     position,
                     Take1(field, to, via),
                     *captures,
-                    color_to_capture.clone(),
+                    color_to_capture,
                 );
                 if let Some(peek) = moves.first() {
                     let num = peek.num_taken();
@@ -209,7 +209,7 @@ impl Generator {
         &self,
         position: &Position,
         mv: Move,
-        color_to_capture: Color,
+        color_to_capture: &Color,
         moves: &mut Vec<Move>,
     ) {
         let mut exploded = false;
@@ -217,7 +217,7 @@ impl Generator {
         for &path in paths.iter().take(4) {
             let mut via: Option<Field> = None;
             for &to in path {
-                match (piece_own(position.piece_at(to), &color_to_capture), via) {
+                match (piece_own(position.piece_at(to), color_to_capture), via) {
                     (Some(false), _) |
                     (Some(true), Some(_)) => break,
                     (Some(true), None) => via = Some(to),
@@ -229,7 +229,7 @@ impl Generator {
                             self.explode_long_jump(
                                 position,
                                 take_more(&mv, via, to, position),
-                                color_to_capture.clone(),
+                                color_to_capture,
                                 moves,
                             );
                         }
@@ -249,7 +249,7 @@ impl Generator {
         position: &Position,
         mv: Move,
         min_captures: Captures,
-        color_to_capture: Color,
+        color_to_capture: &Color,
     ) -> Vec<Move> {
         let mut result = vec![];
         self.explode_long_jump(position, mv, color_to_capture, &mut result);
@@ -262,14 +262,14 @@ impl Generator {
         field: Field,
         mut result: &mut Vec<Move>,
         captures: &mut Captures,
-        color_to_capture: Color,
+        color_to_capture: &Color,
     ) {
         let paths = self.steps.paths(field);
         let without_king = &BitboardPosition::clone(position).put_piece(field, EMPTY);
         for &path in paths.iter().take(4) {
             let mut via: Option<Field> = None;
             for &to in path {
-                match (piece_own(position.piece_at(to), &color_to_capture), via) {
+                match (piece_own(position.piece_at(to), color_to_capture), via) {
                     (Some(false), _) |
                     (Some(true), Some(_)) => break,
                     (Some(true), None) => via = Some(to),
@@ -278,7 +278,7 @@ impl Generator {
                             without_king,
                             Take1(field, to, via),
                             *captures,
-                            color_to_capture.clone(),
+                            color_to_capture,
                         );
                         if let Some(peek) = moves.first() {
                             let num = peek.num_taken();
@@ -306,7 +306,7 @@ impl Generator {
             for field in 0..50 {
                 match position.piece_at(field) {
                     WHITE_MAN => {
-                        self.add_short_jumps(position, field, &mut result, &mut captures, Black);
+                        self.add_short_jumps(position, field, &mut result, &mut captures, &Black);
 
                         if captures == 0 {
                             for &step in self.steps.white_steps(field) {
@@ -317,7 +317,7 @@ impl Generator {
                         }
                     }
                     WHITE_KING => {
-                        self.add_king_moves(position, field, &mut result, &mut captures, Black);
+                        self.add_king_moves(position, field, &mut result, &mut captures, &Black);
                     }
                     _ => (),
                 }
@@ -326,7 +326,7 @@ impl Generator {
             for field in 0..50 {
                 match position.piece_at(field) {
                     BLACK_MAN => {
-                        self.add_short_jumps(position, field, &mut result, &mut captures, White);
+                        self.add_short_jumps(position, field, &mut result, &mut captures, &White);
 
                         if captures == 0 {
                             for &step in self.steps.black_steps(field) {
@@ -337,7 +337,7 @@ impl Generator {
                         }
                     }
                     BLACK_KING => {
-                        self.add_king_moves(position, field, &mut result, &mut captures, White);
+                        self.add_king_moves(position, field, &mut result, &mut captures, &White);
                     }
                     _ => (),
                 }
