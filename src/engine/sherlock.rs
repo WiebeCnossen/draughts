@@ -1,4 +1,4 @@
-use std::cmp::{max, min};
+use std::cmp::max;
 use std::cmp::Ordering::{Less, Greater};
 use std::collections::HashMap;
 
@@ -136,10 +136,10 @@ impl SherlockJudge {
     }
 
     fn hole_score(&self, stats: &PositionStats) -> Eval {
-        let holes = |a| {
+        let holes = |a: [Eval; 10]| {
             let mut hole = 0;
             let mut max_hole = 0;
-            for &o in &a {
+            for &o in &a[1..9] {
                 if o == 0 {
                     hole += 1;
                     max_hole = max(max_hole, hole);
@@ -151,7 +151,7 @@ impl SherlockJudge {
         };
         let hole_white = holes(stats.hoffset_white);
         let hole_black = holes(stats.hoffset_black);
-        2 * (HOLE[hole_white] - HOLE[hole_black])
+        HOLE[hole_white] - HOLE[hole_black]
     }
 }
 
@@ -240,8 +240,7 @@ impl Judge for SherlockJudge {
         let balance_black = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_black[i]);
 
         let hole_score = self.hole_score(&stats);
-        let height_score = (30 - min(max(men, 10), 30)) / 2 *
-            (HEIGHT[stats.height_white] - HEIGHT[stats.height_black]);
+        let height_score = 10 * (HEIGHT[stats.height_white] - HEIGHT[stats.height_black]);
 
         let structure = if men < 8 {
             0
