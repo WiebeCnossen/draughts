@@ -9,7 +9,7 @@ use draughts::engine::randaap::RandAap;
 use draughts::engine::slonenok::Slonenok;
 use draughts::engine::sherlock::Sherlock;
 use draughts::uci::io::read_stdin;
-use draughts::uci::slagzet::Slagzet;
+// use draughts::uci::slagzet::Slagzet;
 
 const MAX_NODES: Nodes = 100_000;
 
@@ -61,6 +61,6 @@ pub fn main() {
         run(&mut RandAap::create(MAX_NODES));
         run(&mut Sherlock::create(MAX_NODES));
         run(&mut Slonenok::create(MAX_NODES));
-        run(&mut Slagzet::create(MAX_NODES));
+        // run(&mut Slagzet::create(MAX_NODES));
     }
 }
