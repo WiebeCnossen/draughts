@@ -1,3 +1,4 @@
+use std::cmp::{max, min};
 use std::cmp::Ordering::{Less, Greater};
 use std::collections::HashMap;
 
@@ -19,7 +20,7 @@ use engine::{Engine, EngineResult};
 
 const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1500, -500, -1500];
 const BALANCE: [Eval; 10] = [-27, -26, -24, -21, -15, 15, 21, 24, 26, 27];
-const HOLE: [Eval; 10] = [0, 0, -35, -60, -100, -100, -100, -100, -100, -100];
+const HOLE: [Eval; 11] = [0, -10, -35, -60, -100, -100, -100, -100, -100, -100, -100];
 const HEIGHT: [Eval; 10] = [2, 2, 2, 2, 1, 0, -1, -2, -3, -4];
 const THREES: [usize; 5] = [1, 3, 9, 27, 81];
 const TL: usize = 0;
@@ -135,28 +136,22 @@ impl SherlockJudge {
     }
 
     fn hole_score(&self, stats: &PositionStats) -> Eval {
-        let hole_white = HOLE[(1..9)
-                                  .scan(0, |&mut hole, i| {
-            Some(if stats.hoffset_white[i] == 0 {
-                hole + 1
-            } else {
-                0
-            })
-        })
-                                  .max()
-                                  .unwrap()];
-        let hole_black = HOLE[(1..9)
-                                  .scan(0, |&mut hole, i| {
-            Some(if stats.hoffset_black[i] == 0 {
-                hole + 1
-            } else {
-                0
-            })
-        })
-                                  .max()
-                                  .unwrap()];
-
-        hole_white - hole_black
+        let holes = |a| {
+            let mut hole = 0;
+            let mut max_hole = 0;
+            for &o in &a {
+                if o == 0 {
+                    hole += 1;
+                    max_hole = max(max_hole, hole);
+                } else {
+                    hole = 0;
+                }
+            }
+            max_hole
+        };
+        let hole_white = holes(stats.hoffset_white);
+        let hole_black = holes(stats.hoffset_black);
+        2 * (HOLE[hole_white] - HOLE[hole_black])
     }
 }
 
@@ -245,11 +240,8 @@ impl Judge for SherlockJudge {
         let balance_black = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_black[i]);
 
         let hole_score = self.hole_score(&stats);
-        let height_score = if men < 20 {
-            2 * (HEIGHT[stats.height_white] - HEIGHT[stats.height_black])
-        } else {
-            0
-        };
+        let height_score = (30 - min(max(men, 10), 30)) / 2 *
+            (HEIGHT[stats.height_white] - HEIGHT[stats.height_black]);
 
         let structure = if men < 8 {
             0
