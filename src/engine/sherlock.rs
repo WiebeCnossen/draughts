@@ -20,6 +20,7 @@ use engine::{Engine, EngineResult};
 const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1500, -500, -1500];
 const BALANCE: [Eval; 10] = [-27, -26, -24, -21, -15, 15, 21, 24, 26, 27];
 const HOLE: [Eval; 10] = [0, 0, -35, -60, -100, -100, -100, -100, -100, -100];
+const HEIGHT: [Eval; 10] = [2, 2, 2, 2, 1, 0, -1, -2, -3, -4];
 const THREES: [usize; 5] = [1, 3, 9, 27, 81];
 const TL: usize = 0;
 const TR: usize = 1;
@@ -132,6 +133,31 @@ impl SherlockJudge {
     pub fn reset(&mut self) {
         self.hash.clear()
     }
+
+    fn hole_score(&self, stats: &PositionStats) -> Eval {
+        let hole_white = HOLE[(1..9)
+                                  .scan(0, |&mut hole, i| {
+            Some(if stats.hoffset_white[i] == 0 {
+                hole + 1
+            } else {
+                0
+            })
+        })
+                                  .max()
+                                  .unwrap()];
+        let hole_black = HOLE[(1..9)
+                                  .scan(0, |&mut hole, i| {
+            Some(if stats.hoffset_black[i] == 0 {
+                hole + 1
+            } else {
+                0
+            })
+        })
+                                  .max()
+                                  .unwrap()];
+
+        hole_white - hole_black
+    }
 }
 
 impl Judge for SherlockJudge {
@@ -218,26 +244,12 @@ impl Judge for SherlockJudge {
         let balance_white = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_white[i]);
         let balance_black = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_black[i]);
 
-        let hole_white = HOLE[(1..9)
-                                  .scan(0, |&mut hole, i| {
-            Some(if stats.hoffset_white[i] == 0 {
-                hole + 1
-            } else {
-                0
-            })
-        })
-                                  .max()
-                                  .unwrap()];
-        let hole_black = HOLE[(1..9)
-                                  .scan(0, |&mut hole, i| {
-            Some(if stats.hoffset_black[i] == 0 {
-                hole + 1
-            } else {
-                0
-            })
-        })
-                                  .max()
-                                  .unwrap()];
+        let hole_score = self.hole_score(&stats);
+        let height_score = if men < 20 {
+            2 * (HEIGHT[stats.height_white] - HEIGHT[stats.height_black])
+        } else {
+            0
+        };
 
         let structure = if men < 8 {
             0
@@ -256,9 +268,8 @@ impl Judge for SherlockJudge {
             stars.iter().map(|&star| self.evals[star]).sum()
         };
 
-        let score = beans + structure + (28 - men) * (dev_white - dev_black) +
-            (hole_white - hole_black) -
-            2 * (balance_white.abs() - balance_black.abs());
+        let score = beans + structure + (28 - men) * (dev_white - dev_black) + hole_score +
+            height_score - 2 * (balance_white.abs() - balance_black.abs());
         let scaled = if self.drawish(&stats) {
             score / 10
         } else {
