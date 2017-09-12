@@ -30,8 +30,8 @@ pub trait Position {
         } else {
             "b"
         });
-        for i in 1..51 {
-            fen.push(FEN_CHARS[self.piece_at(i - 1) as Field]);
+        for c in (0..50).map(|i| FEN_CHARS[self.piece_at(i) as Field]) {
+            fen.push(c);
         }
         fen
     }
@@ -68,12 +68,14 @@ pub trait Position {
 
     fn ascii(&self) -> String {
         let mut ascii = String::new();
+        let ascii_char = |field: usize| if (field + (field / 10)) % 2 == 0 {
+            ' '
+        } else {
+            ASCII_CHARS[self.piece_at(field / 2) as Field]
+        };
+
         for field in 0..100 {
-            let c = if (field + (field / 10)) % 2 == 0 {
-                ' '
-            } else {
-                ASCII_CHARS[self.piece_at(field / 2) as Field]
-            };
+            let c = ascii_char(field);
             ascii.push(c);
             ascii.push(c);
             if (field == 9 && self.side_to_move() == Color::Black) ||
