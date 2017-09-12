@@ -19,6 +19,7 @@ use engine::{Engine, EngineResult};
 
 const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1500, -500, -1500];
 const BALANCE: [Eval; 10] = [-27, -26, -24, -21, -15, 15, 21, 24, 26, 27];
+const CENTER: [Eval; 10] = [-2, -1, 0, 1, 2, 2, 1, 0, -1, -2];
 const HOLE: [Eval; 11] = [0, -10, -35, -60, -100, -100, -100, -100, -100, -100, -100];
 const HEIGHT: [Eval; 10] = [2, 2, 2, 2, 1, 0, -1, -2, -3, -4];
 const THREES: [usize; 5] = [1, 3, 9, 27, 81];
@@ -125,23 +126,35 @@ impl SherlockJudge {
         self.hash.clear()
     }
 
-    fn hole_score(&self, stats: &PositionStats) -> Eval {
-        let holes = |a: [Eval; 10]| {
-            let mut hole = 0;
-            let mut max_hole = 0;
-            for &o in &a[1..9] {
-                if o == 0 {
-                    hole += 1;
-                    max_hole = max(max_hole, hole);
-                } else {
-                    hole = 0;
-                }
+    fn hole(&self, hoffset: &[Eval; 10]) -> Eval {
+        let mut hole = 0;
+        let mut max_hole = 0;
+        for &o in &hoffset[1..9] {
+            if o == 0 {
+                hole += 1;
+                max_hole = max(max_hole, hole);
+            } else {
+                hole = 0;
             }
-            max_hole
-        };
-        let hole_white = holes(stats.hoffset_white);
-        let hole_black = holes(stats.hoffset_black);
-        HOLE[hole_white] - HOLE[hole_black]
+        }
+        HOLE[max_hole]
+    }
+
+    fn balance(&self, hoffset: &[Eval]) -> Eval {
+        -hoffset
+            .iter()
+            .enumerate()
+            .map(|(i, &offset)| BALANCE[i] * offset)
+            .sum::<Eval>()
+            .abs()
+    }
+
+    fn center(&self, hoffset: &[Eval]) -> Eval {
+        hoffset
+            .iter()
+            .enumerate()
+            .map(|(i, &offset)| CENTER[i] * offset)
+            .sum::<Eval>() / 4
     }
 }
 
@@ -217,10 +230,9 @@ impl Judge for SherlockJudge {
             .map(|i| i as Eval * stats.voffset_black[i] as Eval)
             .sum();
 
-        let balance_white = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_white[i]);
-        let balance_black = (0..10).fold(0, |b, i| b + BALANCE[i] * stats.hoffset_black[i]);
-
-        let hole_score = self.hole_score(&stats);
+        let balance_score = self.balance(&stats.hoffset_white) - self.balance(&stats.hoffset_black);
+        let hole_score = self.hole(&stats.hoffset_white) - self.hole(&stats.hoffset_black);
+        let center_score = self.center(&stats.hoffset_white) - self.center(&stats.hoffset_black);
         let height_score = 10 * (HEIGHT[stats.height_white] - HEIGHT[stats.height_black]);
 
         let structure = if men < 8 {
@@ -241,7 +253,7 @@ impl Judge for SherlockJudge {
         };
 
         let score = beans + structure + (28 - men) * (dev_white - dev_black) + hole_score +
-            height_score - 2 * (balance_white.abs() - balance_black.abs());
+            height_score + 2 * balance_score + center_score;
         let scaled = if self.drawish(&stats) {
             score / 10
         } else {
@@ -262,7 +274,19 @@ impl Judge for SherlockJudge {
     }
 
     fn moves(&self, position: &Position) -> Vec<Move> {
-        self.generator.legal_moves(position)
+        let mut moves = self.generator.legal_moves(position);
+        let memory = self.recall(position);
+        if memory.has_move() {
+            if let Some(found) = moves.iter().position(|mv| {
+                mv.from() == memory.from && mv.to() == memory.to
+            })
+            {
+                if found > 0 {
+                    moves.swap(0, found);
+                }
+            }
+        }
+        moves
     }
 
     fn quiet_move(&self, position: &Position, mv: &Move) -> bool {
