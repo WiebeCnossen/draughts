@@ -154,7 +154,7 @@ impl SherlockJudge {
             .iter()
             .enumerate()
             .map(|(i, &offset)| CENTER[i] * offset)
-            .sum::<Eval>() / 4
+            .sum()
     }
 }
 
