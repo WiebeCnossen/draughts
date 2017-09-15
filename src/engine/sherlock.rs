@@ -18,7 +18,7 @@ use board::stars::Stars;
 use engine::{Engine, EngineResult};
 
 const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1500, -500, -1500];
-const BALANCE: [Eval; 10] = [-27, -26, -24, -21, -15, 15, 21, 24, 26, 27];
+const BALANCE: [Eval; 10] = [-54, -52, -48, -42, -30, 30, 42, 48, 52, 54];
 const CENTER: [Eval; 10] = [-2, -1, 0, 1, 2, 2, 1, 0, -1, -2];
 const HOLE: [Eval; 11] = [0, -10, -35, -60, -100, -100, -100, -100, -100, -100, -100];
 const HEIGHT: [Eval; 10] = [2, 2, 2, 2, 1, 0, -1, -2, -3, -4];
@@ -252,8 +252,8 @@ impl Judge for SherlockJudge {
             stars.iter().map(|&star| self.evals[star]).sum()
         };
 
-        let score = beans + structure + (28 - men) * (dev_white - dev_black) + hole_score +
-            height_score + 2 * balance_score + center_score;
+        let score = beans + structure + (27 - men) * (dev_white - dev_black) + hole_score +
+            height_score + balance_score + center_score;
         let scaled = if self.drawish(&stats) {
             score / 10
         } else {
