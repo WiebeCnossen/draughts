@@ -19,7 +19,7 @@ use engine::{Engine, EngineResult};
 
 const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1500, -500, -1500];
 const BALANCE: [Eval; 10] = [-54, -52, -48, -42, -30, 30, 42, 48, 52, 54];
-const CENTER: [Eval; 10] = [-2, -1, 0, 1, 2, 2, 1, 0, -1, -2];
+const CENTER: [Eval; 10] = [5, -1, 0, 1, 4, 4, 1, 0, -1, 5];
 const HOLE: [Eval; 11] = [0, -10, -35, -60, -100, -100, -100, -100, -100, -100, -100];
 const HEIGHT: [Eval; 10] = [2, 2, 2, 2, 1, 0, -1, -2, -3, -4];
 const THREES: [usize; 5] = [1, 3, 9, 27, 81];
