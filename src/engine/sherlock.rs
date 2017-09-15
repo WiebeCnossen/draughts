@@ -17,7 +17,7 @@ use board::stats::PositionStats;
 use board::stars::Stars;
 use engine::{Engine, EngineResult};
 
-const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1500, -500, -1500];
+const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1475, -500, -1475];
 const BALANCE: [Eval; 10] = [-54, -52, -48, -42, -10, 10, 42, 48, 52, 54];
 const CENTER: [Eval; 10] = [5, -1, 0, 1, 4, 4, 1, 0, -1, 5];
 const HOLE: [Eval; 11] = [0, -10, -34, -60, -100, -100, -100, -100, -100, -100, -100];
