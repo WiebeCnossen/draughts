@@ -36,7 +36,7 @@ impl BnsState {
         }
     }
 
-    fn next(&self, better_count: MoveCount, search_result: SearchResult) -> BnsState {
+    fn next(&self, better_count: MoveCount, search_result: &SearchResult) -> BnsState {
         let up = better_count > 0;
         let lower = if up { self.cut } else { self.lower };
         let upper = if up {
@@ -72,7 +72,7 @@ fn up_zero() {
     let initial = BnsState::initial(0, Move::Shift(0, 5));
     let next = initial.next(
         2,
-        SearchResult::with_move(Move::Shift(1, 5), initial.upper - 1),
+        &SearchResult::with_move(Move::Shift(1, 5), initial.upper - 1),
     );
     assert_eq!(next.lower, initial.cut);
     assert_eq!(next.upper, initial.upper);
@@ -85,7 +85,7 @@ fn up_one() {
     let initial = BnsState::initial(0, Move::Shift(0, 5));
     let next = initial.next(
         2,
-        SearchResult::with_move(Move::Shift(1, 5), initial.upper - 2),
+        &SearchResult::with_move(Move::Shift(1, 5), initial.upper - 2),
     );
     assert_eq!(next.lower, initial.cut);
     assert_eq!(next.upper, initial.upper);
@@ -97,7 +97,7 @@ fn up_one() {
 #[test]
 fn up_two() {
     let initial = BnsState::initial(0, Move::Shift(0, 5));
-    let next = initial.next(2, SearchResult::with_move(Move::Shift(1, 5), 5));
+    let next = initial.next(2, &SearchResult::with_move(Move::Shift(1, 5), 5));
     assert_eq!(next.lower, initial.cut);
     assert_eq!(next.upper, initial.upper);
     assert!(next.mv == Move::Shift(1, 5));
@@ -109,7 +109,7 @@ fn up_two() {
 #[test]
 fn down() {
     let initial = BnsState::initial(0, Move::Shift(0, 5));
-    let next = initial.next(0, SearchResult::with_move(Move::Shift(1, 5), -2));
+    let next = initial.next(0, &SearchResult::with_move(Move::Shift(1, 5), -2));
     assert_eq!(next.lower, initial.lower);
     assert_eq!(next.upper, -1);
     assert!(next.mv == Move::Shift(0, 5));
@@ -169,7 +169,7 @@ where
         //println!("State: {} {} {} {} {}",
         //  state.count, state.lower, state.cut, state.upper, state.mv.as_string());
         //println!("Result: {} {} {}", beta, best.evaluation, best.mv.unwrap().as_string());
-        let next = state.next(better_count, best);
+        let next = state.next(better_count, &best);
         //println!("Next: {} {} {} {} {}",
         //  next.count, next.lower, next.cut, next.upper, next.mv.as_string());
         if next.count == 0 {

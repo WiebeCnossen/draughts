@@ -99,7 +99,7 @@ fn game(
             }
         };
         if show {
-            println!("")
+            println!()
         }
 
         let next = position.go(&result.mv);

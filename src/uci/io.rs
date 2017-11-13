@@ -40,7 +40,7 @@ pub fn read_lines(reader: &mut BufReader<ChildStdout>, exit: &str) -> Vec<String
         let line = read_stdout(reader);
         result.push(line.clone());
         if result.last().unwrap().starts_with(exit) {
-            println!("");
+            println!();
             println!("[scan] {}", line);
             break;
         } else {
