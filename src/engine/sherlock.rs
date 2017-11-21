@@ -1,4 +1,3 @@
-use std::cmp::max;
 use std::collections::HashMap;
 
 use algorithm::adaptive::AdaptiveScope;
@@ -19,9 +18,7 @@ use engine::{Engine, EngineResult};
 
 const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1475, -500, -1475];
 const BALANCE: [Eval; 10] = [-54, -52, -48, -42, -10, 10, 42, 48, 52, 54];
-const CENTER: [Eval; 10] = [-2, -1, 0, 1, 4, 4, 1, 0, -1, -2];
-const HOLE: [Eval; 11] = [0, -10, -34, -60, -100, -100, -100, -100, -100, -100, -100];
-const HEIGHT: [Eval; 10] = [2, 2, 2, 2, 1, 0, -1, -2, -3, -4];
+const CENTER: [Eval; 10] = [-16, -8, 6, 8, 10, 10, 8, 6, -8, -16];
 const THREES: [usize; 5] = [1, 3, 9, 27, 81];
 const TL: usize = 0;
 const TR: usize = 1;
@@ -126,20 +123,6 @@ impl SherlockJudge {
         self.hash.clear()
     }
 
-    fn hole(&self, hoffset: &[Eval; 10]) -> Eval {
-        let mut hole = 0;
-        let mut max_hole = 0;
-        for &o in &hoffset[1..9] {
-            if o == 0 {
-                hole += 1;
-                max_hole = max(max_hole, hole);
-            } else {
-                hole = 0;
-            }
-        }
-        HOLE[max_hole]
-    }
-
     fn balance(&self, hoffset: &[Eval]) -> Eval {
         -hoffset
             .iter()
@@ -231,9 +214,9 @@ impl Judge for SherlockJudge {
             .sum();
 
         let balance_score = self.balance(&stats.hoffset_white) - self.balance(&stats.hoffset_black);
-        let hole_score = self.hole(&stats.hoffset_white) - self.hole(&stats.hoffset_black);
+        //let hole_score = self.hole(&stats.hoffset_white) - self.hole(&stats.hoffset_black);
         let center_score = self.center(&stats.hoffset_white) - self.center(&stats.hoffset_black);
-        let height_score = 10 * (HEIGHT[stats.height_white] - HEIGHT[stats.height_black]);
+        //let height_score = 10 * (HEIGHT[stats.height_white] - HEIGHT[stats.height_black]);
 
         let structure = if men < 8 {
             0
@@ -252,8 +235,8 @@ impl Judge for SherlockJudge {
             stars.iter().map(|&star| self.evals[star]).sum()
         };
 
-        let score = beans + structure + (27 - men) * (dev_white - dev_black) + hole_score +
-            height_score + balance_score + center_score;
+        let score = beans + structure + (32 - men) * (dev_white - dev_black) / 2 + balance_score +
+            center_score;
         let scaled = if self.drawish(&stats) {
             score / 10
         } else {
