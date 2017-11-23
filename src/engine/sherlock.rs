@@ -86,11 +86,10 @@ impl SherlockJudge {
                             };
                             evals[star] = sign *
                                 match (supporters, blockers, lockers) {
-                                    (2, _, 2) => -150,        // locked
-                                    (_, _, 2) => -100,        // ?!
+                                    (2, _, 2) => -300,        // locked
                                     (_, _, 1) => -50,         // semi-locked
                                     (0, 2, 0) => -25,         // hanging
-                                    (0, 0, _) => -20,         // isolated
+                                    (0, 0, _) => -50,         // isolated
                                     (1, 2, 0) => -5,          // semi -hanging
                                     (2, 0, 0) => 19,
                                     (2, b, 0) => 23 + 8 * b,
