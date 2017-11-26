@@ -66,16 +66,18 @@ pub trait Position {
         fen
     }
 
-    fn ascii(&self) -> String {
-        let mut ascii = String::new();
-        let ascii_char = |field: usize| if (field + (field / 10)) % 2 == 0 {
+    fn ascii_char(&self, field: usize) -> char {
+        if (field + (field / 10)) % 2 == 0 {
             ' '
         } else {
-            ASCII_CHARS[self.piece_at(field / 2) as Field]
-        };
+            ASCII_CHARS[self.piece_at(field / 2) as usize]
+        }
+    }
 
+    fn ascii(&self) -> String {
+        let mut ascii = String::new();
         for field in 0..100 {
-            let c = ascii_char(field);
+            let c = self.ascii_char(field);
             ascii.push(c);
             ascii.push(c);
             if (field == 9 && self.side_to_move() == Color::Black) ||
