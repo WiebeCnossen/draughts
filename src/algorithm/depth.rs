@@ -10,7 +10,7 @@ impl Scope for DepthScope {
         DepthScope { depth: depth }
     }
 
-    fn next(&self, quiet: bool, _: Eval) -> Option<DepthScope> {
+    fn next(&self, _: usize, quiet: bool, _: Eval) -> Option<DepthScope> {
         match (quiet, self.depth > 0) {
             (false, false) => Some(DepthScope::from_depth(0)),
             (_, true) => Some(DepthScope::from_depth(self.depth - 1)),

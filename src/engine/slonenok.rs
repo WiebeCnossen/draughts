@@ -1,9 +1,9 @@
 use std::cmp::Ordering::{Less, Greater};
 use std::collections::HashMap;
 
-use algorithm::adaptive::AdaptiveScope;
 use algorithm::bns::best_node_search;
 use algorithm::judge::{ZERO_EVAL, MIN_EVAL, MAX_EVAL, Eval, Judge, PositionMemory};
+use algorithm::logarithmic::LogarithmicScope;
 use algorithm::metric::{Nodes, Meta, Metric};
 use algorithm::scope::Depth;
 use algorithm::search::SearchResult;
@@ -322,13 +322,12 @@ impl Judge for SlonenokJudge {
         result
     }
 
-    fn quiet_move(&self, position: &Position, mv: &Move) -> bool {
-        mv.num_taken() == 0 &&
-            if position.side_to_move() == White {
-                mv.to() >= 10 || position.piece_at(mv.from()) != WHITE_MAN
-            } else {
-                mv.to() <= 39 || position.piece_at(mv.from()) != BLACK_MAN
-            }
+    fn quiet_move(&self, _: &Position, _: &Move) -> bool {
+        false
+    }
+
+    fn quiet_position(&self, _: &Position, _: &[Move]) -> bool {
+        false
     }
 
     fn display_name(&self) -> &str {
@@ -378,7 +377,7 @@ impl Iterator for Slonenok {
         };
         meta.put_depth(depth);
         meta.put_depth(depth);
-        let bns = best_node_search::<BitboardPosition, AdaptiveScope>(
+        let bns = best_node_search::<BitboardPosition, LogarithmicScope>(
             &mut self.slonenok,
             &self.position,
             depth,

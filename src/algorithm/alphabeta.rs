@@ -59,12 +59,12 @@ where
 
     let current_score = min(max(judge.evaluate(position), memory.lower), memory.upper);
 
-    if scope.next(quiet, cut - current_score).is_some() {
+    if scope.next(len, quiet, cut - current_score).is_some() {
         let mut best = MIN_EVAL;
         let mut pending = None;
         for mv in moves {
             let quiet = judge.quiet_move(position, &mv);
-            let score = if let Some(next) = scope.next(quiet, cut - current_score) {
+            let score = if let Some(next) = scope.next(len, quiet, cut - current_score) {
                 -makes_cut(judge, metric, &position.go(&mv), &next, -cut + 1).evaluation
             } else {
                 current_score

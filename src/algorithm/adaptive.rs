@@ -18,7 +18,7 @@ impl Scope for AdaptiveScope {
         }
     }
 
-    fn next(&self, quiet: bool, gap: Eval) -> Option<AdaptiveScope> {
+    fn next(&self, _: usize, quiet: bool, gap: Eval) -> Option<AdaptiveScope> {
         if !quiet {
             Some(AdaptiveScope {
                 depth: self.depth,

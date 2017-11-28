@@ -3,6 +3,7 @@ pub mod alphabeta;
 pub mod bns;
 pub mod depth;
 pub mod judge;
+pub mod logarithmic;
 pub mod metric;
 pub mod mtdf;
 pub mod scope;
