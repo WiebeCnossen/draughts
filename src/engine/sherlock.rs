@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use algorithm::adaptive::AdaptiveScope;
 use algorithm::bns::best_node_search;
 use algorithm::judge::{ZERO_EVAL, MIN_EVAL, MAX_EVAL, Eval, Judge, PositionMemory};
+use algorithm::logarithmic::LogarithmicScope;
 use algorithm::metric::{Nodes, Meta, Metric};
 use algorithm::scope::Depth;
 use algorithm::search::SearchResult;
@@ -327,7 +327,7 @@ impl Iterator for Sherlock {
         };
         meta.put_depth(depth);
         meta.put_depth(depth);
-        let bns = best_node_search::<BitboardPosition, AdaptiveScope>(
+        let bns = best_node_search::<BitboardPosition, LogarithmicScope>(
             &mut self.sherlock,
             &self.position,
             depth,
