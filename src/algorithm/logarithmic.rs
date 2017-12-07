@@ -8,7 +8,7 @@ pub struct LogarithmicScope {
 const UBASE: usize = 5;
 const POWER: [usize; 28] = [
     1,
-    5,
+    UBASE,
     25,
     125,
     625,
@@ -44,11 +44,13 @@ const POWER: [usize; 28] = [
 
 impl Scope for LogarithmicScope {
     fn from_depth(depth: Depth) -> LogarithmicScope {
-        LogarithmicScope { nodes: UBASE.pow(u32::from(depth.min(27))) }
+        LogarithmicScope { nodes: POWER[usize::from(depth.min(27))] }
     }
 
-    fn next(&self, moves: usize, _: bool, _: Eval) -> Option<LogarithmicScope> {
-        match self.nodes / moves {
+    fn next(&self, moves: usize, quiet: bool, gap: Eval) -> Option<LogarithmicScope> {
+        let shift = (gap / 1000).abs() as usize;
+        let qmoves = if quiet { moves } else { moves.min(2) };
+        match (self.nodes / qmoves) >> shift {
             0 => None,
             nodes => Some(LogarithmicScope { nodes }),
         }
