@@ -20,6 +20,14 @@ const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1475, -500, -1475];
 const BALANCE: [Eval; 10] = [-54, -52, -48, -42, -10, 10, 42, 48, 52, 54];
 const CENTER: [Eval; 10] = [-16, -8, 6, 8, 10, 10, 8, 6, -8, -16];
 const THREES: [usize; 5] = [1, 3, 9, 27, 81];
+const LOCKED: Eval = -300;
+const SEMI_LOCKED: Eval = -49;
+const HANGING: Eval = -25;
+const ISOLATED: Eval = -50;
+const SEMI_HANGING: Eval = -5;
+const BIRDY: Eval = 19;
+const TAIL: Eval = 23;
+const EXTRA: Eval = 8;
 const TL: usize = 0;
 const TR: usize = 1;
 const MM: usize = 2;
@@ -86,14 +94,14 @@ impl SherlockJudge {
                             };
                             evals[star] = sign *
                                 match (supporters, blockers, lockers) {
-                                    (2, _, 2) => -300,        // locked
-                                    (_, _, 1) => -50,         // semi-locked
-                                    (0, 2, 0) => -25,         // hanging
-                                    (0, 0, _) => -50,         // isolated
-                                    (1, 2, 0) => -5,          // semi -hanging
-                                    (2, 0, 0) => 19,
-                                    (2, b, 0) => 23 + 8 * b,
-                                    (s, b, 0) => 8 * (s + b),
+                                    (2, _, 2) => LOCKED,
+                                    (_, _, 1) => SEMI_LOCKED,
+                                    (0, 2, 0) => HANGING,
+                                    (0, 0, _) => ISOLATED,
+                                    (1, 2, 0) => SEMI_HANGING,
+                                    (2, 0, 0) => BIRDY,
+                                    (2, b, 0) => TAIL + EXTRA * b,
+                                    (s, b, 0) => EXTRA * (s + b),
                                     _ => 0,
                                 };
                         }
