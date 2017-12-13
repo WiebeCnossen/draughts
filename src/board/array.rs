@@ -1,10 +1,10 @@
 use std::hash::{Hash, Hasher};
 
-use board::position::{Field, Position, Game};
-use board::piece::{EMPTY, Color, Piece};
+use board::position::{Field, Game, Position};
+use board::piece::{Color, Piece, EMPTY};
 
 #[cfg(test)]
-use board::piece::{WHITE_MAN, BLACK_MAN};
+use board::piece::{BLACK_MAN, WHITE_MAN};
 
 pub struct ArrayPosition {
     white_to_move: bool,
@@ -13,8 +13,8 @@ pub struct ArrayPosition {
 
 impl PartialEq for ArrayPosition {
     fn eq(&self, other: &ArrayPosition) -> bool {
-        self.white_to_move == other.white_to_move &&
-            (0..50).fold(true, |a, i| a && self.pieces[i] == other.pieces[i])
+        self.white_to_move == other.white_to_move
+            && (0..50).fold(true, |a, i| a && self.pieces[i] == other.pieces[i])
     }
 }
 
@@ -146,10 +146,9 @@ fn put_one_piece() {
 
 #[test]
 fn put_pieces_in_same_row() {
-    let position = ArrayPosition::create().put_piece(31, WHITE_MAN).put_piece(
-        32,
-        BLACK_MAN,
-    );
+    let position = ArrayPosition::create()
+        .put_piece(31, WHITE_MAN)
+        .put_piece(32, BLACK_MAN);
     assert_eq!(position.side_to_move(), Color::White);
     assert_eq!(position.piece_at(25), EMPTY);
     assert_eq!(position.piece_at(30), EMPTY);

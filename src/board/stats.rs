@@ -1,7 +1,7 @@
 use std::cmp::{max, min};
 
 use algorithm::judge::Eval;
-use board::piece::{WHITE_MAN, BLACK_MAN};
+use board::piece::{BLACK_MAN, WHITE_MAN};
 use board::position::Position;
 
 pub struct PositionStats {

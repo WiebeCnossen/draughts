@@ -1,9 +1,9 @@
 use std::cmp::min;
-use std::cmp::Ordering::{Less, Greater, Equal};
+use std::cmp::Ordering::{Equal, Greater, Less};
 
 use algorithm::alphabeta::makes_cut;
-use algorithm::judge::{Eval, MIN_EVAL, MAX_EVAL, Judge};
-use algorithm::metric::{Metric, Meta};
+use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};
+use algorithm::metric::{Meta, Metric};
 use algorithm::mtdf::mtd_f;
 use algorithm::scope::{Depth, Scope};
 use algorithm::search::SearchResult;
@@ -38,7 +38,8 @@ impl BnsState {
 
     fn next(&self, better_count: MoveCount, search_result: &SearchResult) -> BnsState {
         let up = better_count > 0;
-        let lower = if up { self.cut } else { self.lower };
+        let lower =
+            if up { self.cut } else { self.lower };
         let upper = if up {
             self.upper
         } else {

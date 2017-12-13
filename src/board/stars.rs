@@ -3,32 +3,29 @@ use board::position::Field;
 
 fn star(mid: Field) -> Option<[Field; 5]> {
     let mid = Coords::from(mid);
-    if mid.min_x() == mid.x || mid.max_x() == mid.x || mid.min_y() == mid.y ||
-        mid.max_y() == mid.y
+    if mid.min_x() == mid.x || mid.max_x() == mid.x || mid.min_y() == mid.y || mid.max_y() == mid.y
     {
         None
     } else {
-        Some(
-            [
-                Field::from(Coords {
-                    x: mid.x,
-                    y: mid.y + 1,
-                }),
-                Field::from(Coords {
-                    x: mid.x + 1,
-                    y: mid.y,
-                }),
-                Field::from(Coords { x: mid.x, y: mid.y }),
-                Field::from(Coords {
-                    x: mid.x - 1,
-                    y: mid.y,
-                }),
-                Field::from(Coords {
-                    x: mid.x,
-                    y: mid.y - 1,
-                }),
-            ],
-        )
+        Some([
+            Field::from(Coords {
+                x: mid.x,
+                y: mid.y + 1,
+            }),
+            Field::from(Coords {
+                x: mid.x + 1,
+                y: mid.y,
+            }),
+            Field::from(Coords { x: mid.x, y: mid.y }),
+            Field::from(Coords {
+                x: mid.x - 1,
+                y: mid.y,
+            }),
+            Field::from(Coords {
+                x: mid.x,
+                y: mid.y - 1,
+            }),
+        ])
     }
 }
 
@@ -44,11 +41,10 @@ impl Stars {
             .map(|field| {
                 (0..32)
                     .filter_map(|star| {
-                        stars[star].iter().position(|&part| field == part).map(
-                            |index| {
-                                (star, index)
-                            },
-                        )
+                        stars[star]
+                            .iter()
+                            .position(|&part| field == part)
+                            .map(|index| (star, index))
                     })
                     .collect()
             })

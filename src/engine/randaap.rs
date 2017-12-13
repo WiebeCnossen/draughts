@@ -1,10 +1,10 @@
 use algorithm::depth::DepthScope;
-use algorithm::judge::{MIN_EVAL, ZERO_EVAL, MAX_EVAL, Eval, Judge};
-use algorithm::metric::{Nodes, Meta, Metric};
+use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL, ZERO_EVAL};
+use algorithm::metric::{Meta, Metric, Nodes};
 use algorithm::mtdf::mtd_f;
 use board::bitboard::BitboardPosition;
 use board::generator::Generator;
-use board::piece::{WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, Piece};
+use board::piece::{Piece, BLACK_KING, BLACK_MAN, WHITE_KING, WHITE_MAN};
 use board::piece::Color::White;
 use board::mv::Move;
 use board::position::{Field, Game, Position};
@@ -16,70 +16,23 @@ struct RandAapJudge {
 
 const PIECES: [Eval; 5] = [0, 500, 1500, -500, -1500];
 const FIELDS: [Eval; 50] = [
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-    0,
-    0,
-    1,
-    1,
-    0,
-    0,
-    0,
-    1,
-    1,
-    0,
-    0,
-    0,
-    1,
-    1,
-    0,
-    0,
-    0,
-    20,
-    20,
-    0,
-    0,
-    0,
-    30,
-    10,
-    0,
-    0,
-    0,
-    15,
-    1,
-    0,
-    10,
-    0,
-    1,
-    1,
-    20,
-    20,
-    0,
-    1,
-    0,
-    30,
-    50,
-    30,
-    0,
+    0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 20, 20, 0, 0, 0, 30,
+    10, 0, 0, 0, 15, 1, 0, 10, 0, 1, 1, 20, 20, 0, 1, 0, 30, 50, 30, 0,
 ];
 
 impl RandAapJudge {
     pub fn create() -> RandAapJudge {
-        RandAapJudge { generator: Generator::create() }
+        RandAapJudge {
+            generator: Generator::create(),
+        }
     }
 
     fn evaluate(&self, piece: Piece, field: Field) -> Eval {
-        PIECES[piece as usize] +
-            match piece {
-                WHITE_MAN => FIELDS[field],
-                BLACK_MAN => -FIELDS[49 - field],
-                _ => ZERO_EVAL,
-            }
+        PIECES[piece as usize] + match piece {
+            WHITE_MAN => FIELDS[field],
+            BLACK_MAN => -FIELDS[49 - field],
+            _ => ZERO_EVAL,
+        }
     }
 }
 
@@ -145,10 +98,9 @@ impl RandAap {
 impl Iterator for RandAap {
     type Item = EngineResult;
     fn next(&mut self) -> Option<EngineResult> {
-        if self.previous.meta.get_nodes() >= self.max_nodes ||
-            self.previous.meta.get_depth() > 63 ||
-            self.previous.evaluation == MIN_EVAL ||
-            self.previous.evaluation == MAX_EVAL
+        if self.previous.meta.get_nodes() >= self.max_nodes || self.previous.meta.get_depth() > 63
+            || self.previous.evaluation == MIN_EVAL
+            || self.previous.evaluation == MAX_EVAL
         {
             return None;
         }

@@ -1,7 +1,7 @@
 use std::io::{BufReader, Write};
 use std::process::{ChildStdin, ChildStdout, Command, Stdio};
 
-use algorithm::metric::{Nodes, Meta};
+use algorithm::metric::{Meta, Nodes};
 use board::bitboard::BitboardPosition;
 use board::generator::Generator;
 use board::position::{Game, Position};

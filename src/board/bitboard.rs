@@ -1,9 +1,7 @@
-use board::position::{Field, Position, Game};
-use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, Color, Piece};
+use board::position::{Field, Game, Position};
+use board::piece::{Color, Piece, BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
 
-#[derive(PartialEq)]
-#[derive(Eq)]
-#[derive(Hash)]
+#[derive(PartialEq, Eq, Hash)]
 pub struct BitboardPosition {
     empty: u64,
     white_man: u64,

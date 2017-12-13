@@ -1,10 +1,10 @@
 use board::bitboard::BitboardPosition;
-use board::piece::{EMPTY, WHITE_MAN, WHITE_KING, BLACK_MAN, BLACK_KING, piece_own, piece_is, Color};
-use board::piece::Color::{White, Black};
+use board::piece::{piece_is, piece_own, Color, BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
+use board::piece::Color::{Black, White};
 use board::position::{Field, Game, Position};
 use board::mv::{Captures, Move};
-use board::mv::Move::{Shift, Take1, Take2, Take3, Take4, Take5, Take6, Take7, Take8, Take9,
-                      Take10, Take11, Take12};
+use board::mv::Move::{Shift, Take1, Take10, Take11, Take12, Take2, Take3, Take4, Take5, Take6,
+                      Take7, Take8, Take9};
 use board::steps::Steps;
 
 fn take_more(mv: &Move, via: Field, to: Field, position: &Position) -> Move {
@@ -23,54 +23,48 @@ fn take_more(mv: &Move, via: Field, to: Field, position: &Position) -> Move {
         Take7(from, _, via0, via1, via2, via3, via4, via5, via6) => {
             Take8(from, to, via0, via1, via2, via3, via4, via5, via6, via)
         }
-        Take8(from, _, via0, via1, via2, via3, via4, via5, via6, via7) => {
-            Take9(
-                from,
-                to,
-                via0,
-                via1,
-                via2,
-                via3,
-                via4,
-                via5,
-                via6,
-                via7,
-                via,
-            )
-        }
-        Take9(from, _, via0, via1, via2, via3, via4, via5, via6, via7, via8) => {
-            Take10(
-                from,
-                to,
-                via0,
-                via1,
-                via2,
-                via3,
-                via4,
-                via5,
-                via6,
-                via7,
-                via8,
-                via,
-            )
-        }
-        Take10(from, _, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9) => {
-            Take11(
-                from,
-                to,
-                via0,
-                via1,
-                via2,
-                via3,
-                via4,
-                via5,
-                via6,
-                via7,
-                via8,
-                via9,
-                via,
-            )
-        }
+        Take8(from, _, via0, via1, via2, via3, via4, via5, via6, via7) => Take9(
+            from,
+            to,
+            via0,
+            via1,
+            via2,
+            via3,
+            via4,
+            via5,
+            via6,
+            via7,
+            via,
+        ),
+        Take9(from, _, via0, via1, via2, via3, via4, via5, via6, via7, via8) => Take10(
+            from,
+            to,
+            via0,
+            via1,
+            via2,
+            via3,
+            via4,
+            via5,
+            via6,
+            via7,
+            via8,
+            via,
+        ),
+        Take10(from, _, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9) => Take11(
+            from,
+            to,
+            via0,
+            via1,
+            via2,
+            via3,
+            via4,
+            via5,
+            via6,
+            via7,
+            via8,
+            via9,
+            via,
+        ),
         Take11(from, _, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9, via10) => {
             Take12(
                 from,
@@ -99,7 +93,9 @@ pub struct Generator {
 
 impl Generator {
     pub fn create() -> Generator {
-        Generator { steps: Steps::create() }
+        Generator {
+            steps: Steps::create(),
+        }
     }
 
     fn merge_moves(result: &mut Vec<Move>, moves: &mut Vec<Move>) {
@@ -117,7 +113,11 @@ impl Generator {
 
         let max = result.iter().fold(0, |mx, mv| {
             let nt = mv.num_taken();
-            if mx > nt { mx } else { nt }
+            if mx > nt {
+                mx
+            } else {
+                nt
+            }
         });
         if max < min_captures {
             result.clear();
@@ -145,8 +145,8 @@ impl Generator {
     ) {
         let mut exploded = false;
         for &(via, to) in self.steps.short_jumps(mv.to()) {
-            if piece_is(position.piece_at(via), color_to_capture) &&
-                position.piece_at(to) == EMPTY && !mv.goes_via(via)
+            if piece_is(position.piece_at(via), color_to_capture) && position.piece_at(to) == EMPTY
+                && !mv.goes_via(via)
             {
                 exploded = true;
                 self.explode_short_jump(
@@ -184,8 +184,7 @@ impl Generator {
         color_to_capture: &Color,
     ) {
         for &(via, to) in self.steps.short_jumps(field) {
-            if position.piece_at(to) == EMPTY &&
-                piece_is(position.piece_at(via), color_to_capture)
+            if position.piece_at(to) == EMPTY && piece_is(position.piece_at(via), color_to_capture)
             {
                 let mut moves = self.explode_short_jumps(
                     position,
@@ -218,8 +217,7 @@ impl Generator {
             let mut via: Option<Field> = None;
             for &to in path {
                 match (piece_own(position.piece_at(to), color_to_capture), via) {
-                    (Some(false), _) |
-                    (Some(true), Some(_)) => break,
+                    (Some(false), _) | (Some(true), Some(_)) => break,
                     (Some(true), None) => via = Some(to),
                     (None, Some(via)) => {
                         if mv.goes_via(via) {
@@ -270,8 +268,7 @@ impl Generator {
             let mut via: Option<Field> = None;
             for &to in path {
                 match (piece_own(position.piece_at(to), color_to_capture), via) {
-                    (Some(false), _) |
-                    (Some(true), Some(_)) => break,
+                    (Some(false), _) | (Some(true), Some(_)) => break,
                     (Some(true), None) => via = Some(to),
                     (None, Some(via)) => {
                         let mut moves = self.explode_long_jumps(
@@ -544,7 +541,6 @@ fn to_start_field() {
             Take4(34, 29, 39, 42, 22, 23),
             Take4(34, 34, 39, 42, 22, 23),
             Take4(34, 34, 23, 22, 42, 39),
-        ]
-            [..],
+        ][..],
     );
 }

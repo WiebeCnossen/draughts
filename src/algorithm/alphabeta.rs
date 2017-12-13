@@ -1,6 +1,6 @@
-use std::cmp::{min, max};
+use std::cmp::{max, min};
 
-use algorithm::judge::{Eval, MIN_EVAL, MAX_EVAL, Judge};
+use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};
 use algorithm::metric::Metric;
 use algorithm::scope::Scope;
 use algorithm::search::SearchResult;

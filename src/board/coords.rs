@@ -25,7 +25,11 @@ fn min_y(x: Coord) -> Coord {
     -max_y(x)
 }
 fn max_y(x: Coord) -> Coord {
-    if x > 4 { 9 - x } else { x }
+    if x > 4 {
+        9 - x
+    } else {
+        x
+    }
 }
 
 impl MinXY for Coords {

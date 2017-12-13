@@ -5,9 +5,7 @@ pub const WHITE_KING: Piece = 2;
 pub const BLACK_MAN: Piece = 3;
 pub const BLACK_KING: Piece = 4;
 
-#[derive(Debug)]
-#[derive(PartialEq)]
-#[derive(Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Color {
     White,
     Black,

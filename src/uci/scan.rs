@@ -2,7 +2,7 @@ use std::cmp::max;
 use std::io::{BufReader, Write};
 use std::process::{ChildStdin, ChildStdout, Command, Stdio};
 
-use algorithm::metric::{Nodes, Meta};
+use algorithm::metric::{Meta, Nodes};
 use board::bitboard::BitboardPosition;
 use board::generator::Generator;
 use board::position::{Game, Position};
@@ -58,9 +58,7 @@ impl Iterator for Scan {
                 .write(format!("pos {}\n", position.fen()).as_bytes())
                 .ok();
             self.stdin
-                .write(
-                    format!("level 1 {} 0\n", max(1, self.max_nodes / 30_000)).as_bytes(),
-                )
+                .write(format!("level 1 {} 0\n", max(1, self.max_nodes / 30_000)).as_bytes())
                 .ok();
             self.stdin.write(b"analyse\n").ok();
             let temp;

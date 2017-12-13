@@ -1,5 +1,5 @@
 use algorithm::alphabeta::makes_cut;
-use algorithm::judge::{Eval, MIN_EVAL, MAX_EVAL, Judge};
+use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};
 use algorithm::metric::Meta;
 use algorithm::scope::{Depth, Scope};
 use board::mv::Move;
