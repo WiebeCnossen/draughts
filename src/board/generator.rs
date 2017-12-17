@@ -272,7 +272,7 @@ fn verify(position: &Position, moves: &[Move]) {
 #[test]
 fn one_white_man_side() {
     let position = BitboardPosition::create().put_piece(35, WHITE_MAN);
-    verify(&position, &vec![Move::shift(35, 30)][..]);
+    verify(&position, &vec![Move::shift(35, 30)]);
 }
 
 #[test]
@@ -281,16 +281,13 @@ fn one_white_man_blocked() {
         .put_piece(35, WHITE_MAN)
         .put_piece(30, BLACK_MAN)
         .put_piece(26, BLACK_MAN);
-    verify(&position, &vec![][..]);
+    verify(&position, &vec![]);
 }
 
 #[test]
 fn one_white_man_center() {
     let position = BitboardPosition::create().put_piece(36, WHITE_MAN);
-    verify(
-        &position,
-        &vec![Move::shift(36, 30), Move::shift(36, 31)][..],
-    );
+    verify(&position, &vec![Move::shift(36, 30), Move::shift(36, 31)]);
 }
 
 #[test]
@@ -298,7 +295,7 @@ fn one_black_man_side() {
     let position = BitboardPosition::create()
         .put_piece(35, BLACK_MAN)
         .toggle_side();
-    verify(&position, &vec![Move::shift(35, 40)][..]);
+    verify(&position, &vec![Move::shift(35, 40)]);
 }
 
 #[test]
@@ -307,7 +304,7 @@ fn one_single_capture_white_man() {
         .put_piece(15, WHITE_MAN)
         .put_piece(40, BLACK_MAN)
         .put_piece(45, WHITE_MAN);
-    verify(&position, &vec![Move::take_one(45, 36, 40)][..]);
+    verify(&position, &vec![Move::take_one(45, 36, 40)]);
 }
 
 #[test]
@@ -317,7 +314,7 @@ fn one_double_capture_white_man() {
         .put_piece(31, BLACK_MAN)
         .put_piece(40, BLACK_MAN)
         .put_piece(45, WHITE_MAN);
-    verify(&position, &vec![Move::take(45, 27, &[40, 31])][..]);
+    verify(&position, &vec![Move::take(45, 27, &[40, 31])]);
 }
 
 #[test]
@@ -329,7 +326,7 @@ fn double_and_triple_capture_white_man() {
         .put_piece(41, BLACK_MAN)
         .put_piece(42, BLACK_MAN)
         .put_piece(45, WHITE_MAN);
-    verify(&position, &vec![Move::take(45, 38, &[40, 41, 42])][..]);
+    verify(&position, &vec![Move::take(45, 38, &[40, 41, 42])]);
 }
 
 #[test]
@@ -340,7 +337,7 @@ fn two_captures_white_man() {
         .put_piece(46, WHITE_MAN);
     verify(
         &position,
-        &vec![Move::take_one(46, 35, 40), Move::take_one(46, 37, 41)][..],
+        &vec![Move::take_one(46, 35, 40), Move::take_one(46, 37, 41)],
     );
 }
 
@@ -353,7 +350,7 @@ fn two_captures_black_man() {
         .toggle_side();
     verify(
         &position,
-        &vec![Move::take_one(36, 25, 30), Move::take_one(36, 27, 31)][..],
+        &vec![Move::take_one(36, 25, 30), Move::take_one(36, 27, 31)],
     );
 }
 
@@ -373,8 +370,7 @@ fn white_king_moves() {
             Move::shift(43, 39),
             Move::shift(43, 48),
             Move::shift(43, 49),
-        ]
-            [..],
+        ],
     );
 }
 
@@ -385,7 +381,7 @@ fn black_king_moves() {
         .put_piece(11, WHITE_MAN)
         .put_piece(17, WHITE_KING)
         .toggle_side();
-    verify(&position, &vec![Move::shift(0, 5), Move::shift(0, 6)][..]);
+    verify(&position, &vec![Move::shift(0, 5), Move::shift(0, 6)]);
 }
 
 #[test]
@@ -394,7 +390,7 @@ fn study1() {
         .ok()
         .unwrap()
         .go(&Move::shift(48, 43));
-    verify(&position, &vec![Move::take_one(39, 48, 43)][..]);
+    verify(&position, &vec![Move::take_one(39, 48, 43)]);
 }
 
 #[test]
@@ -405,7 +401,7 @@ fn study2() {
         .go(&Move::shift(48, 43))
         .go(&Move::take_one(39, 48, 43))
         .go(&Move::shift(49, 43));
-    verify(&position, &vec![Move::take(48, 15, &[31, 20])][..]);
+    verify(&position, &vec![Move::take(48, 15, &[31, 20])]);
 }
 
 #[test]
@@ -418,7 +414,7 @@ fn study3() {
         .go(&Move::shift(49, 43))
         .go(&Move::take(48, 15, &[31, 20]))
         .go(&Move::take(43, 38, &[28, 18, 8, 3]));
-    verify(&position, &vec![Move::take_one(22, 31, 27)][..]);
+    verify(&position, &vec![Move::take_one(22, 31, 27)]);
 }
 
 #[test]
@@ -433,7 +429,7 @@ fn study4() {
         .go(&Move::take(43, 38, &[28, 18, 8, 3]))
         .go(&Move::take_one(22, 31, 27))
         .go(&Move::shift(25, 20));
-    verify(&position, &vec![Move::take_one(15, 26, 20)][..]);
+    verify(&position, &vec![Move::take_one(15, 26, 20)]);
 }
 
 #[test]
@@ -443,7 +439,7 @@ fn multi_long_capture() {
         .unwrap();
     verify(
         &position,
-        &vec![Move::take(45, 4, &[36, 13]), Move::take(45, 9, &[36, 13])][..],
+        &vec![Move::take(45, 4, &[36, 13]), Move::take(45, 9, &[36, 13])],
     );
 }
 
@@ -452,7 +448,7 @@ fn coup_turc() {
     let position = BitboardPosition::parse("b 5/el2/5/Bebew/2w2/5/eh2/3we/ew3/5")
         .ok()
         .unwrap();
-    verify(&position, &vec![Move::take(15, 27, &[31, 38, 19, 22])][..]);
+    verify(&position, &vec![Move::take(15, 27, &[31, 38, 19, 22])]);
 }
 
 #[test]
@@ -465,7 +461,6 @@ fn to_start_field() {
         &vec![
             Move::take(34, 29, &[39, 42, 22, 23]),
             Move::take(34, 34, &[39, 42, 22, 23]),
-        ]
-            [..],
+        ],
     );
 }

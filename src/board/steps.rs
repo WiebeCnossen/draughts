@@ -27,21 +27,29 @@ where
 fn paths(field: Field) -> [Vec<Field>; 4] {
     let coords = Coords::from(field);
     [
-        path(coords.max_x() - coords.x, |d| Coords {
-            x: coords.x + d,
-            y: coords.y,
+        path(coords.max_x() - coords.x, |d| {
+            Coords {
+                x: coords.x + d,
+                y: coords.y,
+            }
         }),
-        path(coords.max_y() - coords.y, |d| Coords {
-            x: coords.x,
-            y: coords.y + d,
+        path(coords.max_y() - coords.y, |d| {
+            Coords {
+                x: coords.x,
+                y: coords.y + d,
+            }
         }),
-        path(coords.x - coords.min_x(), |d| Coords {
-            x: coords.x - d,
-            y: coords.y,
+        path(coords.x - coords.min_x(), |d| {
+            Coords {
+                x: coords.x - d,
+                y: coords.y,
+            }
         }),
-        path(coords.y - coords.min_y(), |d| Coords {
-            x: coords.x,
-            y: coords.y - d,
+        path(coords.y - coords.min_y(), |d| {
+            Coords {
+                x: coords.x,
+                y: coords.y - d,
+            }
         }),
     ]
 }
@@ -202,16 +210,16 @@ impl Steps {
     }
 
     pub fn white_steps(&self, field: Field) -> &[Field] {
-        &self.all_white_steps[field][..]
+        &self.all_white_steps[field]
     }
     pub fn black_steps(&self, field: Field) -> &[Field] {
-        &self.all_black_steps[field][..]
+        &self.all_black_steps[field]
     }
     pub fn short_jumps(&self, field: Field) -> &[(Field, Field)] {
-        &self.all_short_jumps[field][..]
+        &self.all_short_jumps[field]
     }
     pub fn paths(&self, field: Field) -> [&[Field]; 4] {
         let vecs = &self.all_paths[field];
-        [&vecs[0][..], &vecs[1][..], &vecs[2][..], &vecs[3][..]]
+        [&vecs[0], &vecs[1], &vecs[2], &vecs[3]]
     }
 }
