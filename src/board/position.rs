@@ -80,8 +80,8 @@ pub trait Position {
             let c = self.ascii_char(field);
             ascii.push(c);
             ascii.push(c);
-            if (field == 9 && self.side_to_move() == Color::Black)
-                || (field == 99 && self.side_to_move() == Color::White)
+            if (field == 9 && self.side_to_move() == Color::Black) ||
+                (field == 99 && self.side_to_move() == Color::White)
             {
                 ascii.push_str("  *")
             }
@@ -171,13 +171,15 @@ pub trait Game: Position + Hash + Sized {
                     _ => None,
                 };
                 match pieces {
-                    Some((piece, count)) => for _ in 0..count {
-                        if field == 50 {
-                            return Err(String::from("Too many fields"));
+                    Some((piece, count)) => {
+                        for _ in 0..count {
+                            if field == 50 {
+                                return Err(String::from("Too many fields"));
+                            }
+                            position = position.put_piece(field, piece);
+                            field += 1;
                         }
-                        position = position.put_piece(field, piece);
-                        field += 1;
-                    },
+                    }
                     None => return Err(format!("Invalid piece at {}", i)),
                 }
             }
@@ -190,164 +192,16 @@ pub trait Game: Position + Hash + Sized {
     }
 
     fn go(&self, mv: &Move) -> Self {
-        match *mv {
-            Move::Shift(from, to) => self.put_piece(from, EMPTY)
-                .put_piece(to, promote(to, self.piece_at(from)))
-                .toggle_side(),
-            Move::Take1(from, to, via0) => self.put_piece(from, EMPTY)
-                .put_piece(to, promote(to, self.piece_at(from)))
-                .put_piece(via0, EMPTY)
-                .toggle_side(),
-            Move::Take2(from, to, via0, via1) => self.put_piece(from, EMPTY)
-                .put_piece(to, promote(to, self.piece_at(from)))
-                .put_piece(via0, EMPTY)
-                .put_piece(via1, EMPTY)
-                .toggle_side(),
-            Move::Take3(from, to, via0, via1, via2) => self.put_piece(from, EMPTY)
-                .put_piece(to, promote(to, self.piece_at(from)))
-                .put_piece(via0, EMPTY)
-                .put_piece(via1, EMPTY)
-                .put_piece(via2, EMPTY)
-                .toggle_side(),
-            Move::Take4(from, to, via0, via1, via2, via3) => self.put_piece(from, EMPTY)
-                .put_piece(to, promote(to, self.piece_at(from)))
-                .put_piece(via0, EMPTY)
-                .put_piece(via1, EMPTY)
-                .put_piece(via2, EMPTY)
-                .put_piece(via3, EMPTY)
-                .toggle_side(),
-            Move::Take5(from, to, via0, via1, via2, via3, via4) => self.put_piece(from, EMPTY)
-                .put_piece(to, promote(to, self.piece_at(from)))
-                .put_piece(via0, EMPTY)
-                .put_piece(via1, EMPTY)
-                .put_piece(via2, EMPTY)
-                .put_piece(via3, EMPTY)
-                .put_piece(via4, EMPTY)
-                .toggle_side(),
-            Move::Take6(from, to, via0, via1, via2, via3, via4, via5) => {
-                self.put_piece(from, EMPTY)
-                    .put_piece(to, promote(to, self.piece_at(from)))
-                    .put_piece(via0, EMPTY)
-                    .put_piece(via1, EMPTY)
-                    .put_piece(via2, EMPTY)
-                    .put_piece(via3, EMPTY)
-                    .put_piece(via4, EMPTY)
-                    .put_piece(via5, EMPTY)
-                    .toggle_side()
-            }
-            Move::Take7(from, to, via0, via1, via2, via3, via4, via5, via6) => {
-                self.put_piece(from, EMPTY)
-                    .put_piece(to, promote(to, self.piece_at(from)))
-                    .put_piece(via0, EMPTY)
-                    .put_piece(via1, EMPTY)
-                    .put_piece(via2, EMPTY)
-                    .put_piece(via3, EMPTY)
-                    .put_piece(via4, EMPTY)
-                    .put_piece(via5, EMPTY)
-                    .put_piece(via6, EMPTY)
-                    .toggle_side()
-            }
-            Move::Take8(from, to, via0, via1, via2, via3, via4, via5, via6, via7) => {
-                self.put_piece(from, EMPTY)
-                    .put_piece(to, promote(to, self.piece_at(from)))
-                    .put_piece(via0, EMPTY)
-                    .put_piece(via1, EMPTY)
-                    .put_piece(via2, EMPTY)
-                    .put_piece(via3, EMPTY)
-                    .put_piece(via4, EMPTY)
-                    .put_piece(via5, EMPTY)
-                    .put_piece(via6, EMPTY)
-                    .put_piece(via7, EMPTY)
-                    .toggle_side()
-            }
-            Move::Take9(from, to, via0, via1, via2, via3, via4, via5, via6, via7, via8) => {
-                self.put_piece(from, EMPTY)
-                    .put_piece(to, promote(to, self.piece_at(from)))
-                    .put_piece(via0, EMPTY)
-                    .put_piece(via1, EMPTY)
-                    .put_piece(via2, EMPTY)
-                    .put_piece(via3, EMPTY)
-                    .put_piece(via4, EMPTY)
-                    .put_piece(via5, EMPTY)
-                    .put_piece(via6, EMPTY)
-                    .put_piece(via7, EMPTY)
-                    .put_piece(via8, EMPTY)
-                    .toggle_side()
-            }
-            Move::Take10(from, to, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9) => {
-                self.put_piece(from, EMPTY)
-                    .put_piece(to, promote(to, self.piece_at(from)))
-                    .put_piece(via0, EMPTY)
-                    .put_piece(via1, EMPTY)
-                    .put_piece(via2, EMPTY)
-                    .put_piece(via3, EMPTY)
-                    .put_piece(via4, EMPTY)
-                    .put_piece(via5, EMPTY)
-                    .put_piece(via6, EMPTY)
-                    .put_piece(via7, EMPTY)
-                    .put_piece(via8, EMPTY)
-                    .put_piece(via9, EMPTY)
-                    .toggle_side()
-            }
-            Move::Take11(
-                from,
-                to,
-                via0,
-                via1,
-                via2,
-                via3,
-                via4,
-                via5,
-                via6,
-                via7,
-                via8,
-                via9,
-                via10,
-            ) => self.put_piece(from, EMPTY)
-                .put_piece(to, promote(to, self.piece_at(from)))
-                .put_piece(via0, EMPTY)
-                .put_piece(via1, EMPTY)
-                .put_piece(via2, EMPTY)
-                .put_piece(via3, EMPTY)
-                .put_piece(via4, EMPTY)
-                .put_piece(via5, EMPTY)
-                .put_piece(via6, EMPTY)
-                .put_piece(via7, EMPTY)
-                .put_piece(via8, EMPTY)
-                .put_piece(via9, EMPTY)
-                .put_piece(via10, EMPTY)
-                .toggle_side(),
-            Move::Take12(
-                from,
-                to,
-                via0,
-                via1,
-                via2,
-                via3,
-                via4,
-                via5,
-                via6,
-                via7,
-                via8,
-                via9,
-                via10,
-                via11,
-            ) => self.put_piece(from, EMPTY)
-                .put_piece(to, promote(to, self.piece_at(from)))
-                .put_piece(via0, EMPTY)
-                .put_piece(via1, EMPTY)
-                .put_piece(via2, EMPTY)
-                .put_piece(via3, EMPTY)
-                .put_piece(via4, EMPTY)
-                .put_piece(via5, EMPTY)
-                .put_piece(via6, EMPTY)
-                .put_piece(via7, EMPTY)
-                .put_piece(via8, EMPTY)
-                .put_piece(via9, EMPTY)
-                .put_piece(via10, EMPTY)
-                .put_piece(via11, EMPTY)
-                .toggle_side(),
-        }
+        mv.taken().iter().fold(
+            self.toggle_side().put_piece(mv.from(), EMPTY).put_piece(
+                mv.to(),
+                promote(
+                    mv.to(),
+                    self.piece_at(mv.from()),
+                ),
+            ),
+            |position, &taken| position.put_piece(taken, EMPTY),
+        )
     }
 }
 
@@ -356,7 +210,7 @@ fn promotion() {
     let position = BitboardPosition::create()
         .put_piece(1, BLACK_MAN)
         .put_piece(5, WHITE_MAN)
-        .go(&Move::Shift(5, 0));
+        .go(&Move::shift(5, 0));
     assert_eq!(position.side_to_move(), Color::Black);
     assert_eq!(position.piece_at(0), WHITE_KING);
     assert_eq!(position.piece_at(1), BLACK_MAN);

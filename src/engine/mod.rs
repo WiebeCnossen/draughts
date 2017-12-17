@@ -25,7 +25,7 @@ impl EngineResult {
         }
     }
     pub fn empty() -> EngineResult {
-        EngineResult::create(Move::Shift(0, 0), ZERO_EVAL, Meta::create())
+        EngineResult::create(Move::null(), ZERO_EVAL, Meta::create())
     }
 }
 

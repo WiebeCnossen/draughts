@@ -16,23 +16,70 @@ struct RandAapJudge {
 
 const PIECES: [Eval; 5] = [0, 500, 1500, -500, -1500];
 const FIELDS: [Eval; 50] = [
-    0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 20, 20, 0, 0, 0, 30,
-    10, 0, 0, 0, 15, 1, 0, 10, 0, 1, 1, 20, 20, 0, 1, 0, 30, 50, 30, 0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    20,
+    20,
+    0,
+    0,
+    0,
+    30,
+    10,
+    0,
+    0,
+    0,
+    15,
+    1,
+    0,
+    10,
+    0,
+    1,
+    1,
+    20,
+    20,
+    0,
+    1,
+    0,
+    30,
+    50,
+    30,
+    0,
 ];
 
 impl RandAapJudge {
     pub fn create() -> RandAapJudge {
-        RandAapJudge {
-            generator: Generator::create(),
-        }
+        RandAapJudge { generator: Generator::create() }
     }
 
     fn evaluate(&self, piece: Piece, field: Field) -> Eval {
-        PIECES[piece as usize] + match piece {
-            WHITE_MAN => FIELDS[field],
-            BLACK_MAN => -FIELDS[49 - field],
-            _ => ZERO_EVAL,
-        }
+        PIECES[piece as usize] +
+            match piece {
+                WHITE_MAN => FIELDS[field],
+                BLACK_MAN => -FIELDS[49 - field],
+                _ => ZERO_EVAL,
+            }
     }
 }
 
@@ -89,7 +136,7 @@ impl RandAap {
         RandAap {
             max_nodes,
             judge: RandAapJudge::create(),
-            previous: EngineResult::create(Move::Shift(0, 0), ZERO_EVAL, Meta::create()),
+            previous: EngineResult::create(Move::null(), ZERO_EVAL, Meta::create()),
             position: BitboardPosition::initial(),
         }
     }
@@ -98,9 +145,10 @@ impl RandAap {
 impl Iterator for RandAap {
     type Item = EngineResult;
     fn next(&mut self) -> Option<EngineResult> {
-        if self.previous.meta.get_nodes() >= self.max_nodes || self.previous.meta.get_depth() > 63
-            || self.previous.evaluation == MIN_EVAL
-            || self.previous.evaluation == MAX_EVAL
+        if self.previous.meta.get_nodes() >= self.max_nodes ||
+            self.previous.meta.get_depth() > 63 ||
+            self.previous.evaluation == MIN_EVAL ||
+            self.previous.evaluation == MAX_EVAL
         {
             return None;
         }

@@ -3,89 +3,7 @@ use board::piece::{piece_is, piece_own, Color, BLACK_KING, BLACK_MAN, EMPTY, WHI
 use board::piece::Color::{Black, White};
 use board::position::{Field, Game, Position};
 use board::mv::{Captures, Move};
-use board::mv::Move::{Shift, Take1, Take10, Take11, Take12, Take2, Take3, Take4, Take5, Take6,
-                      Take7, Take8, Take9};
 use board::steps::Steps;
-
-fn take_more(mv: &Move, via: Field, to: Field, position: &Position) -> Move {
-    match *mv {
-        Shift(..) => panic!("Taking more after Shift is prohibited"),
-        Take1(from, _, via0) => Take2(from, to, via0, via),
-        Take2(from, _, via0, via1) => Take3(from, to, via0, via1, via),
-        Take3(from, _, via0, via1, via2) => Take4(from, to, via0, via1, via2, via),
-        Take4(from, _, via0, via1, via2, via3) => Take5(from, to, via0, via1, via2, via3, via),
-        Take5(from, _, via0, via1, via2, via3, via4) => {
-            Take6(from, to, via0, via1, via2, via3, via4, via)
-        }
-        Take6(from, _, via0, via1, via2, via3, via4, via5) => {
-            Take7(from, to, via0, via1, via2, via3, via4, via5, via)
-        }
-        Take7(from, _, via0, via1, via2, via3, via4, via5, via6) => {
-            Take8(from, to, via0, via1, via2, via3, via4, via5, via6, via)
-        }
-        Take8(from, _, via0, via1, via2, via3, via4, via5, via6, via7) => Take9(
-            from,
-            to,
-            via0,
-            via1,
-            via2,
-            via3,
-            via4,
-            via5,
-            via6,
-            via7,
-            via,
-        ),
-        Take9(from, _, via0, via1, via2, via3, via4, via5, via6, via7, via8) => Take10(
-            from,
-            to,
-            via0,
-            via1,
-            via2,
-            via3,
-            via4,
-            via5,
-            via6,
-            via7,
-            via8,
-            via,
-        ),
-        Take10(from, _, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9) => Take11(
-            from,
-            to,
-            via0,
-            via1,
-            via2,
-            via3,
-            via4,
-            via5,
-            via6,
-            via7,
-            via8,
-            via9,
-            via,
-        ),
-        Take11(from, _, via0, via1, via2, via3, via4, via5, via6, via7, via8, via9, via10) => {
-            Take12(
-                from,
-                to,
-                via0,
-                via1,
-                via2,
-                via3,
-                via4,
-                via5,
-                via6,
-                via7,
-                via8,
-                via9,
-                via10,
-                via,
-            )
-        }
-        _ => panic!("Too many captures at \r\n{}", position.ascii()),
-    }
-}
 
 pub struct Generator {
     steps: Steps,
@@ -93,9 +11,7 @@ pub struct Generator {
 
 impl Generator {
     pub fn create() -> Generator {
-        Generator {
-            steps: Steps::create(),
-        }
+        Generator { steps: Steps::create() }
     }
 
     fn merge_moves(result: &mut Vec<Move>, moves: &mut Vec<Move>) {
@@ -113,11 +29,7 @@ impl Generator {
 
         let max = result.iter().fold(0, |mx, mv| {
             let nt = mv.num_taken();
-            if mx > nt {
-                mx
-            } else {
-                nt
-            }
+            if mx > nt { mx } else { nt }
         });
         if max < min_captures {
             result.clear();
@@ -145,16 +57,11 @@ impl Generator {
     ) {
         let mut exploded = false;
         for &(via, to) in self.steps.short_jumps(mv.to()) {
-            if piece_is(position.piece_at(via), color_to_capture) && position.piece_at(to) == EMPTY
-                && !mv.goes_via(via)
+            if piece_is(position.piece_at(via), color_to_capture) &&
+                position.piece_at(to) == EMPTY && !mv.goes_via(via)
             {
                 exploded = true;
-                self.explode_short_jump(
-                    position,
-                    take_more(&mv, via, to, position),
-                    color_to_capture,
-                    moves,
-                );
+                self.explode_short_jump(position, mv.take_more(via, to), color_to_capture, moves);
             }
         }
 
@@ -184,11 +91,12 @@ impl Generator {
         color_to_capture: &Color,
     ) {
         for &(via, to) in self.steps.short_jumps(field) {
-            if position.piece_at(to) == EMPTY && piece_is(position.piece_at(via), color_to_capture)
+            if position.piece_at(to) == EMPTY &&
+                piece_is(position.piece_at(via), color_to_capture)
             {
                 let mut moves = self.explode_short_jumps(
                     position,
-                    Take1(field, to, via),
+                    Move::take_one(field, to, via),
                     *captures,
                     color_to_capture,
                 );
@@ -217,7 +125,8 @@ impl Generator {
             let mut via: Option<Field> = None;
             for &to in path {
                 match (piece_own(position.piece_at(to), color_to_capture), via) {
-                    (Some(false), _) | (Some(true), Some(_)) => break,
+                    (Some(false), _) |
+                    (Some(true), Some(_)) => break,
                     (Some(true), None) => via = Some(to),
                     (None, Some(via)) => {
                         if mv.goes_via(via) {
@@ -226,7 +135,7 @@ impl Generator {
                             exploded = true;
                             self.explode_long_jump(
                                 position,
-                                take_more(&mv, via, to, position),
+                                mv.take_more(via, to),
                                 color_to_capture,
                                 moves,
                             );
@@ -268,12 +177,13 @@ impl Generator {
             let mut via: Option<Field> = None;
             for &to in path {
                 match (piece_own(position.piece_at(to), color_to_capture), via) {
-                    (Some(false), _) | (Some(true), Some(_)) => break,
+                    (Some(false), _) |
+                    (Some(true), Some(_)) => break,
                     (Some(true), None) => via = Some(to),
                     (None, Some(via)) => {
                         let mut moves = self.explode_long_jumps(
                             without_king,
-                            Take1(field, to, via),
+                            Move::take_one(field, to, via),
                             *captures,
                             color_to_capture,
                         );
@@ -288,7 +198,7 @@ impl Generator {
                     }
                     (None, None) => {
                         if *captures == 0 {
-                            result.push(Shift(field, to));
+                            result.push(Move::shift(field, to));
                         }
                     }
                 }
@@ -308,7 +218,7 @@ impl Generator {
                         if captures == 0 {
                             for &step in self.steps.white_steps(field) {
                                 if position.piece_at(step) == EMPTY {
-                                    result.push(Shift(field, step));
+                                    result.push(Move::shift(field, step));
                                 }
                             }
                         }
@@ -328,7 +238,7 @@ impl Generator {
                         if captures == 0 {
                             for &step in self.steps.black_steps(field) {
                                 if position.piece_at(step) == EMPTY {
-                                    result.push(Shift(field, step));
+                                    result.push(Move::shift(field, step));
                                 }
                             }
                         }
@@ -362,7 +272,7 @@ fn verify(position: &Position, moves: &[Move]) {
 #[test]
 fn one_white_man_side() {
     let position = BitboardPosition::create().put_piece(35, WHITE_MAN);
-    verify(&position, &vec![Shift(35, 30)][..]);
+    verify(&position, &vec![Move::shift(35, 30)][..]);
 }
 
 #[test]
@@ -377,7 +287,10 @@ fn one_white_man_blocked() {
 #[test]
 fn one_white_man_center() {
     let position = BitboardPosition::create().put_piece(36, WHITE_MAN);
-    verify(&position, &vec![Shift(36, 30), Shift(36, 31)][..]);
+    verify(
+        &position,
+        &vec![Move::shift(36, 30), Move::shift(36, 31)][..],
+    );
 }
 
 #[test]
@@ -385,7 +298,7 @@ fn one_black_man_side() {
     let position = BitboardPosition::create()
         .put_piece(35, BLACK_MAN)
         .toggle_side();
-    verify(&position, &vec![Shift(35, 40)][..]);
+    verify(&position, &vec![Move::shift(35, 40)][..]);
 }
 
 #[test]
@@ -394,7 +307,7 @@ fn one_single_capture_white_man() {
         .put_piece(15, WHITE_MAN)
         .put_piece(40, BLACK_MAN)
         .put_piece(45, WHITE_MAN);
-    verify(&position, &vec![Take1(45, 36, 40)][..]);
+    verify(&position, &vec![Move::take_one(45, 36, 40)][..]);
 }
 
 #[test]
@@ -404,7 +317,7 @@ fn one_double_capture_white_man() {
         .put_piece(31, BLACK_MAN)
         .put_piece(40, BLACK_MAN)
         .put_piece(45, WHITE_MAN);
-    verify(&position, &vec![Take2(45, 27, 40, 31)][..]);
+    verify(&position, &vec![Move::take(45, 27, &[40, 31])][..]);
 }
 
 #[test]
@@ -416,7 +329,7 @@ fn double_and_triple_capture_white_man() {
         .put_piece(41, BLACK_MAN)
         .put_piece(42, BLACK_MAN)
         .put_piece(45, WHITE_MAN);
-    verify(&position, &vec![Take3(45, 38, 40, 41, 42)][..]);
+    verify(&position, &vec![Move::take(45, 38, &[40, 41, 42])][..]);
 }
 
 #[test]
@@ -425,7 +338,10 @@ fn two_captures_white_man() {
         .put_piece(40, BLACK_MAN)
         .put_piece(41, BLACK_MAN)
         .put_piece(46, WHITE_MAN);
-    verify(&position, &vec![Take1(46, 35, 40), Take1(46, 37, 41)][..]);
+    verify(
+        &position,
+        &vec![Move::take_one(46, 35, 40), Move::take_one(46, 37, 41)][..],
+    );
 }
 
 #[test]
@@ -435,7 +351,10 @@ fn two_captures_black_man() {
         .put_piece(31, WHITE_MAN)
         .put_piece(36, BLACK_MAN)
         .toggle_side();
-    verify(&position, &vec![Take1(36, 25, 30), Take1(36, 27, 31)][..]);
+    verify(
+        &position,
+        &vec![Move::take_one(36, 25, 30), Move::take_one(36, 27, 31)][..],
+    );
 }
 
 #[test]
@@ -449,7 +368,13 @@ fn white_king_moves() {
         .put_piece(43, WHITE_KING);
     verify(
         &position,
-        &vec![Shift(43, 34), Shift(43, 39), Shift(43, 48), Shift(43, 49)][..],
+        &vec![
+            Move::shift(43, 34),
+            Move::shift(43, 39),
+            Move::shift(43, 48),
+            Move::shift(43, 49),
+        ]
+            [..],
     );
 }
 
@@ -460,7 +385,7 @@ fn black_king_moves() {
         .put_piece(11, WHITE_MAN)
         .put_piece(17, WHITE_KING)
         .toggle_side();
-    verify(&position, &vec![Shift(0, 5), Shift(0, 6)][..]);
+    verify(&position, &vec![Move::shift(0, 5), Move::shift(0, 6)][..]);
 }
 
 #[test]
@@ -468,8 +393,8 @@ fn study1() {
     let position = BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
         .ok()
         .unwrap()
-        .go(&Shift(48, 43));
-    verify(&position, &vec![Take1(39, 48, 43)][..]);
+        .go(&Move::shift(48, 43));
+    verify(&position, &vec![Move::take_one(39, 48, 43)][..]);
 }
 
 #[test]
@@ -477,10 +402,10 @@ fn study2() {
     let position = BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
         .ok()
         .unwrap()
-        .go(&Shift(48, 43))
-        .go(&Take1(39, 48, 43))
-        .go(&Shift(49, 43));
-    verify(&position, &vec![Take2(48, 15, 31, 20)][..]);
+        .go(&Move::shift(48, 43))
+        .go(&Move::take_one(39, 48, 43))
+        .go(&Move::shift(49, 43));
+    verify(&position, &vec![Move::take(48, 15, &[31, 20])][..]);
 }
 
 #[test]
@@ -488,12 +413,12 @@ fn study3() {
     let position = BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
         .ok()
         .unwrap()
-        .go(&Shift(48, 43))
-        .go(&Take1(39, 48, 43))
-        .go(&Shift(49, 43))
-        .go(&Take2(48, 15, 31, 20))
-        .go(&Take4(43, 38, 28, 18, 8, 3));
-    verify(&position, &vec![Take1(22, 31, 27)][..]);
+        .go(&Move::shift(48, 43))
+        .go(&Move::take_one(39, 48, 43))
+        .go(&Move::shift(49, 43))
+        .go(&Move::take(48, 15, &[31, 20]))
+        .go(&Move::take(43, 38, &[28, 18, 8, 3]));
+    verify(&position, &vec![Move::take_one(22, 31, 27)][..]);
 }
 
 #[test]
@@ -501,14 +426,14 @@ fn study4() {
     let position = BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
         .ok()
         .unwrap()
-        .go(&Shift(48, 43))
-        .go(&Take1(39, 48, 43))
-        .go(&Shift(49, 43))
-        .go(&Take2(48, 15, 31, 20))
-        .go(&Take4(43, 38, 28, 18, 8, 3))
-        .go(&Take1(22, 31, 27))
-        .go(&Shift(25, 20));
-    verify(&position, &vec![Take1(15, 26, 20)][..]);
+        .go(&Move::shift(48, 43))
+        .go(&Move::take_one(39, 48, 43))
+        .go(&Move::shift(49, 43))
+        .go(&Move::take(48, 15, &[31, 20]))
+        .go(&Move::take(43, 38, &[28, 18, 8, 3]))
+        .go(&Move::take_one(22, 31, 27))
+        .go(&Move::shift(25, 20));
+    verify(&position, &vec![Move::take_one(15, 26, 20)][..]);
 }
 
 #[test]
@@ -518,7 +443,7 @@ fn multi_long_capture() {
         .unwrap();
     verify(
         &position,
-        &vec![Take2(45, 4, 36, 13), Take2(45, 9, 36, 13)][..],
+        &vec![Move::take(45, 4, &[36, 13]), Move::take(45, 9, &[36, 13])][..],
     );
 }
 
@@ -527,7 +452,7 @@ fn coup_turc() {
     let position = BitboardPosition::parse("b 5/el2/5/Bebew/2w2/5/eh2/3we/ew3/5")
         .ok()
         .unwrap();
-    verify(&position, &vec![Take4(15, 27, 31, 38, 19, 22)][..]);
+    verify(&position, &vec![Move::take(15, 27, &[31, 38, 19, 22])][..]);
 }
 
 #[test]
@@ -538,9 +463,9 @@ fn to_start_field() {
     verify(
         &position,
         &vec![
-            Take4(34, 29, 39, 42, 22, 23),
-            Take4(34, 34, 39, 42, 22, 23),
-            Take4(34, 34, 23, 22, 42, 39),
-        ][..],
+            Move::take(34, 29, &[39, 42, 22, 23]),
+            Move::take(34, 34, &[39, 42, 22, 23]),
+        ]
+            [..],
     );
 }
