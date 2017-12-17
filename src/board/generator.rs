@@ -2,7 +2,7 @@ use board::bitboard::BitboardPosition;
 use board::piece::{piece_is, piece_own, Color, BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
 use board::piece::Color::{Black, White};
 use board::position::{Field, Game, Position};
-use board::mv::{Captures, Move};
+use board::mv::Move;
 use board::steps::Steps;
 
 pub struct Generator {
@@ -16,42 +16,30 @@ impl Generator {
         }
     }
 
-    fn merge_moves(result: &mut Vec<Move>, moves: &mut Vec<Move>) {
-        while let Some(mv) = moves.pop() {
-            if !result.contains(&mv) {
-                result.push(mv)
-            }
-        }
-    }
-
-    fn trim_result(mut result: Vec<Move>, min_captures: Captures) -> Vec<Move> {
-        if result.is_empty() {
-            return result;
+    fn trim_list(list: &mut Vec<Move>) {
+        if list.is_empty() {
+            return;
         }
 
-        let max = result.iter().fold(0, |mx, mv| {
-            let nt = mv.num_taken();
-            if mx > nt {
-                mx
-            } else {
-                nt
-            }
-        });
-        if max < min_captures {
-            result.clear();
-            return result;
+        let num_taken = list.iter().map(|mv| mv.num_taken()).max().unwrap();
+        if num_taken == 0 {
+            return;
         }
 
         let mut i = 0;
-        while i < result.len() {
-            if result[i].num_taken() < max {
-                result.swap_remove(i);
+        while i < list.len() {
+            if list[i].num_taken() < num_taken {
+                list.swap_remove(i);
             } else {
                 i += 1;
             }
         }
+        if num_taken < 2 {
+            return;
+        }
 
-        result
+        list.sort_unstable_by_key(|mv| (mv.from(), mv.to()));
+        list.dedup();
     }
 
     fn explode_short_jump(
@@ -59,7 +47,7 @@ impl Generator {
         position: &Position,
         mv: Move,
         color_to_capture: &Color,
-        moves: &mut Vec<Move>,
+        list: &mut Vec<Move>,
     ) {
         let mut exploded = false;
         for &(via, to) in self.steps.short_jumps(mv.to()) {
@@ -67,54 +55,36 @@ impl Generator {
                 && !mv.goes_via(via)
             {
                 exploded = true;
-                self.explode_short_jump(position, mv.take_more(via, to), color_to_capture, moves);
+                self.explode_short_jump(position, mv.take_more(via, to), color_to_capture, list);
             }
         }
 
         if !exploded {
-            moves.push(mv);
+            list.push(mv);
         }
-    }
-
-    fn explode_short_jumps(
-        &self,
-        position: &Position,
-        mv: Move,
-        min_captures: Captures,
-        color_to_capture: &Color,
-    ) -> Vec<Move> {
-        let mut result = vec![];
-        self.explode_short_jump(position, mv, color_to_capture, &mut result);
-        Generator::trim_result(result, min_captures)
     }
 
     fn add_short_jumps(
         &self,
         position: &Position,
         field: Field,
-        result: &mut Vec<Move>,
-        captures: &mut Captures,
+        list: &mut Vec<Move>,
         color_to_capture: &Color,
-    ) {
+    ) -> bool {
+        let mut captures = false;
         for &(via, to) in self.steps.short_jumps(field) {
             if position.piece_at(to) == EMPTY && piece_is(position.piece_at(via), color_to_capture)
             {
-                let mut moves = self.explode_short_jumps(
+                captures = true;
+                self.explode_short_jump(
                     position,
                     Move::take_one(field, to, via),
-                    *captures,
                     color_to_capture,
+                    list,
                 );
-                if let Some(peek) = moves.first() {
-                    let num = peek.num_taken();
-                    if num > *captures {
-                        result.clear();
-                        *captures = num;
-                    }
-                }
-                result.append(&mut moves);
             }
         }
+        captures
     }
 
     fn explode_long_jump(
@@ -126,7 +96,7 @@ impl Generator {
     ) {
         let mut exploded = false;
         let paths = self.steps.paths(mv.to());
-        for &path in paths.iter().take(4) {
+        for &path in &paths {
             let mut via: Option<Field> = None;
             for &to in path {
                 match (piece_own(position.piece_at(to), color_to_capture), via) {
@@ -155,53 +125,34 @@ impl Generator {
         }
     }
 
-    fn explode_long_jumps(
-        &self,
-        position: &Position,
-        mv: Move,
-        min_captures: Captures,
-        color_to_capture: &Color,
-    ) -> Vec<Move> {
-        let mut result = vec![];
-        self.explode_long_jump(position, mv, color_to_capture, &mut result);
-        Generator::trim_result(result, min_captures)
-    }
-
     fn add_king_moves(
         &self,
         position: &Position,
         field: Field,
-        mut result: &mut Vec<Move>,
-        captures: &mut Captures,
+        list: &mut Vec<Move>,
+        captures: &mut bool,
         color_to_capture: &Color,
     ) {
         let paths = self.steps.paths(field);
         let without_king = &BitboardPosition::clone(position).put_piece(field, EMPTY);
-        for &path in paths.iter().take(4) {
+        for &path in &paths {
             let mut via: Option<Field> = None;
             for &to in path {
                 match (piece_own(position.piece_at(to), color_to_capture), via) {
                     (Some(false), _) | (Some(true), Some(_)) => break,
                     (Some(true), None) => via = Some(to),
                     (None, Some(via)) => {
-                        let mut moves = self.explode_long_jumps(
+                        self.explode_long_jump(
                             without_king,
                             Move::take_one(field, to, via),
-                            *captures,
                             color_to_capture,
+                            list,
                         );
-                        if let Some(peek) = moves.first() {
-                            let num = peek.num_taken();
-                            if num > *captures {
-                                result.clear();
-                                *captures = num;
-                            }
-                        }
-                        Generator::merge_moves(&mut result, &mut moves);
+                        *captures = true;
                     }
                     (None, None) => {
-                        if *captures == 0 {
-                            result.push(Move::shift(field, to));
+                        if !*captures {
+                            list.push(Move::shift(field, to));
                         }
                     }
                 }
@@ -210,24 +161,26 @@ impl Generator {
     }
 
     pub fn legal_moves(&self, position: &Position) -> Vec<Move> {
-        let mut result = Vec::with_capacity(20);
-        let mut captures = 0;
+        let mut list = Vec::with_capacity(20);
+        let mut captures = false;
         if position.side_to_move() == White {
             for field in 0..50 {
                 match position.piece_at(field) {
                     WHITE_MAN => {
-                        self.add_short_jumps(position, field, &mut result, &mut captures, &Black);
+                        if self.add_short_jumps(position, field, &mut list, &Black) {
+                            captures = true;
+                        }
 
-                        if captures == 0 {
+                        if !captures {
                             for &step in self.steps.white_steps(field) {
                                 if position.piece_at(step) == EMPTY {
-                                    result.push(Move::shift(field, step));
+                                    list.push(Move::shift(field, step));
                                 }
                             }
                         }
                     }
                     WHITE_KING => {
-                        self.add_king_moves(position, field, &mut result, &mut captures, &Black);
+                        self.add_king_moves(position, field, &mut list, &mut captures, &Black);
                     }
                     _ => (),
                 }
@@ -236,24 +189,28 @@ impl Generator {
             for field in 0..50 {
                 match position.piece_at(field) {
                     BLACK_MAN => {
-                        self.add_short_jumps(position, field, &mut result, &mut captures, &White);
+                        if self.add_short_jumps(position, field, &mut list, &White) {
+                            captures = true;
+                        }
 
-                        if captures == 0 {
+                        if !captures {
                             for &step in self.steps.black_steps(field) {
                                 if position.piece_at(step) == EMPTY {
-                                    result.push(Move::shift(field, step));
+                                    list.push(Move::shift(field, step));
                                 }
                             }
                         }
                     }
                     BLACK_KING => {
-                        self.add_king_moves(position, field, &mut result, &mut captures, &White);
+                        self.add_king_moves(position, field, &mut list, &mut captures, &White);
                     }
                     _ => (),
                 }
             }
         }
-        result
+
+        Generator::trim_list(&mut list);
+        list
     }
 }
 
