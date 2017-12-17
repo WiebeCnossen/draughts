@@ -4,7 +4,7 @@ use board::position::Field;
 
 pub type Captures = u8;
 
-const NULL_FIELD: Field = 50;
+const NULL_FIELD: Field = 0;
 const MAX_TAKEN: usize = 12;
 const MAX_CAPTURES: u8 = 12;
 

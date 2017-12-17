@@ -30,59 +30,9 @@ impl Hash for ArrayPosition {
 }
 
 fn clone(pieces: [Piece; 50], field: Field, piece: Piece) -> [Piece; 50] {
-    let read_or_set = |i| if field == i { piece } else { pieces[i] };
-    [
-        read_or_set(0),
-        read_or_set(1),
-        read_or_set(2),
-        read_or_set(3),
-        read_or_set(4),
-        read_or_set(5),
-        read_or_set(6),
-        read_or_set(7),
-        read_or_set(8),
-        read_or_set(9),
-        read_or_set(10),
-        read_or_set(11),
-        read_or_set(12),
-        read_or_set(13),
-        read_or_set(14),
-        read_or_set(15),
-        read_or_set(16),
-        read_or_set(17),
-        read_or_set(18),
-        read_or_set(19),
-        read_or_set(20),
-        read_or_set(21),
-        read_or_set(22),
-        read_or_set(23),
-        read_or_set(24),
-        read_or_set(25),
-        read_or_set(26),
-        read_or_set(27),
-        read_or_set(28),
-        read_or_set(29),
-        read_or_set(30),
-        read_or_set(31),
-        read_or_set(32),
-        read_or_set(33),
-        read_or_set(34),
-        read_or_set(35),
-        read_or_set(36),
-        read_or_set(37),
-        read_or_set(38),
-        read_or_set(39),
-        read_or_set(40),
-        read_or_set(41),
-        read_or_set(42),
-        read_or_set(43),
-        read_or_set(44),
-        read_or_set(45),
-        read_or_set(46),
-        read_or_set(47),
-        read_or_set(48),
-        read_or_set(49),
-    ]
+    let mut clone = pieces;
+    clone[field] = piece;
+    clone
 }
 
 impl Position for ArrayPosition {
