@@ -1,3 +1,5 @@
+use board::mv::Move;
+use board::position;
 use board::position::{Field, Game, Position};
 use board::piece::{Color, Piece, BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
 
@@ -138,6 +140,48 @@ impl Game for BitboardPosition {
             } else {
                 clear(self.white_king, field)
             },
+        }
+    }
+
+    fn go(&self, mv: &Move) -> Self {
+        let from = mv.from();
+        let to = mv.to();
+        let mut empty = self.empty ^ SIDE_BIT;
+        empty = set(empty, from);
+        empty = clear(empty, to);
+
+        let mut white_man = self.white_man;
+        let mut black_man = self.black_man;
+        let mut white_king = self.white_king;
+        for &taken in mv.taken() {
+            match self.piece_at(taken) {
+                WHITE_MAN => white_man = clear(white_man, taken),
+                BLACK_MAN => black_man = clear(black_man, taken),
+                WHITE_KING => white_king = clear(white_king, taken),
+                _ => (),
+            }
+            empty = set(empty, taken);
+        }
+
+        let from_piece = self.piece_at(from);
+        match from_piece {
+            WHITE_MAN => white_man = clear(white_man, from),
+            BLACK_MAN => black_man = clear(black_man, from),
+            WHITE_KING => white_king = clear(white_king, from),
+            _ => (),
+        }
+        match position::promote(to, from_piece) {
+            WHITE_MAN => white_man = set(white_man, to),
+            BLACK_MAN => black_man = set(black_man, to),
+            WHITE_KING => white_king = set(white_king, to),
+            _ => (),
+        }
+
+        BitboardPosition {
+            empty,
+            white_man,
+            black_man,
+            white_king,
         }
     }
 }

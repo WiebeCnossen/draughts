@@ -7,7 +7,7 @@ use board::piece::{Color, Piece, BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE
 use board::bitboard::BitboardPosition;
 
 pub type Field = usize;
-fn promote(field: Field, piece: Piece) -> Piece {
+pub fn promote(field: Field, piece: Piece) -> Piece {
     if piece == WHITE_MAN && field < 5 {
         WHITE_KING
     } else if piece == BLACK_MAN && field >= 45 {
