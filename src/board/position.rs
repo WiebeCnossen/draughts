@@ -80,8 +80,8 @@ pub trait Position {
             let c = self.ascii_char(field);
             ascii.push(c);
             ascii.push(c);
-            if (field == 9 && self.side_to_move() == Color::Black) ||
-                (field == 99 && self.side_to_move() == Color::White)
+            if (field == 9 && self.side_to_move() == Color::Black)
+                || (field == 99 && self.side_to_move() == Color::White)
             {
                 ascii.push_str("  *")
             }
@@ -171,15 +171,13 @@ pub trait Game: Position + Hash + Sized {
                     _ => None,
                 };
                 match pieces {
-                    Some((piece, count)) => {
-                        for _ in 0..count {
-                            if field == 50 {
-                                return Err(String::from("Too many fields"));
-                            }
-                            position = position.put_piece(field, piece);
-                            field += 1;
+                    Some((piece, count)) => for _ in 0..count {
+                        if field == 50 {
+                            return Err(String::from("Too many fields"));
                         }
-                    }
+                        position = position.put_piece(field, piece);
+                        field += 1;
+                    },
                     None => return Err(format!("Invalid piece at {}", i)),
                 }
             }
@@ -193,13 +191,9 @@ pub trait Game: Position + Hash + Sized {
 
     fn go(&self, mv: &Move) -> Self {
         mv.taken().iter().fold(
-            self.toggle_side().put_piece(mv.from(), EMPTY).put_piece(
-                mv.to(),
-                promote(
-                    mv.to(),
-                    self.piece_at(mv.from()),
-                ),
-            ),
+            self.toggle_side()
+                .put_piece(mv.from(), EMPTY)
+                .put_piece(mv.to(), promote(mv.to(), self.piece_at(mv.from()))),
             |position, &taken| position.put_piece(taken, EMPTY),
         )
     }

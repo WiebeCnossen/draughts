@@ -120,10 +120,9 @@ fn put_one_piece() {
 
 #[test]
 fn put_pieces_in_same_row() {
-    let position = CodedPosition::create().put_piece(31, WHITE_MAN).put_piece(
-        32,
-        BLACK_MAN,
-    );
+    let position = CodedPosition::create()
+        .put_piece(31, WHITE_MAN)
+        .put_piece(32, BLACK_MAN);
     assert_eq!(position.side_to_move(), Color::White);
     assert_eq!(position.piece_at(25), EMPTY);
     assert_eq!(position.piece_at(30), EMPTY);

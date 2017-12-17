@@ -11,7 +11,9 @@ pub struct Generator {
 
 impl Generator {
     pub fn create() -> Generator {
-        Generator { steps: Steps::create() }
+        Generator {
+            steps: Steps::create(),
+        }
     }
 
     fn merge_moves(result: &mut Vec<Move>, moves: &mut Vec<Move>) {
@@ -29,7 +31,11 @@ impl Generator {
 
         let max = result.iter().fold(0, |mx, mv| {
             let nt = mv.num_taken();
-            if mx > nt { mx } else { nt }
+            if mx > nt {
+                mx
+            } else {
+                nt
+            }
         });
         if max < min_captures {
             result.clear();
@@ -57,8 +63,8 @@ impl Generator {
     ) {
         let mut exploded = false;
         for &(via, to) in self.steps.short_jumps(mv.to()) {
-            if piece_is(position.piece_at(via), color_to_capture) &&
-                position.piece_at(to) == EMPTY && !mv.goes_via(via)
+            if piece_is(position.piece_at(via), color_to_capture) && position.piece_at(to) == EMPTY
+                && !mv.goes_via(via)
             {
                 exploded = true;
                 self.explode_short_jump(position, mv.take_more(via, to), color_to_capture, moves);
@@ -91,8 +97,7 @@ impl Generator {
         color_to_capture: &Color,
     ) {
         for &(via, to) in self.steps.short_jumps(field) {
-            if position.piece_at(to) == EMPTY &&
-                piece_is(position.piece_at(via), color_to_capture)
+            if position.piece_at(to) == EMPTY && piece_is(position.piece_at(via), color_to_capture)
             {
                 let mut moves = self.explode_short_jumps(
                     position,
@@ -125,8 +130,7 @@ impl Generator {
             let mut via: Option<Field> = None;
             for &to in path {
                 match (piece_own(position.piece_at(to), color_to_capture), via) {
-                    (Some(false), _) |
-                    (Some(true), Some(_)) => break,
+                    (Some(false), _) | (Some(true), Some(_)) => break,
                     (Some(true), None) => via = Some(to),
                     (None, Some(via)) => {
                         if mv.goes_via(via) {
@@ -177,8 +181,7 @@ impl Generator {
             let mut via: Option<Field> = None;
             for &to in path {
                 match (piece_own(position.piece_at(to), color_to_capture), via) {
-                    (Some(false), _) |
-                    (Some(true), Some(_)) => break,
+                    (Some(false), _) | (Some(true), Some(_)) => break,
                     (Some(true), None) => via = Some(to),
                     (None, Some(via)) => {
                         let mut moves = self.explode_long_jumps(

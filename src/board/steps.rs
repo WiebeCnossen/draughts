@@ -27,29 +27,21 @@ where
 fn paths(field: Field) -> [Vec<Field>; 4] {
     let coords = Coords::from(field);
     [
-        path(coords.max_x() - coords.x, |d| {
-            Coords {
-                x: coords.x + d,
-                y: coords.y,
-            }
+        path(coords.max_x() - coords.x, |d| Coords {
+            x: coords.x + d,
+            y: coords.y,
         }),
-        path(coords.max_y() - coords.y, |d| {
-            Coords {
-                x: coords.x,
-                y: coords.y + d,
-            }
+        path(coords.max_y() - coords.y, |d| Coords {
+            x: coords.x,
+            y: coords.y + d,
         }),
-        path(coords.x - coords.min_x(), |d| {
-            Coords {
-                x: coords.x - d,
-                y: coords.y,
-            }
+        path(coords.x - coords.min_x(), |d| Coords {
+            x: coords.x - d,
+            y: coords.y,
         }),
-        path(coords.y - coords.min_y(), |d| {
-            Coords {
-                x: coords.x,
-                y: coords.y - d,
-            }
+        path(coords.y - coords.min_y(), |d| Coords {
+            x: coords.x,
+            y: coords.y - d,
         }),
     ]
 }

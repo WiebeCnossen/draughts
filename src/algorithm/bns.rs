@@ -38,7 +38,8 @@ impl BnsState {
 
     fn next(&self, better_count: MoveCount, search_result: &SearchResult) -> BnsState {
         let up = better_count > 0;
-        let lower = if up { self.cut } else { self.lower };
+        let lower =
+            if up { self.cut } else { self.lower };
         let upper = if up {
             self.upper
         } else {

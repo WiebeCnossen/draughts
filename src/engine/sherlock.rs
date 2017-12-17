@@ -92,18 +92,17 @@ impl SherlockJudge {
                             } else {
                                 (if op == bl { 1 } else { 0 }) + (if op == br { 1 } else { 0 })
                             };
-                            evals[star] = sign *
-                                match (supporters, blockers, lockers) {
-                                    (2, _, 2) => LOCKED,
-                                    (_, _, 1) => SEMI_LOCKED,
-                                    (0, 2, 0) => HANGING,
-                                    (0, 0, _) => ISOLATED,
-                                    (1, 2, 0) => SEMI_HANGING,
-                                    (2, 0, 0) => BIRDY,
-                                    (2, b, 0) => TAIL + EXTRA * b,
-                                    (s, b, 0) => EXTRA * (s + b),
-                                    _ => 0,
-                                };
+                            evals[star] = sign * match (supporters, blockers, lockers) {
+                                (2, _, 2) => LOCKED,
+                                (_, _, 1) => SEMI_LOCKED,
+                                (0, 2, 0) => HANGING,
+                                (0, 0, _) => ISOLATED,
+                                (1, 2, 0) => SEMI_HANGING,
+                                (2, 0, 0) => BIRDY,
+                                (2, b, 0) => TAIL + EXTRA * b,
+                                (s, b, 0) => EXTRA * (s + b),
+                                _ => 0,
+                            };
                         }
                     }
                 }
@@ -122,8 +121,8 @@ impl SherlockJudge {
     fn drawish(&self, stats: &PositionStats) -> bool {
         let whites = stats.piece_count[WHITE_MAN as usize] + stats.piece_count[WHITE_KING as usize];
         let blacks = stats.piece_count[BLACK_MAN as usize] + stats.piece_count[BLACK_KING as usize];
-        stats.piece_count[WHITE_KING as usize] > 0 &&
-            stats.piece_count[BLACK_KING as usize] > 0 && whites <= 3 && blacks <= 3
+        stats.piece_count[WHITE_KING as usize] > 0 && stats.piece_count[BLACK_KING as usize] > 0
+            && whites <= 3 && blacks <= 3
     }
 
     pub fn reset(&mut self) {
@@ -242,13 +241,13 @@ impl Judge for SherlockJudge {
             stars.iter().map(|&star| self.evals[star]).sum()
         };
 
-        let score = beans + structure + (32 - men) * (dev_white - dev_black) / 2 + balance_score +
-            center_score;
+        let score = beans + structure + (32 - men) * (dev_white - dev_black) / 2 + balance_score
+            + center_score;
         let scaled = if self.drawish(&stats) {
             score / 10
         } else {
-            let min_kings = if stats.piece_count[WHITE_KING as usize] <
-                stats.piece_count[BLACK_KING as usize]
+            let min_kings = if stats.piece_count[WHITE_KING as usize]
+                < stats.piece_count[BLACK_KING as usize]
             {
                 stats.piece_count[WHITE_KING as usize]
             } else {
@@ -267,9 +266,9 @@ impl Judge for SherlockJudge {
         let mut moves = self.generator.legal_moves(position);
         let memory = self.recall(position);
         if memory.has_move() {
-            if let Some(found) = moves.iter().position(|mv| {
-                mv.from() == memory.from && mv.to() == memory.to
-            })
+            if let Some(found) = moves
+                .iter()
+                .position(|mv| mv.from() == memory.from && mv.to() == memory.to)
             {
                 if found > 0 {
                     moves.swap(0, found);
@@ -280,12 +279,11 @@ impl Judge for SherlockJudge {
     }
 
     fn quiet_move(&self, position: &Position, mv: &Move) -> bool {
-        mv.num_taken() == 0 &&
-            if position.side_to_move() == White {
-                mv.to() >= 10 || position.piece_at(mv.from()) != WHITE_MAN
-            } else {
-                mv.to() <= 39 || position.piece_at(mv.from()) != BLACK_MAN
-            }
+        mv.num_taken() == 0 && if position.side_to_move() == White {
+            mv.to() >= 10 || position.piece_at(mv.from()) != WHITE_MAN
+        } else {
+            mv.to() <= 39 || position.piece_at(mv.from()) != BLACK_MAN
+        }
     }
 
     fn display_name(&self) -> &str {
@@ -314,10 +312,9 @@ impl Sherlock {
 impl Iterator for Sherlock {
     type Item = EngineResult;
     fn next(&mut self) -> Option<EngineResult> {
-        if self.previous.meta.get_nodes() >= self.max_nodes ||
-            self.previous.meta.get_depth() > 63 ||
-            self.previous.evaluation == MIN_EVAL ||
-            self.previous.evaluation == MAX_EVAL
+        if self.previous.meta.get_nodes() >= self.max_nodes || self.previous.meta.get_depth() > 63
+            || self.previous.evaluation == MIN_EVAL
+            || self.previous.evaluation == MAX_EVAL
         {
             return None;
         }

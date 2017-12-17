@@ -58,11 +58,11 @@ impl Move {
         }
 
         let mut taken = self.taken;
-        match self.taken.iter().take(self.num_taken as usize).position(
-            |&taken| {
-                taken > via
-            },
-        ) {
+        match self.taken
+            .iter()
+            .take(self.num_taken as usize)
+            .position(|&taken| taken > via)
+        {
             Some(p) => {
                 for p in (p..self.num_taken as usize).rev() {
                     taken[p + 1] = taken[p];
@@ -100,11 +100,10 @@ impl Move {
     }
 
     pub fn goes_via(&self, via: Field) -> bool {
-        self.taken.iter().take(self.num_taken as usize).any(
-            |&taken| {
-                taken == via
-            },
-        )
+        self.taken
+            .iter()
+            .take(self.num_taken as usize)
+            .any(|&taken| taken == via)
     }
 
     pub fn as_string(&self) -> String {
@@ -114,11 +113,12 @@ impl Move {
 
     pub fn as_full_string(&self) -> String {
         iter::once(self.as_string())
-            .chain(self.taken.iter().take(self.num_taken as usize).map(
-                |&via| {
-                    format!("x{}", via + 1)
-                },
-            ))
+            .chain(
+                self.taken
+                    .iter()
+                    .take(self.num_taken as usize)
+                    .map(|&via| format!("x{}", via + 1)),
+            )
             .collect()
     }
 }

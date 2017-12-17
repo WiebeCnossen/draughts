@@ -39,7 +39,9 @@ const POWER: [usize; 28] = [
 
 impl Scope for LogarithmicScope {
     fn from_depth(depth: Depth) -> LogarithmicScope {
-        LogarithmicScope { nodes: POWER[usize::from(depth.min(27))] }
+        LogarithmicScope {
+            nodes: POWER[usize::from(depth.min(27))],
+        }
     }
 
     fn next(&self, moves: usize, quiet: bool, gap: Eval) -> Option<LogarithmicScope> {
