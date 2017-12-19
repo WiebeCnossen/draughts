@@ -132,12 +132,12 @@ pub fn main() {
     for level in 10..15 {
         println!("Level {}\r\n----", level);
         let nodes = 100 << level;
-        //let one = &mut RandAap::create(6 * nodes);
+        //let one = &mut RandAap::create(3 * nodes);
         //let one = &mut Scan::create(0);
-        //let one = &mut Slagzet::create(nodes / 2);
-        let one = &mut Slonenok::create(2 * nodes);
+        //let one = &mut Slagzet::create(nodes / 4);
+        let one = &mut Slonenok::create(nodes);
         //let one = &mut User::create();
-        let two = &mut Sherlock::create(4 * nodes);
+        let two = &mut Sherlock::create(2 * nodes);
         for fen in &positions[..] {
             let position = &Position::parse(fen).unwrap();
             {
