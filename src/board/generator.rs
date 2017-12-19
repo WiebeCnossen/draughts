@@ -42,7 +42,7 @@ impl Generator {
         list.dedup();
     }
 
-    fn explode_short_jump(
+    fn explode_jump(
         &self,
         position: &Position,
         mv: Move,
@@ -55,7 +55,7 @@ impl Generator {
                 && !mv.goes_via(via)
             {
                 exploded = true;
-                self.explode_short_jump(position, mv.take_more(via, to), color_to_capture, list);
+                self.explode_jump(position, mv.take_more(via, to), color_to_capture, list);
             }
         }
 
@@ -76,7 +76,7 @@ impl Generator {
             if position.piece_at(to) == EMPTY && piece_is(position.piece_at(via), color_to_capture)
             {
                 captures = true;
-                self.explode_short_jump(
+                self.explode_jump(
                     position,
                     Move::take_one(field, to, via),
                     color_to_capture,
@@ -95,10 +95,9 @@ impl Generator {
         moves: &mut Vec<Move>,
     ) {
         let mut exploded = false;
-        let paths = self.steps.paths(mv.to());
-        for &path in &paths {
+        for path in self.steps.paths(mv.to()) {
             let mut via: Option<Field> = None;
-            for &to in path {
+            for &to in path.iter() {
                 match (piece_own(position.piece_at(to), color_to_capture), via) {
                     (Some(false), _) | (Some(true), Some(_)) => break,
                     (Some(true), None) => via = Some(to),
@@ -133,11 +132,10 @@ impl Generator {
         captures: &mut bool,
         color_to_capture: &Color,
     ) {
-        let paths = self.steps.paths(field);
         let without_king = &BitboardPosition::clone(position).put_piece(field, EMPTY);
-        for &path in &paths {
+        for path in self.steps.paths(field) {
             let mut via: Option<Field> = None;
-            for &to in path {
+            for &to in path.iter() {
                 match (piece_own(position.piece_at(to), color_to_capture), via) {
                     (Some(false), _) | (Some(true), Some(_)) => break,
                     (Some(true), None) => via = Some(to),
@@ -409,6 +407,14 @@ fn coup_turc() {
         .ok()
         .unwrap();
     verify(&position, &vec![Move::take(15, 27, &[31, 38, 19, 22])]);
+}
+
+#[test]
+fn coup_tour() {
+    let position = BitboardPosition::parse("w 3We/5/5/5/l3/5/l3/ew3/b4/5")
+        .ok()
+        .unwrap();
+    verify(&position, &vec![Move::take(37, 37, &[21, 22, 31, 32])]);
 }
 
 #[test]
