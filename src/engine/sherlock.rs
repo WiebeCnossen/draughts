@@ -6,12 +6,11 @@ use algorithm::logarithmic::LogarithmicScope;
 use algorithm::metric::{Meta, Metric, Nodes};
 use algorithm::scope::Depth;
 use algorithm::search::SearchResult;
-use board::bitboard::BitboardPosition;
 use board::generator::Generator;
 use board::mv::Move;
 use board::piece::{BLACK_KING, BLACK_MAN, WHITE_KING, WHITE_MAN};
 use board::piece::Color::White;
-use board::position::{Field, Game, Position};
+use board::position::{Field, Position};
 use board::stats::PositionStats;
 use board::stars::Stars;
 use engine::{Engine, EngineResult};
@@ -59,7 +58,7 @@ pub struct SherlockJudge {
     generator: Generator,
     stars: Stars,
     evals: [Eval; 243],
-    hash: HashMap<BitboardPosition, HashEval>,
+    hash: HashMap<Position, HashEval>,
 }
 
 impl SherlockJudge {
@@ -149,7 +148,7 @@ impl SherlockJudge {
 
 impl Judge for SherlockJudge {
     fn recall(&self, position: &Position) -> PositionMemory {
-        let bitboard = BitboardPosition::clone(position);
+        let bitboard = Position::clone(position);
         match self.hash.get(&bitboard) {
             Some(found) => found.as_memory(),
             _ => PositionMemory::empty(),
@@ -169,7 +168,7 @@ impl Judge for SherlockJudge {
             (false, 0, 0)
         };
 
-        let bitboard = BitboardPosition::clone(position);
+        let bitboard = Position::clone(position);
         let hash_eval = if let Some(found) = self.hash.get(&bitboard) {
             if found.depth > depth {
                 return;
@@ -295,7 +294,7 @@ pub struct Sherlock {
     max_nodes: Nodes,
     sherlock: SherlockJudge,
     previous: EngineResult,
-    position: BitboardPosition,
+    position: Position,
 }
 
 impl Sherlock {
@@ -304,7 +303,7 @@ impl Sherlock {
             max_nodes,
             sherlock: SherlockJudge::create(Generator::create()),
             previous: EngineResult::create(Move::null(), ZERO_EVAL, Meta::create()),
-            position: BitboardPosition::initial(),
+            position: Position::initial(),
         }
     }
 }
@@ -332,7 +331,7 @@ impl Iterator for Sherlock {
         };
         meta.put_depth(depth);
         meta.put_depth(depth);
-        let bns = best_node_search::<BitboardPosition, LogarithmicScope>(
+        let bns = best_node_search::<Position, LogarithmicScope>(
             &mut self.sherlock,
             &self.position,
             depth,
@@ -350,7 +349,7 @@ impl Engine for Sherlock {
     }
     fn set_position(&mut self, position: &Position) {
         self.sherlock.reset();
-        self.position = BitboardPosition::clone(position);
+        self.position = Position::clone(position);
         self.previous = EngineResult::empty();
     }
 }

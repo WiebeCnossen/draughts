@@ -2,8 +2,7 @@ extern crate draughts;
 extern crate time;
 
 use draughts::algorithm::metric::{Metric, Nodes};
-use draughts::board::bitboard::BitboardPosition;
-use draughts::board::position::Game;
+use draughts::board::position::Position;
 use draughts::engine::{Engine, EngineResult};
 use draughts::engine::randaap::RandAap;
 use draughts::engine::slonenok::Slonenok;
@@ -21,7 +20,7 @@ fn run(engine: &mut Engine<Item = EngineResult>) {
         if line == "quit" {
             break;
         }
-        let position = match BitboardPosition::parse(line.as_str()) {
+        let position = match Position::parse(line.as_str()) {
             Err(msg) => {
                 println!("Invalid position: {}", msg);
                 (continue)

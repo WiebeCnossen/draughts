@@ -1,8 +1,6 @@
 extern crate draughts;
 
-use draughts::board::bitboard::BitboardPosition;
 use draughts::board::position::Position;
-use draughts::board::position::Game;
 use draughts::board::generator::Generator;
 
 fn moves() -> Vec<String> {
@@ -113,7 +111,7 @@ fn moves() -> Vec<String> {
 pub fn main() {
     println!("yo: {}", moves().len());
     let generator = Generator::create();
-    let mut position = BitboardPosition::initial();
+    let mut position = Position::initial();
     println!("{}", position.ascii());
     for move_string in moves() {
         let legal = generator.legal_moves(&position);

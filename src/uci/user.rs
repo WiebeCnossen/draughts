@@ -1,12 +1,11 @@
 use algorithm::metric::Meta;
-use board::bitboard::BitboardPosition;
 use board::generator::Generator;
-use board::position::{Game, Position};
+use board::position::Position;
 use engine::{Engine, EngineResult};
 use uci::io::read_stdin;
 
 pub struct User {
-    position: Option<BitboardPosition>,
+    position: Option<Position>,
     generator: Generator,
 }
 
@@ -55,6 +54,6 @@ impl Engine for User {
         NAME
     }
     fn set_position(&mut self, position: &Position) {
-        self.position = Some(BitboardPosition::clone(position));
+        self.position = Some(Position::clone(position));
     }
 }

@@ -2,16 +2,15 @@ use std::io::{BufReader, Write};
 use std::process::{ChildStdin, ChildStdout, Command, Stdio};
 
 use algorithm::metric::{Meta, Nodes};
-use board::bitboard::BitboardPosition;
 use board::generator::Generator;
-use board::position::{Game, Position};
+use board::position::Position;
 use engine::{Engine, EngineResult};
 use uci::io::read_stdout;
 
 pub struct Slagzet {
     stdin: ChildStdin,
     stdout: BufReader<ChildStdout>,
-    position: Option<BitboardPosition>,
+    position: Option<Position>,
     generator: Generator,
 }
 
@@ -64,6 +63,6 @@ impl Engine for Slagzet {
         NAME
     }
     fn set_position(&mut self, position: &Position) {
-        self.position = Some(BitboardPosition::clone(position));
+        self.position = Some(Position::clone(position));
     }
 }

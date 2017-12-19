@@ -2,12 +2,11 @@ use algorithm::depth::DepthScope;
 use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL, ZERO_EVAL};
 use algorithm::metric::{Meta, Metric, Nodes};
 use algorithm::mtdf::mtd_f;
-use board::bitboard::BitboardPosition;
 use board::generator::Generator;
 use board::piece::{Piece, BLACK_KING, BLACK_MAN, WHITE_KING, WHITE_MAN};
 use board::piece::Color::White;
 use board::mv::Move;
-use board::position::{Field, Game, Position};
+use board::position::{Field, Position};
 use engine::{Engine, EngineResult};
 
 struct RandAapJudge {
@@ -81,7 +80,7 @@ pub struct RandAap {
     max_nodes: Nodes,
     judge: RandAapJudge,
     previous: EngineResult,
-    position: BitboardPosition,
+    position: Position,
 }
 
 impl RandAap {
@@ -90,7 +89,7 @@ impl RandAap {
             max_nodes,
             judge: RandAapJudge::create(),
             previous: EngineResult::create(Move::null(), ZERO_EVAL, Meta::create()),
-            position: BitboardPosition::initial(),
+            position: Position::initial(),
         }
     }
 }
@@ -112,7 +111,7 @@ impl Iterator for RandAap {
             meta.get_depth() + 1
         };
         meta.put_depth(depth);
-        let mtd = mtd_f::<BitboardPosition, DepthScope>(
+        let mtd = mtd_f::<Position, DepthScope>(
             &mut self.judge,
             &self.position,
             depth,
@@ -126,7 +125,7 @@ impl Iterator for RandAap {
 
 impl Engine for RandAap {
     fn set_position(&mut self, position: &Position) {
-        self.position = BitboardPosition::clone(position);
+        self.position = Position::clone(position);
         self.previous = EngineResult::empty();
     }
 

@@ -3,7 +3,7 @@ use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};
 use algorithm::metric::Meta;
 use algorithm::scope::{Depth, Scope};
 use board::mv::Move;
-use board::position::Game;
+use board::position::Position;
 
 struct MtdState {
     lower: Eval,
@@ -59,12 +59,11 @@ impl MtdResult {
 
 pub fn mtd_f<TGame, TScope>(
     judge: &mut Judge,
-    position: &TGame,
+    position: &Position,
     depth: Depth,
     guess: Eval,
 ) -> MtdResult
 where
-    TGame: Game,
     TScope: Scope,
 {
     let scope = &TScope::from_depth(depth);

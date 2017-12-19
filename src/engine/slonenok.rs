@@ -7,12 +7,11 @@ use algorithm::judge::{Eval, Judge, PositionMemory, MAX_EVAL, MIN_EVAL, ZERO_EVA
 use algorithm::metric::{Meta, Metric, Nodes};
 use algorithm::scope::Depth;
 use algorithm::search::SearchResult;
-use board::bitboard::BitboardPosition;
 use board::generator::Generator;
 use board::mv::Move;
 use board::piece::{BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
 use board::piece::Color::White;
-use board::position::{Field, Game, Position};
+use board::position::{Field, Position};
 use board::stats::PositionStats;
 use engine::{Engine, EngineResult};
 
@@ -46,7 +45,7 @@ impl HashEval {
 
 pub struct SlonenokJudge {
     generator: Generator,
-    hash: HashMap<BitboardPosition, HashEval>,
+    hash: HashMap<Position, HashEval>,
     white_killer_moves: [Move; KILLERS],
     white_killer_cursor: usize,
     black_killer_moves: [Move; KILLERS],
@@ -176,7 +175,7 @@ impl SlonenokJudge {
 
 impl Judge for SlonenokJudge {
     fn recall(&self, position: &Position) -> PositionMemory {
-        let bitboard = BitboardPosition::clone(position);
+        let bitboard = Position::clone(position);
         match self.hash.get(&bitboard) {
             Some(found) => found.as_memory(),
             _ => PositionMemory::empty(),
@@ -205,7 +204,7 @@ impl Judge for SlonenokJudge {
             (false, 0, 0)
         };
 
-        let bitboard = BitboardPosition::clone(position);
+        let bitboard = Position::clone(position);
         let hash_eval = if let Some(found) = self.hash.get(&bitboard) {
             if found.depth > depth {
                 return;
@@ -343,7 +342,7 @@ pub struct Slonenok {
     max_nodes: Nodes,
     slonenok: SlonenokJudge,
     previous: EngineResult,
-    position: BitboardPosition,
+    position: Position,
 }
 
 impl Slonenok {
@@ -352,7 +351,7 @@ impl Slonenok {
             max_nodes,
             slonenok: SlonenokJudge::create(Generator::create()),
             previous: EngineResult::create(Move::null(), ZERO_EVAL, Meta::create()),
-            position: BitboardPosition::initial(),
+            position: Position::initial(),
         }
     }
 }
@@ -380,7 +379,7 @@ impl Iterator for Slonenok {
         };
         meta.put_depth(depth);
         meta.put_depth(depth);
-        let bns = best_node_search::<BitboardPosition, AdaptiveScope>(
+        let bns = best_node_search::<Position, AdaptiveScope>(
             &mut self.slonenok,
             &self.position,
             depth,
@@ -398,7 +397,7 @@ impl Engine for Slonenok {
     }
     fn set_position(&mut self, position: &Position) {
         self.slonenok.reset();
-        self.position = BitboardPosition::clone(position);
+        self.position = Position::clone(position);
         self.previous = EngineResult::empty();
     }
 }

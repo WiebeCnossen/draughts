@@ -1,10 +1,5 @@
-use std::hash::Hash;
-
 use board::mv::Move;
 use board::piece::{Color, Piece, BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
-
-#[cfg(test)]
-use board::bitboard::BitboardPosition;
 
 pub type Field = usize;
 pub fn promote(field: Field, piece: Piece) -> Piece {
@@ -20,11 +15,187 @@ pub fn promote(field: Field, piece: Piece) -> Piece {
 const FEN_CHARS: [char; 5] = ['e', 'w', 'W', 'b', 'B'];
 const ASCII_CHARS: [char; 5] = ['.', 'w', 'W', 'b', 'B'];
 
-pub trait Position {
-    fn side_to_move(&self) -> Color;
-    fn piece_at(&self, field: Field) -> Piece;
+#[derive(PartialEq, Eq, Hash, Clone)]
+pub struct Position {
+    empty: u64,
+    white_man: u64,
+    black_man: u64,
+    white_king: u64,
+}
 
-    fn fen(&self) -> String {
+type Index = usize;
+const SIDE_BIT: u64 = 1 << 50;
+const ALL_BITS: u64 = SIDE_BIT - 1;
+const BITS: [u64; 50] = [
+    1,
+    1 << 1,
+    1 << 2,
+    1 << 3,
+    1 << 4,
+    1 << 5,
+    1 << 6,
+    1 << 7,
+    1 << 8,
+    1 << 9,
+    1 << 10,
+    1 << 11,
+    1 << 12,
+    1 << 13,
+    1 << 14,
+    1 << 15,
+    1 << 16,
+    1 << 17,
+    1 << 18,
+    1 << 19,
+    1 << 20,
+    1 << 21,
+    1 << 22,
+    1 << 23,
+    1 << 24,
+    1 << 25,
+    1 << 26,
+    1 << 27,
+    1 << 28,
+    1 << 29,
+    1 << 30,
+    1 << 31,
+    1 << 32,
+    1 << 33,
+    1 << 34,
+    1 << 35,
+    1 << 36,
+    1 << 37,
+    1 << 38,
+    1 << 39,
+    1 << 40,
+    1 << 41,
+    1 << 42,
+    1 << 43,
+    1 << 44,
+    1 << 45,
+    1 << 46,
+    1 << 47,
+    1 << 48,
+    1 << 49,
+];
+
+fn set(mask: u64, bit: Index) -> u64 {
+    mask | BITS[bit]
+}
+
+fn clear(mask: u64, bit: Index) -> u64 {
+    mask ^ (mask & BITS[bit])
+}
+
+impl Position {
+    pub fn side_to_move(&self) -> Color {
+        if self.empty & SIDE_BIT == 0 {
+            Color::White
+        } else {
+            Color::Black
+        }
+    }
+
+    pub fn piece_at(&self, field: Field) -> Piece {
+        if self.empty & BITS[field] != 0 {
+            EMPTY
+        } else if self.white_man & BITS[field] != 0 {
+            WHITE_MAN
+        } else if self.black_man & BITS[field] != 0 {
+            BLACK_MAN
+        } else if self.white_king & BITS[field] != 0 {
+            WHITE_KING
+        } else {
+            BLACK_KING
+        }
+    }
+
+    pub fn create() -> Position {
+        Position {
+            empty: ALL_BITS,
+            white_man: 0,
+            black_man: 0,
+            white_king: 0,
+        }
+    }
+
+    pub fn toggle_side(&self) -> Position {
+        Position {
+            empty: self.empty ^ SIDE_BIT,
+            white_man: self.white_man,
+            black_man: self.black_man,
+            white_king: self.white_king,
+        }
+    }
+
+    pub fn put_piece(&self, field: Field, piece: Piece) -> Position {
+        Position {
+            empty: if piece == EMPTY {
+                set(self.empty, field)
+            } else {
+                clear(self.empty, field)
+            },
+            white_man: if piece == WHITE_MAN {
+                set(self.white_man, field)
+            } else {
+                clear(self.white_man, field)
+            },
+            black_man: if piece == BLACK_MAN {
+                set(self.black_man, field)
+            } else {
+                clear(self.black_man, field)
+            },
+            white_king: if piece == WHITE_KING {
+                set(self.white_king, field)
+            } else {
+                clear(self.white_king, field)
+            },
+        }
+    }
+
+    pub fn go(&self, mv: &Move) -> Self {
+        let from = mv.from();
+        let to = mv.to();
+        let mut empty = self.empty ^ SIDE_BIT;
+        empty = set(empty, from);
+        empty = clear(empty, to);
+
+        let mut white_man = self.white_man;
+        let mut black_man = self.black_man;
+        let mut white_king = self.white_king;
+        for &taken in mv.taken() {
+            match self.piece_at(taken) {
+                WHITE_MAN => white_man = clear(white_man, taken),
+                BLACK_MAN => black_man = clear(black_man, taken),
+                WHITE_KING => white_king = clear(white_king, taken),
+                _ => (),
+            }
+            empty = set(empty, taken);
+        }
+
+        let from_piece = self.piece_at(from);
+        match from_piece {
+            WHITE_MAN => white_man = clear(white_man, from),
+            BLACK_MAN => black_man = clear(black_man, from),
+            WHITE_KING => white_king = clear(white_king, from),
+            _ => (),
+        }
+        match promote(to, from_piece) {
+            WHITE_MAN => white_man = set(white_man, to),
+            BLACK_MAN => black_man = set(black_man, to),
+            WHITE_KING => white_king = set(white_king, to),
+            _ => (),
+        }
+
+        Position {
+            empty,
+            white_man,
+            black_man,
+            white_king,
+        }
+    }
+
+    pub fn fen(&self) -> String {
         let mut fen = String::from(if self.side_to_move() == Color::White {
             "w"
         } else {
@@ -36,7 +207,7 @@ pub trait Position {
         fen
     }
 
-    fn sfen(&self) -> String {
+    pub fn sfen(&self) -> String {
         let mut fen = String::from(if self.side_to_move() == Color::White {
             "w"
         } else {
@@ -74,7 +245,7 @@ pub trait Position {
         }
     }
 
-    fn ascii(&self) -> String {
+    pub fn ascii(&self) -> String {
         let mut ascii = String::new();
         for field in 0..100 {
             let c = self.ascii_char(field);
@@ -94,38 +265,13 @@ pub trait Position {
         }
         ascii
     }
-}
 
-use std::fmt;
-
-impl fmt::Display for Position {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.sfen())
-    }
-}
-
-pub trait Game: Position + Hash + Sized {
-    fn create() -> Self;
-    fn toggle_side(&self) -> Self;
-    fn put_piece(&self, field: Field, piece: Piece) -> Self;
-
-    fn initial() -> Self {
+    pub fn initial() -> Self {
         let black = (0..20).fold(Self::create(), |pos, field| pos.put_piece(field, BLACK_MAN));
         (30..50).fold(black, |pos, field| pos.put_piece(field, WHITE_MAN))
     }
 
-    fn clone(source: &Position) -> Self {
-        (0..50).fold(
-            if source.side_to_move() == Color::White {
-                Self::create()
-            } else {
-                Self::create().toggle_side()
-            },
-            |pos, field| pos.put_piece(field, source.piece_at(field)),
-        )
-    }
-
-    fn parse(fen: &str) -> Result<Self, String> {
+    pub fn parse(fen: &str) -> Result<Self, String> {
         if fen.len() < 11 {
             return Err("Invalid length".into());
         }
@@ -188,20 +334,93 @@ pub trait Game: Position + Hash + Sized {
         }
         Ok(position)
     }
+}
 
-    fn go(&self, mv: &Move) -> Self {
-        mv.taken().iter().fold(
-            self.toggle_side()
-                .put_piece(mv.from(), EMPTY)
-                .put_piece(mv.to(), promote(mv.to(), self.piece_at(mv.from()))),
-            |position, &taken| position.put_piece(taken, EMPTY),
-        )
+use std::fmt;
+
+impl fmt::Display for Position {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.sfen())
     }
 }
 
 #[test]
+fn create() {
+    let empty = Position::create();
+    assert_eq!(empty.side_to_move(), Color::White);
+    assert_eq!(empty.piece_at(0), EMPTY);
+    assert_eq!(empty.piece_at(19), EMPTY);
+    assert_eq!(empty.piece_at(23), EMPTY);
+    assert_eq!(empty.piece_at(30), EMPTY);
+    assert_eq!(empty.piece_at(49), EMPTY);
+}
+
+#[test]
+fn put_one_piece() {
+    let position = Position::create().put_piece(31, WHITE_MAN);
+    assert_eq!(position.side_to_move(), Color::White);
+    assert_eq!(position.piece_at(25), EMPTY);
+    assert_eq!(position.piece_at(30), EMPTY);
+    assert_eq!(position.piece_at(31), WHITE_MAN);
+    assert_eq!(position.piece_at(32), EMPTY);
+    assert_eq!(position.piece_at(35), EMPTY);
+}
+
+#[test]
+fn put_pieces_in_same_row() {
+    let position = Position::create()
+        .put_piece(31, WHITE_MAN)
+        .put_piece(32, BLACK_MAN)
+        .put_piece(33, BLACK_KING);
+    assert_eq!(position.side_to_move(), Color::White);
+    assert_eq!(position.piece_at(25), EMPTY);
+    assert_eq!(position.piece_at(30), EMPTY);
+    assert_eq!(position.piece_at(31), WHITE_MAN);
+    assert_eq!(position.piece_at(32), BLACK_MAN);
+    assert_eq!(position.piece_at(33), BLACK_KING);
+    assert_eq!(position.piece_at(35), EMPTY);
+}
+
+#[test]
+fn put_pieces_in_distinct_rows() {
+    let position = Position::create()
+        .put_piece(6, WHITE_MAN)
+        .put_piece(16, BLACK_MAN)
+        .put_piece(11, BLACK_MAN);
+    assert_eq!(position.side_to_move(), Color::White);
+    assert_eq!(position.piece_at(0), EMPTY);
+    assert_eq!(position.piece_at(5), EMPTY);
+    assert_eq!(position.piece_at(6), WHITE_MAN);
+    assert_eq!(position.piece_at(7), EMPTY);
+    assert_eq!(position.piece_at(10), EMPTY);
+    assert_eq!(position.piece_at(11), BLACK_MAN);
+    assert_eq!(position.piece_at(12), EMPTY);
+    assert_eq!(position.piece_at(15), EMPTY);
+    assert_eq!(position.piece_at(16), BLACK_MAN);
+    assert_eq!(position.piece_at(17), EMPTY);
+    assert_eq!(position.piece_at(20), EMPTY);
+}
+
+#[test]
+fn initial() {
+    let initial = Position::initial();
+    assert_eq!(initial.side_to_move(), Color::White);
+    assert_eq!(initial.piece_at(0), BLACK_MAN);
+    assert_eq!(initial.piece_at(19), BLACK_MAN);
+    assert_eq!(initial.piece_at(23), EMPTY);
+    assert_eq!(initial.piece_at(30), WHITE_MAN);
+    assert_eq!(initial.piece_at(49), WHITE_MAN);
+}
+
+#[test]
+fn toggle_side() {
+    let black = Position::create().toggle_side();
+    assert_eq!(black.side_to_move(), Color::Black);
+}
+
+#[test]
 fn promotion() {
-    let position = BitboardPosition::create()
+    let position = Position::create()
         .put_piece(1, BLACK_MAN)
         .put_piece(5, WHITE_MAN)
         .go(&Move::shift(5, 0));
@@ -213,13 +432,13 @@ fn promotion() {
 
 #[test]
 fn from_fen() {
-    let constructed = BitboardPosition::create()
+    let constructed = Position::create()
         .put_piece(1, BLACK_MAN)
         .put_piece(5, WHITE_MAN)
         .put_piece(11, BLACK_KING)
         .put_piece(15, WHITE_KING)
         .toggle_side();
-    match BitboardPosition::parse("bebeeeweeeeeBeeeWeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") {
+    match Position::parse("bebeeeweeeeeBeeeWeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") {
         Err(msg) => {
             println!("{}", msg);
             assert!(false);
@@ -230,7 +449,7 @@ fn from_fen() {
 
 #[test]
 fn as_fen() {
-    let constructed = BitboardPosition::create()
+    let constructed = Position::create()
         .put_piece(1, BLACK_MAN)
         .put_piece(5, WHITE_MAN)
         .put_piece(11, BLACK_KING)
@@ -244,13 +463,13 @@ fn as_fen() {
 
 #[test]
 fn from_sfen() {
-    let constructed = BitboardPosition::create()
+    let constructed = Position::create()
         .put_piece(1, BLACK_MAN)
         .put_piece(5, WHITE_MAN)
         .put_piece(11, BLACK_KING)
         .put_piece(15, WHITE_KING)
         .toggle_side();
-    match BitboardPosition::parse("beb3w41B3W4555555") {
+    match Position::parse("beb3w41B3W4555555") {
         Err(msg) => {
             println!("{}", msg);
             assert!(false);
@@ -261,7 +480,7 @@ fn from_sfen() {
 
 #[test]
 fn from_ufen() {
-    let constructed = BitboardPosition::create()
+    let constructed = Position::create()
         .put_piece(1, BLACK_MAN)
         .put_piece(5, WHITE_MAN)
         .put_piece(6, WHITE_MAN)
@@ -269,7 +488,7 @@ fn from_ufen() {
         .put_piece(11, BLACK_KING)
         .put_piece(15, WHITE_KING)
         .toggle_side();
-    match BitboardPosition::parse("beb3i21B3W4555555") {
+    match Position::parse("beb3i21B3W4555555") {
         Err(msg) => {
             println!("{}", msg);
             assert!(false);
@@ -280,7 +499,7 @@ fn from_ufen() {
 
 #[test]
 fn goerres_bayar() {
-    let spaced = match BitboardPosition::parse("w ce/bea/k/a2/2b2/5/r/r/et/eie") {
+    let spaced = match Position::parse("w ce/bea/k/a2/2b2/5/r/r/et/eie") {
         Err(msg) => {
             println!("{}", msg);
             assert!(false);
@@ -288,7 +507,7 @@ fn goerres_bayar() {
         }
         Ok(parsed) => Some(parsed),
     };
-    let small = match BitboardPosition::parse("wcebeaka22b25rreteie") {
+    let small = match Position::parse("wcebeaka22b25rreteie") {
         Err(msg) => {
             println!("{}", msg);
             assert!(false);
@@ -301,7 +520,7 @@ fn goerres_bayar() {
 
 #[test]
 fn as_sfen() {
-    let constructed = BitboardPosition::create()
+    let constructed = Position::create()
         .put_piece(1, BLACK_MAN)
         .put_piece(5, WHITE_MAN)
         .put_piece(11, BLACK_KING)
@@ -312,7 +531,7 @@ fn as_sfen() {
 
 #[test]
 fn as_ascii() {
-    match BitboardPosition::parse("w 5/4b/b4/5/2w2/bewwb/2w2/ewebe/3be/ew3") {
+    match Position::parse("w 5/4b/b4/5/2w2/bewwb/2w2/ewebe/3be/ew3") {
         Ok(position) => {
             let ascii = position.ascii();
             println!("\r\n{}\r\n", ascii);

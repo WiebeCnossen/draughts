@@ -4,17 +4,16 @@ use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};
 use algorithm::metric::Metric;
 use algorithm::scope::Scope;
 use algorithm::search::SearchResult;
-use board::position::Game;
+use board::position::Position;
 
-pub fn makes_cut<TGame, TScope>(
+pub fn makes_cut<TScope>(
     judge: &mut Judge,
     metric: &mut Metric,
-    position: &TGame,
+    position: &Position,
     scope: &TScope,
     cut: Eval,
 ) -> SearchResult
 where
-    TGame: Game,
     TScope: Scope,
 {
     if cut <= MIN_EVAL {

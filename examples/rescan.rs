@@ -3,11 +3,10 @@ extern crate draughts;
 use std::io::{BufReader, Write};
 use std::process::{Command, Stdio};
 
-use draughts::board::bitboard::BitboardPosition;
 use draughts::board::generator::Generator;
 use draughts::board::mv::Move;
-use draughts::board::position::{Game, Position};
-use draughts::uci::io::{read_stdin, read_lines, LineReader};
+use draughts::board::position::Position;
+use draughts::uci::io::{read_lines, read_stdin, LineReader};
 
 fn main() {
     let mut child = Command::new("/mnt/c/Users/wiebe/scan_20/scan")
@@ -22,7 +21,7 @@ fn main() {
     let mut stdin = child.stdin.take().expect("Bimmer");
     let mut stdout = BufReader::new(child.stdout.take().expect("Bommer"));
     let generator = Generator::create();
-    let mut current = BitboardPosition::initial();
+    let mut current = Position::initial();
     let mut moves = generator.legal_moves(&current);
     let mut suggestion: Option<Move> = None;
 
@@ -53,25 +52,28 @@ fn main() {
             }
 
             let move_string = last_line.split(' ').nth(1).unwrap();
-            suggestion = moves.clone().into_iter().find(|m| {
-                m.as_full_string() == move_string
-            });
+            suggestion = moves
+                .clone()
+                .into_iter()
+                .find(|m| m.as_full_string() == move_string);
         } else if head == "go" {
             stdin.write(b"level 1 10000 0\n").ok();
             stdin.write(b"analyse\n").ok();
             let line = read_lines(&mut stdout, "move").pop().unwrap();
             let move_string = line.split(' ').nth(1).unwrap();
-            suggestion = moves.clone().into_iter().find(|m| {
-                m.as_full_string() == move_string
-            });
+            suggestion = moves
+                .clone()
+                .into_iter()
+                .find(|m| m.as_full_string() == move_string);
         } else if head == "ponder" {
             stdin.write(b"level 1 100000 0\n").ok();
             stdin.write(b"analyse\n").ok();
             let line = read_lines(&mut stdout, "move").pop().unwrap();
             let move_string = line.split(' ').nth(1).unwrap();
-            suggestion = moves.clone().into_iter().find(|m| {
-                m.as_full_string() == move_string
-            });
+            suggestion = moves
+                .clone()
+                .into_iter()
+                .find(|m| m.as_full_string() == move_string);
         } else if head == "pos" {
             let fen = match command.nth(0) {
                 Some(word) => word,
@@ -80,7 +82,7 @@ fn main() {
                     (continue)
                 }
             };
-            current = match BitboardPosition::parse(fen) {
+            current = match Position::parse(fen) {
                 Ok(position) => position,
                 Err(msg) => {
                     println!("[error] {}", msg);
@@ -102,9 +104,10 @@ fn main() {
             stdin.write(b"analyse\n").ok();
             let line = read_lines(&mut stdout, "move").pop().unwrap();
             let move_string = line.split(' ').nth(1).unwrap();
-            suggestion = moves.clone().into_iter().find(|m| {
-                m.as_full_string() == move_string
-            });
+            suggestion = moves
+                .clone()
+                .into_iter()
+                .find(|m| m.as_full_string() == move_string);
         } else {
             let mv = if head == "ok" {
                 match suggestion {
@@ -139,9 +142,10 @@ fn main() {
             stdin.write(b"analyse\n").ok();
             let line = read_lines(&mut stdout, "move").pop().unwrap();
             let move_string = line.split(' ').nth(1).unwrap();
-            suggestion = moves.clone().into_iter().find(|m| {
-                m.as_full_string() == move_string
-            });
+            suggestion = moves
+                .clone()
+                .into_iter()
+                .find(|m| m.as_full_string() == move_string);
         }
     }
 

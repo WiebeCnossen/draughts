@@ -8,7 +8,7 @@ use algorithm::mtdf::mtd_f;
 use algorithm::scope::{Depth, Scope};
 use algorithm::search::SearchResult;
 use board::mv::Move;
-use board::position::Game;
+use board::position::Position;
 
 pub struct BnsResult {
     pub lower: Eval,
@@ -121,12 +121,11 @@ fn down() {
 
 pub fn best_node_search<TGame, TScope>(
     judge: &mut Judge,
-    position: &TGame,
+    position: &Position,
     depth: Depth,
     initial: &SearchResult,
 ) -> BnsResult
 where
-    TGame: Game,
     TScope: Scope,
 {
     let mut moves = judge.moves(position);

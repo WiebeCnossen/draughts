@@ -1,7 +1,6 @@
-use board::bitboard::BitboardPosition;
 use board::piece::{piece_is, piece_own, Color, BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
 use board::piece::Color::{Black, White};
-use board::position::{Field, Game, Position};
+use board::position::{Field, Position};
 use board::mv::Move;
 use board::steps::Steps;
 
@@ -76,7 +75,7 @@ impl Generator {
             if position.piece_at(to) == EMPTY && piece_is(position.piece_at(via), color_to_capture)
             {
                 captures = true;
-                let without_man = &BitboardPosition::clone(position).put_piece(field, EMPTY);
+                let without_man = &position.clone().put_piece(field, EMPTY);
                 self.explode_jump(
                     without_man,
                     Move::take_one(field, to, via),
@@ -133,7 +132,7 @@ impl Generator {
         captures: &mut bool,
         color_to_capture: &Color,
     ) {
-        let without_king = &BitboardPosition::clone(position).put_piece(field, EMPTY);
+        let without_king = &position.clone().put_piece(field, EMPTY);
         for path in self.steps.paths(field) {
             let mut via: Option<Field> = None;
             for &to in path.iter() {
@@ -230,13 +229,13 @@ fn verify(position: &Position, moves: &[Move]) {
 
 #[test]
 fn one_white_man_side() {
-    let position = BitboardPosition::create().put_piece(35, WHITE_MAN);
+    let position = Position::create().put_piece(35, WHITE_MAN);
     verify(&position, &vec![Move::shift(35, 30)]);
 }
 
 #[test]
 fn one_white_man_blocked() {
-    let position = BitboardPosition::create()
+    let position = Position::create()
         .put_piece(35, WHITE_MAN)
         .put_piece(30, BLACK_MAN)
         .put_piece(26, BLACK_MAN);
@@ -245,21 +244,19 @@ fn one_white_man_blocked() {
 
 #[test]
 fn one_white_man_center() {
-    let position = BitboardPosition::create().put_piece(36, WHITE_MAN);
+    let position = Position::create().put_piece(36, WHITE_MAN);
     verify(&position, &vec![Move::shift(36, 30), Move::shift(36, 31)]);
 }
 
 #[test]
 fn one_black_man_side() {
-    let position = BitboardPosition::create()
-        .put_piece(35, BLACK_MAN)
-        .toggle_side();
+    let position = Position::create().put_piece(35, BLACK_MAN).toggle_side();
     verify(&position, &vec![Move::shift(35, 40)]);
 }
 
 #[test]
 fn one_single_capture_white_man() {
-    let position = BitboardPosition::create()
+    let position = Position::create()
         .put_piece(15, WHITE_MAN)
         .put_piece(40, BLACK_MAN)
         .put_piece(45, WHITE_MAN);
@@ -268,7 +265,7 @@ fn one_single_capture_white_man() {
 
 #[test]
 fn one_double_capture_white_man() {
-    let position = BitboardPosition::create()
+    let position = Position::create()
         .put_piece(15, WHITE_MAN)
         .put_piece(31, BLACK_MAN)
         .put_piece(40, BLACK_MAN)
@@ -278,7 +275,7 @@ fn one_double_capture_white_man() {
 
 #[test]
 fn double_and_triple_capture_white_man() {
-    let position = BitboardPosition::create()
+    let position = Position::create()
         .put_piece(15, WHITE_MAN)
         .put_piece(31, BLACK_MAN)
         .put_piece(40, BLACK_MAN)
@@ -290,7 +287,7 @@ fn double_and_triple_capture_white_man() {
 
 #[test]
 fn two_captures_white_man() {
-    let position = BitboardPosition::create()
+    let position = Position::create()
         .put_piece(40, BLACK_MAN)
         .put_piece(41, BLACK_MAN)
         .put_piece(46, WHITE_MAN);
@@ -302,7 +299,7 @@ fn two_captures_white_man() {
 
 #[test]
 fn two_captures_black_man() {
-    let position = BitboardPosition::create()
+    let position = Position::create()
         .put_piece(30, WHITE_MAN)
         .put_piece(31, WHITE_MAN)
         .put_piece(36, BLACK_MAN)
@@ -315,7 +312,7 @@ fn two_captures_black_man() {
 
 #[test]
 fn white_king_moves() {
-    let position = BitboardPosition::create()
+    let position = Position::create()
         .put_piece(27, BLACK_MAN)
         .put_piece(29, BLACK_MAN)
         .put_piece(32, BLACK_MAN)
@@ -335,7 +332,7 @@ fn white_king_moves() {
 
 #[test]
 fn black_king_moves() {
-    let position = BitboardPosition::create()
+    let position = Position::create()
         .put_piece(0, BLACK_KING)
         .put_piece(11, WHITE_MAN)
         .put_piece(17, WHITE_KING)
@@ -345,7 +342,7 @@ fn black_king_moves() {
 
 #[test]
 fn study1() {
-    let position = BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
+    let position = Position::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
         .ok()
         .unwrap()
         .go(&Move::shift(48, 43));
@@ -354,7 +351,7 @@ fn study1() {
 
 #[test]
 fn study2() {
-    let position = BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
+    let position = Position::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
         .ok()
         .unwrap()
         .go(&Move::shift(48, 43))
@@ -365,7 +362,7 @@ fn study2() {
 
 #[test]
 fn study3() {
-    let position = BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
+    let position = Position::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
         .ok()
         .unwrap()
         .go(&Move::shift(48, 43))
@@ -378,7 +375,7 @@ fn study3() {
 
 #[test]
 fn study4() {
-    let position = BitboardPosition::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
+    let position = Position::parse("w 5/3be/5/3be/web2/wewbe/ew3/3bb/5/3ww")
         .ok()
         .unwrap()
         .go(&Move::shift(48, 43))
@@ -393,9 +390,7 @@ fn study4() {
 
 #[test]
 fn multi_long_capture() {
-    let position = BitboardPosition::parse("w 5/5/3b1/5/5/5/5/1b3/5/W4")
-        .ok()
-        .unwrap();
+    let position = Position::parse("w 5/5/3b1/5/5/5/5/1b3/5/W4").ok().unwrap();
     verify(
         &position,
         &vec![Move::take(45, 4, &[36, 13]), Move::take(45, 9, &[36, 13])],
@@ -404,7 +399,7 @@ fn multi_long_capture() {
 
 #[test]
 fn coup_turc() {
-    let position = BitboardPosition::parse("b 5/el2/5/Bebew/2w2/5/eh2/3we/ew3/5")
+    let position = Position::parse("b 5/el2/5/Bebew/2w2/5/eh2/3we/ew3/5")
         .ok()
         .unwrap();
     verify(&position, &vec![Move::take(15, 27, &[31, 38, 19, 22])]);
@@ -412,7 +407,7 @@ fn coup_turc() {
 
 #[test]
 fn coup_tour() {
-    let position = BitboardPosition::parse("w 3We/5/5/5/l3/5/l3/ew3/b4/5")
+    let position = Position::parse("w 3We/5/5/5/l3/5/l3/ew3/b4/5")
         .ok()
         .unwrap();
     verify(&position, &vec![Move::take(36, 45, &[20, 21, 30, 31, 40])]);
@@ -420,7 +415,7 @@ fn coup_tour() {
 
 #[test]
 fn to_start_field() {
-    let position = BitboardPosition::parse("b 2b2/b4/3bb/5/wewww/3we/4B/ww2w/eww2/5")
+    let position = Position::parse("b 2b2/b4/3bb/5/wewww/3we/4B/ww2w/eww2/5")
         .ok()
         .unwrap();
     verify(
