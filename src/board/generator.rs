@@ -76,8 +76,9 @@ impl Generator {
             if position.piece_at(to) == EMPTY && piece_is(position.piece_at(via), color_to_capture)
             {
                 captures = true;
+                let without_man = &BitboardPosition::clone(position).put_piece(field, EMPTY);
                 self.explode_jump(
-                    position,
+                    without_man,
                     Move::take_one(field, to, via),
                     color_to_capture,
                     list,
@@ -414,7 +415,7 @@ fn coup_tour() {
     let position = BitboardPosition::parse("w 3We/5/5/5/l3/5/l3/ew3/b4/5")
         .ok()
         .unwrap();
-    verify(&position, &vec![Move::take(37, 37, &[21, 22, 31, 32])]);
+    verify(&position, &vec![Move::take(36, 45, &[20, 21, 30, 31, 40])]);
 }
 
 #[test]
