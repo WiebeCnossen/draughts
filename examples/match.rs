@@ -25,7 +25,7 @@ fn game(
     nodes: Nodes,
 ) -> (Score, Score) {
     let generator = Generator::create();
-    let mut position = Position::clone(initial);
+    let mut position = *initial;
     let mut prev = vec![];
     let show = nodes > 10_000;
     loop {
