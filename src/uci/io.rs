@@ -3,14 +3,9 @@ use std::io::{BufRead, BufReader, Write};
 use std::process::ChildStdout;
 
 fn trim_eol(mut s: String) -> String {
-    match s.pop() {
-        None => s,
-        Some('\n') | Some('\r') => trim_eol(s),
-        Some(c) => {
-            s.push(c);
-            s
-        }
-    }
+    let len = s.trim().len();
+    s.truncate(len);
+    s
 }
 
 pub fn read_stdin() -> String {
