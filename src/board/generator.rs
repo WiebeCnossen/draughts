@@ -75,7 +75,7 @@ impl Generator {
             if position.piece_at(to) == EMPTY && piece_is(position.piece_at(via), color_to_capture)
             {
                 captures = true;
-                let without_man = &position.clone().put_piece(field, EMPTY);
+                let without_man = &position.put_piece(field, EMPTY);
                 self.explode_jump(
                     without_man,
                     Move::take_one(field, to, via),
@@ -132,7 +132,7 @@ impl Generator {
         captures: &mut bool,
         color_to_capture: &Color,
     ) {
-        let without_king = &position.clone().put_piece(field, EMPTY);
+        let without_king = &position.put_piece(field, EMPTY);
         for path in self.steps.paths(field) {
             let mut via: Option<Field> = None;
             for &to in path.iter() {

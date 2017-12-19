@@ -15,7 +15,7 @@ pub fn promote(field: Field, piece: Piece) -> Piece {
 const FEN_CHARS: [char; 5] = ['e', 'w', 'W', 'b', 'B'];
 const ASCII_CHARS: [char; 5] = ['.', 'w', 'W', 'b', 'B'];
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Position {
     empty: u64,
     white_man: u64,

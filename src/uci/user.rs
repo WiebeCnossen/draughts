@@ -54,6 +54,6 @@ impl Engine for User {
         NAME
     }
     fn set_position(&mut self, position: &Position) {
-        self.position = Some(Position::clone(position));
+        self.position = Some(*position);
     }
 }

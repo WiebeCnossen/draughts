@@ -175,8 +175,7 @@ impl SlonenokJudge {
 
 impl Judge for SlonenokJudge {
     fn recall(&self, position: &Position) -> PositionMemory {
-        let bitboard = Position::clone(position);
-        match self.hash.get(&bitboard) {
+        match self.hash.get(position) {
             Some(found) => found.as_memory(),
             _ => PositionMemory::empty(),
         }
@@ -204,8 +203,7 @@ impl Judge for SlonenokJudge {
             (false, 0, 0)
         };
 
-        let bitboard = Position::clone(position);
-        let hash_eval = if let Some(found) = self.hash.get(&bitboard) {
+        let hash_eval = if let Some(found) = self.hash.get(position) {
             if found.depth > depth {
                 return;
             }
@@ -238,7 +236,7 @@ impl Judge for SlonenokJudge {
                 to,
             }
         };
-        self.hash.insert(bitboard, hash_eval);
+        self.hash.insert(*position, hash_eval);
     }
 
     fn evaluate(&self, position: &Position) -> Eval {
@@ -397,7 +395,7 @@ impl Engine for Slonenok {
     }
     fn set_position(&mut self, position: &Position) {
         self.slonenok.reset();
-        self.position = Position::clone(position);
+        self.position = *position;
         self.previous = EngineResult::empty();
     }
 }

@@ -125,7 +125,7 @@ impl Iterator for RandAap {
 
 impl Engine for RandAap {
     fn set_position(&mut self, position: &Position) {
-        self.position = Position::clone(position);
+        self.position = *position;
         self.previous = EngineResult::empty();
     }
 
