@@ -24,25 +24,25 @@ where
     result
 }
 
-fn paths(field: Field) -> [Vec<Field>; 4] {
+fn paths(field: Field) -> [Box<[Field]>; 4] {
     let coords = Coords::from(field);
     [
         path(coords.max_x() - coords.x, |d| Coords {
             x: coords.x + d,
             y: coords.y,
-        }),
+        }).into_boxed_slice(),
         path(coords.max_y() - coords.y, |d| Coords {
             x: coords.x,
             y: coords.y + d,
-        }),
+        }).into_boxed_slice(),
         path(coords.x - coords.min_x(), |d| Coords {
             x: coords.x - d,
             y: coords.y,
-        }),
+        }).into_boxed_slice(),
         path(coords.y - coords.min_y(), |d| Coords {
             x: coords.x,
             y: coords.y - d,
-        }),
+        }).into_boxed_slice(),
     ]
 }
 
@@ -188,7 +188,7 @@ pub struct Steps {
     all_white_steps: Vec<Vec<Field>>,
     all_black_steps: Vec<Vec<Field>>,
     all_short_jumps: Vec<Vec<(Field, Field)>>,
-    all_paths: Vec<[Vec<Field>; 4]>,
+    all_paths: Vec<[Box<[Field]>; 4]>,
 }
 
 impl Steps {
@@ -210,8 +210,7 @@ impl Steps {
     pub fn short_jumps(&self, field: Field) -> &[(Field, Field)] {
         &self.all_short_jumps[field]
     }
-    pub fn paths(&self, field: Field) -> [&[Field]; 4] {
-        let vecs = &self.all_paths[field];
-        [&vecs[0], &vecs[1], &vecs[2], &vecs[3]]
+    pub fn paths(&self, field: Field) -> &[Box<[Field]>; 4] {
+        &self.all_paths[field]
     }
 }
