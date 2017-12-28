@@ -134,7 +134,6 @@ where
         Some(mv) if depth > 2 => {
             let mtd =
                 mtd_f::<TGame, TScope>(judge, &position.go(&mv), depth - 2, -initial.evaluation);
-            //println!("MTD: {} {}", mtd.meta.get_nodes(), -mtd.evaluation);
             meta.add_nodes(mtd.meta.get_nodes() + 1);
             moves.sort_by(|&mv1, &mv2| match (mv1 == mv, mv2 == mv) {
                 (true, false) => Less,
@@ -152,7 +151,6 @@ where
         let mut beta = state.cut - 1;
         for mv in &moves[..] {
             let score = -makes_cut(judge, &mut meta, &position.go(mv), scope, -beta).evaluation;
-            //println!("Score: {} {} {}", beta, score, mv.as_string());
             if score > best.evaluation {
                 best = SearchResult::with_move(*mv, score);
             }
@@ -166,12 +164,7 @@ where
             }
         }
 
-        //println!("State: {} {} {} {} {}",
-        //  state.count, state.lower, state.cut, state.upper, state.mv.as_string());
-        //println!("Result: {} {} {}", beta, best.evaluation, best.mv.unwrap().as_string());
         let next = state.next(better_count, &best);
-        //println!("Next: {} {} {} {} {}",
-        //  next.count, next.lower, next.cut, next.upper, next.mv.as_string());
         if next.count == 0 {
             return BnsResult {
                 lower: next.lower,

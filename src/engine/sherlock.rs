@@ -40,6 +40,7 @@ struct HashEval {
     depth: Depth,
     from: SmallField,
     to: SmallField,
+    generation: u8,
 }
 
 impl HashEval {
@@ -59,6 +60,7 @@ pub struct SherlockJudge {
     stars: Stars,
     evals: [Eval; 243],
     hash: HashMap<Position, HashEval>,
+    generation: u8,
 }
 
 impl SherlockJudge {
@@ -113,6 +115,7 @@ impl SherlockJudge {
             evals,
             stars: Stars::create(),
             hash: HashMap::new(),
+            generation: 0,
         }
     }
 
@@ -125,7 +128,9 @@ impl SherlockJudge {
     }
 
     pub fn reset(&mut self) {
-        self.hash.clear()
+        let generation = self.generation;
+        self.hash.retain(|_, value| value.generation == generation);
+        self.generation += 1;
     }
 
     fn balance(&self, hoffset: &[Eval]) -> Eval {
@@ -181,6 +186,7 @@ impl Judge for SherlockJudge {
                     upper: if low { evaluation } else { found.upper },
                     from: if has_move { from } else { found.from },
                     to: if has_move { to } else { found.to },
+                    generation: self.generation,
                 }
             } else {
                 HashEval {
@@ -189,6 +195,7 @@ impl Judge for SherlockJudge {
                     upper: if low { evaluation } else { MAX_EVAL },
                     from,
                     to,
+                    generation: self.generation,
                 }
             }
         } else {
@@ -198,6 +205,7 @@ impl Judge for SherlockJudge {
                 upper: if low { evaluation } else { MAX_EVAL },
                 from,
                 to,
+                generation: self.generation,
             }
         };
         self.hash.insert(*position, hash_eval);
@@ -217,9 +225,7 @@ impl Judge for SherlockJudge {
             .sum();
 
         let balance_score = self.balance(&stats.hoffset_white) - self.balance(&stats.hoffset_black);
-        //let hole_score = self.hole(&stats.hoffset_white) - self.hole(&stats.hoffset_black);
         let center_score = self.center(&stats.hoffset_white) - self.center(&stats.hoffset_black);
-        //let height_score = 10 * (HEIGHT[stats.height_white] - HEIGHT[stats.height_black]);
 
         let structure = if men < 8 {
             0
@@ -309,7 +315,7 @@ impl Sherlock {
 impl Iterator for Sherlock {
     type Item = EngineResult;
     fn next(&mut self) -> Option<EngineResult> {
-        if self.previous.meta.get_nodes() >= self.max_nodes || self.previous.meta.get_depth() > 63
+        if self.previous.meta.get_nodes() >= self.max_nodes || self.previous.meta.get_depth() > 27
             || self.previous.evaluation == MIN_EVAL
             || self.previous.evaluation == MAX_EVAL
         {
@@ -322,12 +328,7 @@ impl Iterator for Sherlock {
         } else {
             SearchResult::with_move(self.previous.mv, self.previous.evaluation)
         };
-        let depth = if meta.get_nodes() == 0 {
-            0
-        } else {
-            meta.get_depth() + 1
-        };
-        meta.put_depth(depth);
+        let depth = meta.get_depth() + 1;
         meta.put_depth(depth);
         let bns = best_node_search::<Position, LogarithmicScope>(
             &mut self.sherlock,

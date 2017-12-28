@@ -79,7 +79,11 @@ where
         if state.finished() {
             let mv = match mv {
                 Some(mv) => mv,
-                None => judge.moves(position)[0],
+                None => judge
+                    .moves(position)
+                    .get(0)
+                    .cloned()
+                    .unwrap_or_else(Move::null),
             };
             return MtdResult::create(mv, state.lower, meta);
         }
