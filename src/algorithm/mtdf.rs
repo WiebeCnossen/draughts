@@ -1,4 +1,4 @@
-use algorithm::alphabeta::makes_cut;
+use algorithm::alphabeta::{makes_cut, makes_cut_parallel};
 use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};
 use algorithm::meta::Meta;
 use algorithm::scope::{Depth, Scope};
@@ -75,7 +75,42 @@ where
             let mv = match mv {
                 Some(mv) => mv,
                 None => judge
-                    .moves(position)
+                    .moves(position, depth)
+                    .get(0)
+                    .cloned()
+                    .unwrap_or_else(Move::null),
+            };
+            return MtdResult::create(mv, state.lower, meta);
+        }
+    }
+}
+
+pub fn mtd_f_parallel<TJudge, TScope>(
+    judge: &mut TJudge,
+    position: &Position,
+    depth: Depth,
+    guess: Eval,
+) -> MtdResult
+where
+    TJudge: 'static + Judge + Clone + Send,
+    TScope: 'static + Scope + Send,
+{
+    let scope = &TScope::from_depth(depth);
+    let mut state = MtdState::initial(guess);
+    let mut meta = Meta::create();
+    let mut mv = None;
+    loop {
+        let result =
+            makes_cut_parallel::<TJudge, TScope>(judge, &mut meta, position, scope, state.guess);
+        state = state.next(result.evaluation);
+        if let Some(best_move) = result.mv {
+            mv = Some(best_move);
+        }
+        if state.finished() {
+            let mv = match mv {
+                Some(mv) => mv,
+                None => judge
+                    .moves(position, depth)
                     .get(0)
                     .cloned()
                     .unwrap_or_else(Move::null),

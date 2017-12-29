@@ -29,6 +29,7 @@ fn star(mid: Field) -> Option<[Field; 5]> {
     }
 }
 
+#[derive(Clone)]
 pub struct Stars {
     pub positions: Vec<Vec<(usize, usize)>>,
     pub stars: Vec<[Field; 5]>,

@@ -1,7 +1,10 @@
+use std::sync::Arc;
+
 use algorithm::depth::DepthScope;
 use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL, ZERO_EVAL};
 use algorithm::meta::{Meta, Nodes};
-use algorithm::mtdf::mtd_f;
+use algorithm::mtdf::mtd_f_parallel;
+use algorithm::scope::Depth;
 use board::generator::Generator;
 use board::piece::{Piece, BLACK_KING, BLACK_MAN, WHITE_KING, WHITE_MAN};
 use board::piece::Color::White;
@@ -9,8 +12,9 @@ use board::mv::Move;
 use board::position::{Field, Position};
 use engine::{Engine, EngineResult};
 
+#[derive(Clone)]
 struct RandAapJudge {
-    generator: Generator,
+    generator: Arc<Generator>,
 }
 
 const PIECES: [Eval; 5] = [0, 500, 1500, -500, -1500];
@@ -22,7 +26,7 @@ const FIELDS: [Eval; 50] = [
 impl RandAapJudge {
     pub fn create() -> RandAapJudge {
         RandAapJudge {
-            generator: Generator::create(),
+            generator: Arc::new(Generator::create()),
         }
     }
 
@@ -63,7 +67,7 @@ impl Judge for RandAapJudge {
         }
     }
 
-    fn moves(&self, position: &Position) -> Vec<Move> {
+    fn moves(&self, position: &Position, _depth: Depth) -> Vec<Move> {
         self.generator.legal_moves(position)
     }
 
@@ -111,7 +115,7 @@ impl Iterator for RandAap {
             meta.get_depth() + 1
         };
         meta.put_depth(depth);
-        let mtd = mtd_f::<DepthScope>(
+        let mtd = mtd_f_parallel::<RandAapJudge, DepthScope>(
             &mut self.judge,
             &self.position,
             depth,

@@ -174,7 +174,7 @@ impl SlonenokJudge {
 }
 
 impl Judge for SlonenokJudge {
-    fn recall(&self, position: &Position) -> PositionMemory {
+    fn recall(&self, position: &Position, _: Depth) -> PositionMemory {
         match self.hash.get(position) {
             Some(found) => found.as_memory(),
             _ => PositionMemory::empty(),
@@ -295,7 +295,7 @@ impl Judge for SlonenokJudge {
         }
     }
 
-    fn moves(&self, position: &Position) -> Vec<Move> {
+    fn moves(&self, position: &Position, _depth: Depth) -> Vec<Move> {
         let mut result = self.generator.legal_moves(position);
         if position.side_to_move() == White {
             result.sort_by(|mv1, mv2| {

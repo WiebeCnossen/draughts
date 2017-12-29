@@ -1,6 +1,7 @@
 use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
 
-use algorithm::bns::best_node_search;
+use algorithm::bns::best_node_search_parallel;
 use algorithm::judge::{Eval, Judge, PositionMemory, MAX_EVAL, MIN_EVAL, ZERO_EVAL};
 use algorithm::logarithmic::LogarithmicScope;
 use algorithm::meta::{Meta, Nodes};
@@ -55,11 +56,12 @@ impl HashEval {
     }
 }
 
+#[derive(Clone)]
 pub struct SherlockJudge {
-    generator: Generator,
+    generator: Arc<Generator>,
     stars: Stars,
     evals: [Eval; 243],
-    hash: HashMap<Position, HashEval>,
+    hash: Arc<RwLock<HashMap<Position, HashEval>>>,
     generation: u8,
 }
 
@@ -111,10 +113,10 @@ impl SherlockJudge {
         }
 
         SherlockJudge {
-            generator: generator,
+            generator: Arc::new(generator),
             evals,
             stars: Stars::create(),
-            hash: HashMap::new(),
+            hash: Arc::new(RwLock::new(HashMap::new())),
             generation: 0,
         }
     }
@@ -129,7 +131,10 @@ impl SherlockJudge {
 
     pub fn reset(&mut self) {
         let generation = self.generation;
-        self.hash.retain(|_, value| value.generation == generation);
+        self.hash
+            .write()
+            .unwrap()
+            .retain(|_, value| value.generation == generation);
         self.generation += 1;
     }
 
@@ -151,9 +156,14 @@ impl SherlockJudge {
     }
 }
 
+const HASH_DEPTH: Depth = 4;
+
 impl Judge for SherlockJudge {
-    fn recall(&self, position: &Position) -> PositionMemory {
-        match self.hash.get(position) {
+    fn recall(&self, position: &Position, depth: Depth) -> PositionMemory {
+        if depth < HASH_DEPTH {
+            return PositionMemory::empty();
+        }
+        match self.hash.read().unwrap().get(position) {
             Some(found) => found.as_memory(),
             _ => PositionMemory::empty(),
         }
@@ -166,13 +176,17 @@ impl Judge for SherlockJudge {
         mv: Option<Move>,
         low: bool,
     ) {
+        if depth < HASH_DEPTH {
+            return;
+        }
         let (has_move, from, to) = if let Some(mv) = mv {
             (true, mv.from() as SmallField, mv.to() as SmallField)
         } else {
             (false, 0, 0)
         };
 
-        let hash_eval = if let Some(found) = self.hash.get(position) {
+        let mut hash = self.hash.write().unwrap();
+        let hash_eval = if let Some(found) = hash.get(position) {
             if found.depth > depth {
                 return;
             }
@@ -208,7 +222,7 @@ impl Judge for SherlockJudge {
                 generation: self.generation,
             }
         };
-        self.hash.insert(*position, hash_eval);
+        hash.insert(*position, hash_eval);
     }
     fn evaluate(&self, position: &Position) -> Eval {
         let stats = PositionStats::for_position(position);
@@ -265,9 +279,9 @@ impl Judge for SherlockJudge {
         }
     }
 
-    fn moves(&self, position: &Position) -> Vec<Move> {
+    fn moves(&self, position: &Position, depth: Depth) -> Vec<Move> {
         let mut moves = self.generator.legal_moves(position);
-        let memory = self.recall(position);
+        let memory = self.recall(position, depth);
         if memory.has_move() {
             if let Some(found) = moves
                 .iter()
@@ -330,7 +344,7 @@ impl Iterator for Sherlock {
         };
         let depth = meta.get_depth() + 1;
         meta.put_depth(depth);
-        let bns = best_node_search::<LogarithmicScope>(
+        let bns = best_node_search_parallel::<SherlockJudge, LogarithmicScope>(
             &mut self.sherlock,
             &self.position,
             depth,

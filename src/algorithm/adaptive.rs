@@ -1,6 +1,7 @@
 use algorithm::judge::Eval;
 use algorithm::scope::{Depth, Scope};
 
+#[derive(Clone)]
 pub struct AdaptiveScope {
     depth: Depth,
     forcing: bool,

@@ -49,12 +49,12 @@ impl PositionMemory {
 }
 
 pub trait Judge {
-    fn recall(&self, _: &Position) -> PositionMemory {
+    fn recall(&self, _position: &Position, _depth: Depth) -> PositionMemory {
         PositionMemory::empty()
     }
     fn remember(&mut self, _: &Position, _: Depth, _: Eval, _: Option<Move>, _: bool) {}
     fn evaluate(&self, position: &Position) -> Eval;
-    fn moves(&self, position: &Position) -> Vec<Move>;
+    fn moves(&self, position: &Position, depth: Depth) -> Vec<Move>;
     fn display_name(&self) -> &str;
     fn quiet_move(&self, position: &Position, mv: &Move) -> bool;
     fn quiet_position(&self, position: &Position, moves: &[Move]) -> bool {
