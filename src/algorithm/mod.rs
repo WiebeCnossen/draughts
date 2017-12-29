@@ -4,7 +4,7 @@ pub mod bns;
 pub mod depth;
 pub mod judge;
 pub mod logarithmic;
-pub mod metric;
+pub mod meta;
 pub mod mtdf;
 pub mod scope;
 pub mod search;

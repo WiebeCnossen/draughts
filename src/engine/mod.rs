@@ -5,7 +5,7 @@ pub mod slonenok;
 use std::iter::Iterator;
 
 use algorithm::judge::{Eval, ZERO_EVAL};
-use algorithm::metric::Meta;
+use algorithm::meta::Meta;
 use board::mv::Move;
 use board::position::Position;
 

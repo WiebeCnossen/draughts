@@ -3,7 +3,7 @@ use std::cmp::Ordering::{Equal, Greater, Less};
 
 use algorithm::alphabeta::makes_cut;
 use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};
-use algorithm::metric::{Meta, Metric};
+use algorithm::meta::Meta;
 use algorithm::mtdf::mtd_f;
 use algorithm::scope::{Depth, Scope};
 use algorithm::search::SearchResult;
@@ -132,8 +132,7 @@ where
     let mut meta = Meta::create();
     let mut state = match initial.mv {
         Some(mv) if depth > 2 => {
-            let mtd =
-                mtd_f::<TScope>(judge, &position.go(&mv), depth - 2, -initial.evaluation);
+            let mtd = mtd_f::<TScope>(judge, &position.go(&mv), depth - 2, -initial.evaluation);
             meta.add_nodes(mtd.meta.get_nodes() + 1);
             moves.sort_by(|&mv1, &mv2| match (mv1 == mv, mv2 == mv) {
                 (true, false) => Less,

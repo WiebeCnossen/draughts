@@ -1,6 +1,6 @@
 use algorithm::depth::DepthScope;
 use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL, ZERO_EVAL};
-use algorithm::metric::{Meta, Metric, Nodes};
+use algorithm::meta::{Meta, Nodes};
 use algorithm::mtdf::mtd_f;
 use board::generator::Generator;
 use board::piece::{Piece, BLACK_KING, BLACK_MAN, WHITE_KING, WHITE_MAN};

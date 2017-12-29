@@ -1,7 +1,7 @@
 extern crate draughts;
 extern crate time;
 
-use draughts::algorithm::metric::{Metric, Nodes};
+use draughts::algorithm::meta::Nodes;
 use draughts::board::position::Position;
 use draughts::engine::{Engine, EngineResult};
 use draughts::engine::randaap::RandAap;

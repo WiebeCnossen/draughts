@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use algorithm::adaptive::AdaptiveScope;
 use algorithm::bns::best_node_search;
 use algorithm::judge::{Eval, Judge, PositionMemory, MAX_EVAL, MIN_EVAL, ZERO_EVAL};
-use algorithm::metric::{Meta, Metric, Nodes};
+use algorithm::meta::{Meta, Nodes};
 use algorithm::scope::Depth;
 use algorithm::search::SearchResult;
 use board::generator::Generator;

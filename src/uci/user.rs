@@ -1,4 +1,4 @@
-use algorithm::metric::Meta;
+use algorithm::meta::Meta;
 use board::generator::Generator;
 use board::position::Position;
 use engine::{Engine, EngineResult};

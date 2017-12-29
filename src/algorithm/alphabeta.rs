@@ -1,14 +1,14 @@
 use std::cmp::{max, min};
 
 use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};
-use algorithm::metric::Metric;
+use algorithm::meta::Meta;
 use algorithm::scope::Scope;
 use algorithm::search::SearchResult;
 use board::position::Position;
 
 pub fn makes_cut<TScope>(
     judge: &mut Judge,
-    metric: &mut Metric,
+    meta: &mut Meta,
     position: &Position,
     scope: &TScope,
     cut: Eval,
@@ -34,7 +34,7 @@ where
         }
     }
 
-    metric.add_nodes(1);
+    meta.add_nodes(1);
 
     let mut moves = judge.moves(position);
     if moves.is_empty() {
@@ -65,7 +65,7 @@ where
         for mv in moves {
             let quiet = !single && judge.quiet_move(position, &mv);
             let score = if let Some(next) = scope.next(len, quiet, cut - current_score) {
-                -makes_cut(judge, metric, &position.go(&mv), &next, -cut + 1).evaluation
+                -makes_cut(judge, meta, &position.go(&mv), &next, -cut + 1).evaluation
             } else {
                 current_score
             };

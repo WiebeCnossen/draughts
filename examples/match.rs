@@ -3,7 +3,7 @@ extern crate draughts;
 use std::io;
 use std::io::Write;
 
-use draughts::algorithm::metric::{Metric, Nodes};
+use draughts::algorithm::meta::Nodes;
 use draughts::board::generator::Generator;
 use draughts::board::piece::Color;
 use draughts::board::position::Position;
