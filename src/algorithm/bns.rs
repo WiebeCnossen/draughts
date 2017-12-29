@@ -131,8 +131,8 @@ where
     let mut moves = judge.moves(position);
     let mut meta = Meta::create();
     let mut state = match initial.mv {
-        Some(mv) if depth > 2 => {
-            let mtd = mtd_f::<TScope>(judge, &position.go(&mv), depth - 2, -initial.evaluation);
+        Some(mv) if depth > 1 => {
+            let mtd = mtd_f::<TScope>(judge, &position.go(&mv), depth - 1, -initial.evaluation);
             meta.add_nodes(mtd.meta.get_nodes() + 1);
             moves.sort_by(|&mv1, &mv2| match (mv1 == mv, mv2 == mv) {
                 (true, false) => Less,
