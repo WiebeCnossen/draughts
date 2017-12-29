@@ -330,7 +330,7 @@ impl Iterator for Sherlock {
         };
         let depth = meta.get_depth() + 1;
         meta.put_depth(depth);
-        let bns = best_node_search::<Position, LogarithmicScope>(
+        let bns = best_node_search::<LogarithmicScope>(
             &mut self.sherlock,
             &self.position,
             depth,

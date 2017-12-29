@@ -57,7 +57,7 @@ impl MtdResult {
     }
 }
 
-pub fn mtd_f<TGame, TScope>(
+pub fn mtd_f<TScope>(
     judge: &mut Judge,
     position: &Position,
     depth: Depth,

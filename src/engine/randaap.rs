@@ -111,7 +111,7 @@ impl Iterator for RandAap {
             meta.get_depth() + 1
         };
         meta.put_depth(depth);
-        let mtd = mtd_f::<Position, DepthScope>(
+        let mtd = mtd_f::<DepthScope>(
             &mut self.judge,
             &self.position,
             depth,

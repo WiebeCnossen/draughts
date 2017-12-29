@@ -377,7 +377,7 @@ impl Iterator for Slonenok {
         };
         meta.put_depth(depth);
         meta.put_depth(depth);
-        let bns = best_node_search::<Position, AdaptiveScope>(
+        let bns = best_node_search::<AdaptiveScope>(
             &mut self.slonenok,
             &self.position,
             depth,
