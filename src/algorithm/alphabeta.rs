@@ -101,7 +101,7 @@ const MAX_DEPTH: Depth = 9;
 const MIN_THREADS: usize = 6;
 
 pub fn makes_cut_parallel<TJudge, TScope>(
-    judge: &mut TJudge,
+    judges: &mut Vec<TJudge>,
     meta: &mut Meta,
     position: &Position,
     scope: &TScope,
@@ -119,7 +119,7 @@ where
         return SearchResult::evaluation(MAX_EVAL);
     }
 
-    let memory = judge.recall(position, scope.depth());
+    let memory = judges[0].recall(position, scope.depth());
     if memory.depth >= scope.depth() {
         if memory.lower >= cut {
             return SearchResult::evaluation(memory.lower);
@@ -131,12 +131,12 @@ where
 
     meta.add_nodes(1);
 
-    let mut moves = judge.moves(position, scope.depth());
+    let mut moves = judges[0].moves(position, scope.depth());
     if moves.is_empty() {
         return SearchResult::evaluation(MIN_EVAL);
     }
 
-    let quiet = judge.quiet_position(position, &moves);
+    let quiet = judges[0].quiet_position(position, &moves);
     let len = moves.len();
     if !quiet && len > 1 && memory.has_move() {
         for i in 0..len {
@@ -151,7 +151,10 @@ where
         }
     }
 
-    let current_score = min(max(judge.evaluate(position), memory.lower), memory.upper);
+    let current_score = min(
+        max(judges[0].evaluate(position), memory.lower),
+        memory.upper,
+    );
 
     if scope.next(len, quiet, cut - current_score).is_some() {
         let mut best = MIN_EVAL;
@@ -160,7 +163,7 @@ where
             let (tx, rx) = mpsc::channel();
             let mut open = moves.len();
             for mv in moves {
-                let mut judge: TJudge = judge.clone();
+                let mut judge: TJudge = judges[0].clone();
                 let tx = tx.clone();
                 let position = *position;
                 let scope: TScope = scope.clone();
@@ -191,10 +194,10 @@ where
         } else {
             let single = moves.len() == 1;
             for mv in moves {
-                let quiet = !single && judge.quiet_move(position, &mv);
+                let quiet = !single && judges[0].quiet_move(position, &mv);
                 let score = if let Some(next) = scope.next(len, quiet, cut - current_score) {
                     -makes_cut_parallel::<TJudge, TScope>(
-                        judge,
+                        judges,
                         meta,
                         &position.go(&mv),
                         &next,
@@ -215,13 +218,13 @@ where
 
         if best >= cut {
             if let Some(mv) = pending {
-                judge.remember(position, scope.depth(), best, Some(mv), false);
+                judges[0].remember(position, scope.depth(), best, Some(mv), false);
                 SearchResult::with_move(mv, best)
             } else {
                 panic!("No move pending");
             }
         } else {
-            judge.remember(position, scope.depth(), best, pending, true);
+            judges[0].remember(position, scope.depth(), best, pending, true);
             SearchResult::evaluation(best)
         }
     } else {

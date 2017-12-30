@@ -86,7 +86,7 @@ where
 }
 
 pub fn mtd_f_parallel<TJudge, TScope>(
-    judge: &mut TJudge,
+    judges: &mut Vec<TJudge>,
     position: &Position,
     depth: Depth,
     guess: Eval,
@@ -101,7 +101,7 @@ where
     let mut mv = None;
     loop {
         let result =
-            makes_cut_parallel::<TJudge, TScope>(judge, &mut meta, position, scope, state.guess);
+            makes_cut_parallel::<TJudge, TScope>(judges, &mut meta, position, scope, state.guess);
         state = state.next(result.evaluation);
         if let Some(best_move) = result.mv {
             mv = Some(best_move);
@@ -109,7 +109,7 @@ where
         if state.finished() {
             let mv = match mv {
                 Some(mv) => mv,
-                None => judge
+                None => judges[0]
                     .moves(position, depth)
                     .get(0)
                     .cloned()

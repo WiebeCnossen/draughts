@@ -176,7 +176,7 @@ where
 }
 
 pub fn best_node_search_parallel<TJudge, TScope>(
-    judge: &mut TJudge,
+    judges: &mut Vec<TJudge>,
     position: &Position,
     depth: Depth,
     initial: &SearchResult,
@@ -185,12 +185,12 @@ where
     TJudge: 'static + Judge + Clone + Send,
     TScope: 'static + Scope + Send,
 {
-    let mut moves = judge.moves(position, depth);
+    let mut moves = judges[0].moves(position, depth);
     let mut meta = Meta::create();
     let mut state = match initial.mv {
         Some(mv) if depth > 1 => {
             let mtd = mtd_f_parallel::<TJudge, TScope>(
-                judge,
+                judges,
                 &position.go(&mv),
                 depth - 1,
                 -initial.evaluation,
@@ -212,7 +212,7 @@ where
         let mut beta = state.cut - 1;
         for mv in &moves[..] {
             let score = -makes_cut_parallel::<TJudge, TScope>(
-                judge,
+                judges,
                 &mut meta,
                 &position.go(mv),
                 scope,

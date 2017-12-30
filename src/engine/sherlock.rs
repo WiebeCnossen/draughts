@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::iter;
 use std::sync::{Arc, RwLock};
 
 use algorithm::bns::best_node_search_parallel;
@@ -58,7 +59,7 @@ impl HashEval {
 
 #[derive(Clone)]
 pub struct SherlockJudge {
-    generator: Arc<Generator>,
+    generator: Generator,
     stars: Stars,
     evals: [Eval; 243],
     hash: Arc<RwLock<HashMap<Position, HashEval>>>,
@@ -113,7 +114,7 @@ impl SherlockJudge {
         }
 
         SherlockJudge {
-            generator: Arc::new(generator),
+            generator: generator,
             evals,
             stars: Stars::create(),
             hash: Arc::new(RwLock::new(HashMap::new())),
@@ -310,7 +311,7 @@ impl Judge for SherlockJudge {
 
 pub struct Sherlock {
     max_nodes: Nodes,
-    sherlock: SherlockJudge,
+    sherlocks: Vec<SherlockJudge>,
     previous: EngineResult,
     position: Position,
 }
@@ -319,7 +320,9 @@ impl Sherlock {
     pub fn create(max_nodes: Nodes) -> Sherlock {
         Sherlock {
             max_nodes,
-            sherlock: SherlockJudge::create(Generator::create()),
+            sherlocks: iter::repeat(SherlockJudge::create(Generator::create()))
+                .take(8)
+                .collect(),
             previous: EngineResult::create(Move::null(), ZERO_EVAL, Meta::create()),
             position: Position::initial(),
         }
@@ -345,7 +348,7 @@ impl Iterator for Sherlock {
         let depth = meta.get_depth() + 1;
         meta.put_depth(depth);
         let bns = best_node_search_parallel::<SherlockJudge, LogarithmicScope>(
-            &mut self.sherlock,
+            &mut self.sherlocks,
             &self.position,
             depth,
             &search_result,
@@ -361,7 +364,7 @@ impl Engine for Sherlock {
         "Sherlock"
     }
     fn set_position(&mut self, position: &Position) {
-        self.sherlock.reset();
+        self.sherlocks[0].reset();
         self.position = *position;
         self.previous = EngineResult::empty();
     }

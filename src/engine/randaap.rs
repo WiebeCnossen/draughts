@@ -1,3 +1,4 @@
+use std::iter;
 use std::sync::Arc;
 
 use algorithm::depth::DepthScope;
@@ -82,7 +83,7 @@ impl Judge for RandAapJudge {
 
 pub struct RandAap {
     max_nodes: Nodes,
-    judge: RandAapJudge,
+    judges: Vec<RandAapJudge>,
     previous: EngineResult,
     position: Position,
 }
@@ -91,7 +92,7 @@ impl RandAap {
     pub fn create(max_nodes: Nodes) -> RandAap {
         RandAap {
             max_nodes,
-            judge: RandAapJudge::create(),
+            judges: iter::repeat(RandAapJudge::create()).take(8).collect(),
             previous: EngineResult::create(Move::null(), ZERO_EVAL, Meta::create()),
             position: Position::initial(),
         }
@@ -116,7 +117,7 @@ impl Iterator for RandAap {
         };
         meta.put_depth(depth);
         let mtd = mtd_f_parallel::<RandAapJudge, DepthScope>(
-            &mut self.judge,
+            &mut self.judges,
             &self.position,
             depth,
             self.previous.evaluation,
@@ -134,6 +135,6 @@ impl Engine for RandAap {
     }
 
     fn display_name(&self) -> &str {
-        self.judge.display_name()
+        self.judges[0].display_name()
     }
 }

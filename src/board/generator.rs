@@ -4,6 +4,7 @@ use board::position::{Field, Position};
 use board::mv::Move;
 use board::steps::Steps;
 
+#[derive(Clone)]
 pub struct Generator {
     steps: Steps,
 }

@@ -184,6 +184,7 @@ fn long_steps_center() {
     }
 }
 
+#[derive(Clone)]
 pub struct Steps {
     all_white_steps: Vec<Vec<Field>>,
     all_black_steps: Vec<Vec<Field>>,
