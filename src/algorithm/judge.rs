@@ -53,6 +53,7 @@ pub trait Judge {
         PositionMemory::empty()
     }
     fn remember(&mut self, _: &Position, _: Depth, _: Eval, _: Option<Move>, _: bool) {}
+    fn consolidate(&mut self) {}
     fn evaluate(&self, position: &Position) -> Eval;
     fn moves(&self, position: &Position, depth: Depth) -> Vec<Move>;
     fn display_name(&self) -> &str;

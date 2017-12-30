@@ -160,36 +160,66 @@ where
         let mut best = MIN_EVAL;
         let mut pending = None;
         if moves.len() >= MIN_THREADS && scope.depth() >= MIN_DEPTH && scope.depth() <= MAX_DEPTH {
+            judges[0].consolidate();
             let (tx, rx) = mpsc::channel();
-            let mut open = moves.len();
-            for mv in moves {
-                let mut judge: TJudge = judges[0].clone();
-                let tx = tx.clone();
-                let position = *position;
-                let scope: TScope = scope.clone();
-                thread::spawn(move || {
-                    let quiet = judge.quiet_move(&position, &mv);
-                    let mut meta = Meta::create();
-                    let score = if let Some(next) = scope.next(len, quiet, cut - current_score) {
-                        -makes_cut(&mut judge, &mut meta, &position.go(&mv), &next, -cut + 1)
-                            .evaluation
-                    } else {
-                        current_score
-                    };
-                    tx.send((score, mv, meta)).expect("Bummer: send failed");
-                });
+            let mut open = 0;
+            let mut mi = 0;
+            while mi < moves.len() || open > 0 {
+                // Start worker(s)
+                while mi < moves.len() && !judges.is_empty() {
+                    let mut judge = judges.pop().unwrap();
+                    let mv = moves[mi];
+                    let tx = tx.clone();
+                    let position = *position;
+                    let scope: TScope = scope.clone();
+
+                    thread::spawn(move || {
+                        let quiet = judge.quiet_move(&position, &mv);
+                        let mut meta = Meta::create();
+                        let score = if let Some(next) = scope.next(len, quiet, cut - current_score)
+                        {
+                            -makes_cut(&mut judge, &mut meta, &position.go(&mv), &next, -cut + 1)
+                                .evaluation
+                        } else {
+                            current_score
+                        };
+                        tx.send((score, mv, meta, judge))
+                            .expect("Bummer: send failed");
+                    });
+
+                    mi += 1;
+                    open += 1;
+                }
+
+                if open > 0 {
+                    let (score, mv, thread_meta, mut judge) =
+                        rx.recv().expect("Bummer: recv failed");
+                    meta.put_depth(thread_meta.get_depth());
+                    meta.add_nodes(thread_meta.get_nodes());
+                    judge.consolidate();
+                    judges.push(judge);
+                    open -= 1;
+                    if score > best {
+                        best = score;
+                        pending = Some(mv);
+                        if best >= cut {
+                            break;
+                        }
+                    }
+                }
             }
-            for (score, mv, thread_meta) in rx {
+
+            while open > 0 {
+                let (score, mv, thread_meta, mut judge) = rx.recv().unwrap();
                 meta.put_depth(thread_meta.get_depth());
                 meta.add_nodes(thread_meta.get_nodes());
+                judge.consolidate();
+                judges.push(judge);
+                open -= 1;
                 if score > best {
                     best = score;
                     pending = Some(mv);
                 }
-                open = match open - 1 {
-                    0 => break,
-                    open => open,
-                };
             }
         } else {
             let single = moves.len() == 1;

@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::iter;
 use std::sync::{Arc, RwLock};
@@ -36,6 +37,7 @@ const BL: usize = 3;
 const BR: usize = 4;
 
 type SmallField = u8;
+
 struct HashEval {
     lower: Eval,
     upper: Eval,
@@ -55,15 +57,51 @@ impl HashEval {
             self.to as Field,
         )
     }
+
+    fn update(&mut self, other: &HashEval) {
+        match self.depth.cmp(&other.depth) {
+            Ordering::Greater => (),
+            Ordering::Equal => {
+                self.lower = self.lower.max(other.lower);
+                self.upper = self.upper.min(other.upper);
+                self.generation = other.generation;
+                if self.from == 0 && self.to == 0 {
+                    self.from = other.from;
+                    self.to = other.to;
+                }
+            }
+            Ordering::Less => {
+                self.depth = other.depth;
+                self.lower = other.lower;
+                self.upper = other.upper;
+                self.from = other.from;
+                self.to = other.to;
+                self.generation = other.generation;
+            }
+        }
+    }
 }
 
-#[derive(Clone)]
 pub struct SherlockJudge {
     generator: Generator,
     stars: Stars,
     evals: [Eval; 243],
-    hash: Arc<RwLock<HashMap<Position, HashEval>>>,
+    private_hash: HashMap<Position, HashEval>,
+    shared_hash: Arc<RwLock<HashMap<Position, HashEval>>>,
     generation: u8,
+}
+
+impl Clone for SherlockJudge {
+    fn clone(&self) -> Self {
+        Self {
+            generator: self.generator.clone(),
+            stars: self.stars.clone(),
+            evals: self.evals,
+            private_hash: HashMap::new(),
+            shared_hash: Arc::clone(&self.shared_hash),
+            generation: self.generation,
+        }
+    }
 }
 
 impl SherlockJudge {
@@ -117,7 +155,8 @@ impl SherlockJudge {
             generator: generator,
             evals,
             stars: Stars::create(),
-            hash: Arc::new(RwLock::new(HashMap::new())),
+            private_hash: HashMap::new(),
+            shared_hash: Arc::new(RwLock::new(HashMap::new())),
             generation: 0,
         }
     }
@@ -132,7 +171,7 @@ impl SherlockJudge {
 
     pub fn reset(&mut self) {
         let generation = self.generation;
-        self.hash
+        self.shared_hash
             .write()
             .unwrap()
             .retain(|_, value| value.generation == generation);
@@ -157,16 +196,20 @@ impl SherlockJudge {
     }
 }
 
-const HASH_DEPTH: Depth = 4;
+const HASH_DEPTH: Depth = 2;
 
 impl Judge for SherlockJudge {
     fn recall(&self, position: &Position, depth: Depth) -> PositionMemory {
         if depth < HASH_DEPTH {
             return PositionMemory::empty();
         }
-        match self.hash.read().unwrap().get(position) {
+        match self.private_hash.get(position) {
             Some(found) => found.as_memory(),
-            _ => PositionMemory::empty(),
+            None if depth < HASH_DEPTH => PositionMemory::empty(),
+            _ => match self.shared_hash.read().unwrap().get(position) {
+                Some(found) => found.as_memory(),
+                _ => PositionMemory::empty(),
+            },
         }
     }
     fn remember(
@@ -177,53 +220,31 @@ impl Judge for SherlockJudge {
         mv: Option<Move>,
         low: bool,
     ) {
-        if depth < HASH_DEPTH {
-            return;
-        }
-        let (has_move, from, to) = if let Some(mv) = mv {
-            (true, mv.from() as SmallField, mv.to() as SmallField)
-        } else {
-            (false, 0, 0)
+        // if depth < HASH_DEPTH {
+        //     return;
+        // }
+        let mv = mv.unwrap_or_else(Move::null);
+        let hash_eval = HashEval {
+            depth,
+            lower: if low { MIN_EVAL } else { evaluation },
+            upper: if low { evaluation } else { MAX_EVAL },
+            from: mv.from() as SmallField,
+            to: mv.to() as SmallField,
+            generation: self.generation,
         };
 
-        let mut hash = self.hash.write().unwrap();
-        let hash_eval = if let Some(found) = hash.get(position) {
-            if found.depth > depth {
-                return;
-            }
-            if found.depth == depth {
-                if !low && evaluation <= found.lower || low && found.upper >= evaluation {
-                    return;
-                }
-                HashEval {
-                    depth,
-                    lower: if low { found.lower } else { evaluation },
-                    upper: if low { evaluation } else { found.upper },
-                    from: if has_move { from } else { found.from },
-                    to: if has_move { to } else { found.to },
-                    generation: self.generation,
-                }
-            } else {
-                HashEval {
-                    depth,
-                    lower: if low { MIN_EVAL } else { evaluation },
-                    upper: if low { evaluation } else { MAX_EVAL },
-                    from,
-                    to,
-                    generation: self.generation,
-                }
-            }
-        } else {
-            HashEval {
-                depth,
-                lower: if low { MIN_EVAL } else { evaluation },
-                upper: if low { evaluation } else { MAX_EVAL },
-                from,
-                to,
-                generation: self.generation,
-            }
-        };
-        hash.insert(*position, hash_eval);
+        self.private_hash
+            .entry(*position)
+            .and_modify(|found| found.update(&hash_eval))
+            .or_insert(hash_eval);
+    }
+    fn consolidate(&mut self) {
+        let mut hash = self.shared_hash.write().unwrap();
+        for (position, hash_eval) in self.private_hash.drain() {
+            hash.entry(position)
+                .and_modify(|found| found.update(&hash_eval))
+                .or_insert(hash_eval);
+        }
     }
     fn evaluate(&self, position: &Position) -> Eval {
         let stats = PositionStats::for_position(position);
@@ -262,7 +283,7 @@ impl Judge for SherlockJudge {
         let score = beans + structure + (32 - men) * (dev_white - dev_black) / 2 + balance_score
             + center_score;
         let scaled = if self.drawish(&stats) {
-            score / 10
+            score / 100
         } else {
             let min_kings = if stats.piece_count[WHITE_KING as usize]
                 < stats.piece_count[BLACK_KING as usize]
@@ -271,7 +292,7 @@ impl Judge for SherlockJudge {
             } else {
                 stats.piece_count[BLACK_KING as usize]
             };
-            score >> min_kings
+            score >> (2 * min_kings)
         };
         if position.side_to_move() == White {
             scaled
@@ -365,6 +386,11 @@ impl Engine for Sherlock {
     }
     fn set_position(&mut self, position: &Position) {
         self.sherlocks[0].reset();
+        self.sherlocks[0].consolidate();
+        let generation = self.sherlocks[0].generation;
+        for sherlock in &mut self.sherlocks {
+            sherlock.generation = generation;
+        }
         self.position = *position;
         self.previous = EngineResult::empty();
     }

@@ -10,7 +10,7 @@ use draughts::engine::sherlock::Sherlock;
 use draughts::uci::io::read_stdin;
 // use draughts::uci::slagzet::Slagzet;
 
-const MAX_NODES: Nodes = 100_000;
+const MAX_NODES: Nodes = 500_000;
 
 fn run(engine: &mut Engine<Item = EngineResult>) {
     let start = time::precise_time_ns();
@@ -30,14 +30,6 @@ fn run(engine: &mut Engine<Item = EngineResult>) {
         engine.set_position(&position);
         let mut position_nodes = 0;
         while let Some(result) = engine.next() {
-            /*
-            println!("{}: {} {} | {} @ {}",
-                     engine.display_name(),
-                     result.mv,
-                     result.evaluation,
-                     result.meta.get_nodes(),
-                     result.meta.get_depth());
-            */
             position_nodes = result.meta.get_nodes();
         }
 

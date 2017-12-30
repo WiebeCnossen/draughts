@@ -137,7 +137,7 @@ pub fn main() {
         // let one = &mut Slagzet::create(nodes / 4);
         let one = &mut Slonenok::create(nodes);
         // let one = &mut User::create();
-        let two = &mut Sherlock::create(2 * nodes);
+        let two = &mut Sherlock::create(3 * nodes);
         for fen in &positions[..] {
             let position = &Position::parse(fen).unwrap();
             {
