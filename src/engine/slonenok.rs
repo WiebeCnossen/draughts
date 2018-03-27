@@ -9,8 +9,8 @@ use algorithm::scope::Depth;
 use algorithm::search::SearchResult;
 use board::generator::Generator;
 use board::mv::Move;
-use board::piece::{BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
 use board::piece::Color::White;
+use board::piece::{BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
 use board::position::{Field, Position};
 use board::stats::PositionStats;
 use engine::{Engine, EngineResult};
@@ -55,7 +55,7 @@ pub struct SlonenokJudge {
 impl SlonenokJudge {
     pub fn create(generator: Generator) -> SlonenokJudge {
         SlonenokJudge {
-            generator: generator,
+            generator,
             hash: HashMap::new(),
             white_killer_moves: [Move::null(); KILLERS],
             white_killer_cursor: 0,

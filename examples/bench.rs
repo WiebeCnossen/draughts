@@ -3,10 +3,10 @@ extern crate time;
 
 use draughts::algorithm::meta::Nodes;
 use draughts::board::position::Position;
-use draughts::engine::{Engine, EngineResult};
 use draughts::engine::randaap::RandAap;
-use draughts::engine::slonenok::Slonenok;
 use draughts::engine::sherlock::Sherlock;
+use draughts::engine::slonenok::Slonenok;
+use draughts::engine::{Engine, EngineResult};
 use draughts::uci::io::read_stdin;
 // use draughts::uci::slagzet::Slagzet;
 

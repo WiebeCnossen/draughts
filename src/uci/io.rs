@@ -56,8 +56,8 @@ pub struct LineReader<'a, 'b> {
 impl<'a, 'b> LineReader<'a, 'b> {
     pub fn create(reader: &'a mut BufReader<ChildStdout>, exit: &'b str) -> LineReader<'a, 'b> {
         LineReader {
-            reader: reader,
-            exit: exit,
+            reader,
+            exit,
             done: false,
         }
     }

@@ -1,7 +1,7 @@
-use board::piece::{piece_is, piece_own, Color, BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
-use board::piece::Color::{Black, White};
-use board::position::{Field, Position};
 use board::mv::Move;
+use board::piece::Color::{Black, White};
+use board::piece::{piece_is, piece_own, Color, BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
+use board::position::{Field, Position};
 use board::steps::Steps;
 
 #[derive(Clone)]

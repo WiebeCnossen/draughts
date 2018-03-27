@@ -12,7 +12,7 @@ pub struct AdaptiveScope {
 impl Scope for AdaptiveScope {
     fn from_depth(depth: Depth) -> AdaptiveScope {
         AdaptiveScope {
-            depth: depth,
+            depth,
             forcing: false,
             forced: 0,
             unforced: 0,

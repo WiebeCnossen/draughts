@@ -7,9 +7,9 @@ use algorithm::meta::{Meta, Nodes};
 use algorithm::mtdf::mtd_f_parallel;
 use algorithm::scope::Depth;
 use board::generator::Generator;
-use board::piece::{Piece, BLACK_KING, BLACK_MAN, WHITE_KING, WHITE_MAN};
-use board::piece::Color::White;
 use board::mv::Move;
+use board::piece::Color::White;
+use board::piece::{Piece, BLACK_KING, BLACK_MAN, WHITE_KING, WHITE_MAN};
 use board::position::{Field, Position};
 use engine::{Engine, EngineResult};
 

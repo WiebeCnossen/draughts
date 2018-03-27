@@ -15,7 +15,7 @@ impl MtdState {
     fn initial(guess: Eval) -> MtdState {
         MtdState {
             lower: MIN_EVAL,
-            guess: guess,
+            guess,
             upper: MAX_EVAL + 1,
         }
     }

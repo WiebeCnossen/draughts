@@ -1,7 +1,7 @@
 extern crate draughts;
 
-use draughts::board::position::Position;
 use draughts::board::generator::Generator;
+use draughts::board::position::Position;
 
 fn moves() -> Vec<String> {
     vec![

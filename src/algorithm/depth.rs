@@ -8,7 +8,7 @@ pub struct DepthScope {
 
 impl Scope for DepthScope {
     fn from_depth(depth: Depth) -> DepthScope {
-        DepthScope { depth: depth }
+        DepthScope { depth }
     }
 
     fn next(&self, _: usize, quiet: bool, _: Eval) -> Option<DepthScope> {

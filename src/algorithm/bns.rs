@@ -1,5 +1,5 @@
-use std::cmp::min;
 use std::cmp::Ordering::{Equal, Greater, Less};
+use std::cmp::min;
 
 use algorithm::alphabeta::{makes_cut, makes_cut_parallel};
 use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};

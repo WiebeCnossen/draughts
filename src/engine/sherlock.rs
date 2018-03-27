@@ -11,11 +11,11 @@ use algorithm::scope::Depth;
 use algorithm::search::SearchResult;
 use board::generator::Generator;
 use board::mv::Move;
-use board::piece::{BLACK_KING, BLACK_MAN, WHITE_KING, WHITE_MAN};
 use board::piece::Color::White;
+use board::piece::{BLACK_KING, BLACK_MAN, WHITE_KING, WHITE_MAN};
 use board::position::{Field, Position};
-use board::stats::PositionStats;
 use board::stars::Stars;
+use board::stats::PositionStats;
 use engine::{Engine, EngineResult};
 
 const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1475, -500, -1475];
@@ -152,7 +152,7 @@ impl SherlockJudge {
         }
 
         SherlockJudge {
-            generator: generator,
+            generator,
             evals,
             stars: Stars::create(),
             private_hash: HashMap::new(),

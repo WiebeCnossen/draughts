@@ -10,14 +10,14 @@ impl SearchResult {
     pub fn with_move(mv: Move, evaluation: Eval) -> SearchResult {
         SearchResult {
             mv: Some(mv),
-            evaluation: evaluation,
+            evaluation,
         }
     }
 
     pub fn evaluation(evaluation: Eval) -> SearchResult {
         SearchResult {
             mv: None,
-            evaluation: evaluation,
+            evaluation,
         }
     }
 }
