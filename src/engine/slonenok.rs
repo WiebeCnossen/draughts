@@ -1,19 +1,19 @@
 use std::cmp::Ordering::{Greater, Less};
 use std::collections::HashMap;
 
-use algorithm::adaptive::AdaptiveScope;
-use algorithm::bns::best_node_search;
-use algorithm::judge::{Eval, Judge, PositionMemory, MAX_EVAL, MIN_EVAL, ZERO_EVAL};
-use algorithm::meta::{Meta, Nodes};
-use algorithm::scope::Depth;
-use algorithm::search::SearchResult;
-use board::generator::Generator;
-use board::mv::Move;
-use board::piece::Color::White;
-use board::piece::{BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
-use board::position::{Field, Position};
-use board::stats::PositionStats;
-use engine::{Engine, EngineResult};
+use super::{Engine, EngineResult};
+use crate::algorithm::adaptive::AdaptiveScope;
+use crate::algorithm::bns::best_node_search;
+use crate::algorithm::judge::{Eval, Judge, PositionMemory, MAX_EVAL, MIN_EVAL, ZERO_EVAL};
+use crate::algorithm::meta::{Meta, Nodes};
+use crate::algorithm::scope::Depth;
+use crate::algorithm::search::SearchResult;
+use crate::board::generator::Generator;
+use crate::board::mv::Move;
+use crate::board::piece::Color::White;
+use crate::board::piece::{BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
+use crate::board::position::{Field, Position};
+use crate::board::stats::PositionStats;
 
 const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1500, -500, -1500];
 const HOFFSET: [Eval; 10] = [0, 1, 3, 7, 15, 15, 7, 3, 1, 0];
@@ -68,8 +68,10 @@ impl SlonenokJudge {
     fn drawish(&self, stats: &PositionStats) -> bool {
         let whites = stats.piece_count[WHITE_MAN as usize] + stats.piece_count[WHITE_KING as usize];
         let blacks = stats.piece_count[BLACK_MAN as usize] + stats.piece_count[BLACK_KING as usize];
-        stats.piece_count[WHITE_KING as usize] > 0 && stats.piece_count[BLACK_KING as usize] > 0
-            && whites <= 3 && blacks <= 3
+        stats.piece_count[WHITE_KING as usize] > 0
+            && stats.piece_count[BLACK_KING as usize] > 0
+            && whites <= 3
+            && blacks <= 3
     }
 
     pub fn reset(&mut self) {
@@ -81,7 +83,8 @@ impl SlonenokJudge {
 
         // hanging piece penalty
         for start in 10..14 {
-            if position.piece_at(start) == BLACK_MAN && position.piece_at(start + 1) == BLACK_MAN
+            if position.piece_at(start) == BLACK_MAN
+                && position.piece_at(start + 1) == BLACK_MAN
                 && position.piece_at(start - 5) == BLACK_MAN
                 && position.piece_at(start - 10) == EMPTY
             {
@@ -97,7 +100,8 @@ impl SlonenokJudge {
             }
         }
         for start in 15..19 {
-            if position.piece_at(start) == BLACK_MAN && position.piece_at(start + 1) == BLACK_MAN
+            if position.piece_at(start) == BLACK_MAN
+                && position.piece_at(start + 1) == BLACK_MAN
                 && position.piece_at(start - 4) == BLACK_MAN
                 && position.piece_at(start - 10) == EMPTY
                 && position.piece_at(start - 9) == EMPTY
@@ -106,7 +110,8 @@ impl SlonenokJudge {
             }
         }
         for start in 30..34 {
-            if position.piece_at(start) == WHITE_MAN && position.piece_at(start + 1) == WHITE_MAN
+            if position.piece_at(start) == WHITE_MAN
+                && position.piece_at(start + 1) == WHITE_MAN
                 && position.piece_at(start + 6) == WHITE_MAN
                 && position.piece_at(start + 10) == EMPTY
                 && position.piece_at(start + 11) == EMPTY
@@ -115,7 +120,8 @@ impl SlonenokJudge {
             }
         }
         for start in 35..39 {
-            if position.piece_at(start) == WHITE_MAN && position.piece_at(start + 1) == WHITE_MAN
+            if position.piece_at(start) == WHITE_MAN
+                && position.piece_at(start + 1) == WHITE_MAN
                 && position.piece_at(start + 5) == WHITE_MAN
                 && position.piece_at(start + 10) == EMPTY
             {
@@ -273,9 +279,9 @@ impl Judge for SlonenokJudge {
 
         let structure = self.evaluate_structure(position);
 
-        let score = beans + structure + (hoffset_white - hoffset_black)
-            + (voffset_white - voffset_black)
-            - 2 * (balance_white.abs() - balance_black.abs());
+        let score =
+            beans + structure + (hoffset_white - hoffset_black) + (voffset_white - voffset_black)
+                - 2 * (balance_white.abs() - balance_black.abs());
         let scaled = if self.drawish(&stats) {
             score / 10
         } else {
@@ -357,7 +363,8 @@ impl Slonenok {
 impl Iterator for Slonenok {
     type Item = EngineResult;
     fn next(&mut self) -> Option<EngineResult> {
-        if self.previous.meta.get_nodes() >= self.max_nodes || self.previous.meta.get_depth() > 63
+        if self.previous.meta.get_nodes() >= self.max_nodes
+            || self.previous.meta.get_depth() > 63
             || self.previous.evaluation == MIN_EVAL
             || self.previous.evaluation == MAX_EVAL
         {

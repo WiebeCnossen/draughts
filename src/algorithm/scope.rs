@@ -1,4 +1,4 @@
-use algorithm::judge::Eval;
+use super::judge::Eval;
 
 pub type Depth = u8;
 pub trait Scope: Sized + Clone {

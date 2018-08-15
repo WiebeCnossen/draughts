@@ -1,4 +1,4 @@
-use algorithm::scope::Depth;
+use super::scope::Depth;
 
 pub type Nodes = usize;
 

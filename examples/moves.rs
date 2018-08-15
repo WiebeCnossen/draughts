@@ -1,5 +1,3 @@
-extern crate draughts;
-
 use draughts::board::generator::Generator;
 use draughts::board::position::Position;
 

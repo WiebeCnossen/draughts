@@ -1,6 +1,6 @@
 use std::iter;
 
-use board::position::Field;
+use super::position::Field;
 
 pub type Captures = u8;
 
@@ -58,7 +58,8 @@ impl Move {
         }
 
         let mut taken = self.taken;
-        match self.taken
+        match self
+            .taken
             .iter()
             .take(self.num_taken as usize)
             .position(|&taken| taken > via)
@@ -118,8 +119,7 @@ impl Move {
                     .iter()
                     .take(self.num_taken as usize)
                     .map(|&via| format!("x{}", via + 1)),
-            )
-            .collect()
+            ).collect()
     }
 }
 

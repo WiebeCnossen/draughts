@@ -1,4 +1,4 @@
-use board::position::Field;
+use super::position::Field;
 
 pub type Coord = i8;
 

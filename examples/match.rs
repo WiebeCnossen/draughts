@@ -1,5 +1,3 @@
-extern crate draughts;
-
 use std::io;
 use std::io::Write;
 
@@ -29,7 +27,8 @@ fn game(
     let mut prev = vec![];
     let show = nodes > 10_000;
     loop {
-        let before = prev.iter()
+        let before = prev
+            .iter()
             .fold(0, |a, p| a + if *p == position { 1 } else { 0 });
         if before >= 1 {
             return (1, 1);

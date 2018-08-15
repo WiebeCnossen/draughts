@@ -1,8 +1,10 @@
-use board::mv::Move;
-use board::piece::Color::{Black, White};
-use board::piece::{piece_is, piece_own, Color, BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
-use board::position::{Field, Position};
-use board::steps::Steps;
+use super::mv::Move;
+use super::piece::Color::{Black, White};
+use super::piece::{
+    piece_is, piece_own, Color, BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN,
+};
+use super::position::{Field, Position};
+use super::steps::Steps;
 
 #[derive(Clone)]
 pub struct Generator {
@@ -51,7 +53,8 @@ impl Generator {
     ) {
         let mut exploded = false;
         for &(via, to) in self.steps.short_jumps(mv.to()) {
-            if piece_is(position.piece_at(via), color_to_capture) && position.piece_at(to) == EMPTY
+            if piece_is(position.piece_at(via), color_to_capture)
+                && position.piece_at(to) == EMPTY
                 && !mv.goes_via(via)
             {
                 exploded = true;

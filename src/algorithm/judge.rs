@@ -1,6 +1,6 @@
-use algorithm::scope::Depth;
-use board::mv::Move;
-use board::position::{Field, Position};
+use super::scope::Depth;
+use crate::board::mv::Move;
+use crate::board::position::{Field, Position};
 
 pub type Eval = i16;
 pub const MAX_EVAL: Eval = 15_000;

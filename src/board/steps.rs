@@ -1,6 +1,7 @@
-use board::coords::{Coords, MinXY};
-use board::position::Field;
 use std::ops::Range;
+
+use super::coords::{Coords, MinXY};
+use super::position::Field;
 
 fn all<F, G>(generator: F) -> Vec<G>
 where

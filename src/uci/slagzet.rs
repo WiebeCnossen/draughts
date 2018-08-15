@@ -1,11 +1,11 @@
 use std::io::{BufReader, Write};
 use std::process::{ChildStdin, ChildStdout, Command, Stdio};
 
-use algorithm::meta::{Meta, Nodes};
-use board::generator::Generator;
-use board::position::Position;
-use engine::{Engine, EngineResult};
-use uci::io::read_stdout;
+use super::io::read_stdout;
+use crate::algorithm::meta::{Meta, Nodes};
+use crate::board::generator::Generator;
+use crate::board::position::Position;
+use crate::engine::{Engine, EngineResult};
 
 pub struct Slagzet {
     stdin: ChildStdin,
@@ -43,7 +43,8 @@ impl Iterator for Slagzet {
             self.stdin.write(position.fen().as_bytes()).ok();
             self.stdin.write(b"\n").ok();
             let move_string = read_stdout(&mut self.stdout);
-            let mv = self.generator
+            let mv = self
+                .generator
                 .legal_moves(position)
                 .into_iter()
                 .find(|m| m.as_string() == move_string)

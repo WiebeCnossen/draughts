@@ -1,5 +1,5 @@
-use algorithm::judge::Eval;
-use board::mv::Move;
+use super::judge::Eval;
+use crate::board::mv::Move;
 
 pub struct SearchResult {
     pub mv: Option<Move>,

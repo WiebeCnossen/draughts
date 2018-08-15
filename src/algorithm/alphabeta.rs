@@ -2,11 +2,11 @@ use std::cmp::{max, min};
 use std::sync::mpsc;
 use std::thread;
 
-use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};
-use algorithm::meta::Meta;
-use algorithm::scope::{Depth, Scope};
-use algorithm::search::SearchResult;
-use board::position::Position;
+use super::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};
+use super::meta::Meta;
+use super::scope::{Depth, Scope};
+use super::search::SearchResult;
+use crate::board::position::Position;
 
 pub fn makes_cut<TScope>(
     judge: &mut Judge,

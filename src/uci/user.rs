@@ -1,8 +1,8 @@
-use algorithm::meta::Meta;
-use board::generator::Generator;
-use board::position::Position;
-use engine::{Engine, EngineResult};
-use uci::io::read_stdin;
+use super::io::read_stdin;
+use crate::algorithm::meta::Meta;
+use crate::board::generator::Generator;
+use crate::board::position::Position;
+use crate::engine::{Engine, EngineResult};
 
 pub struct User {
     position: Option<Position>,
@@ -25,7 +25,8 @@ impl Iterator for User {
             let temp;
             loop {
                 let move_string = read_stdin();
-                match self.generator
+                match self
+                    .generator
                     .legal_moves(position)
                     .into_iter()
                     .find(|m| m.as_full_string() == move_string)

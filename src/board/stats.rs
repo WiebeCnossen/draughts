@@ -1,8 +1,8 @@
 use std::cmp::{max, min};
 
-use algorithm::judge::Eval;
-use board::piece::{BLACK_MAN, WHITE_MAN};
-use board::position::Position;
+use super::piece::{BLACK_MAN, WHITE_MAN};
+use super::position::Position;
+use crate::algorithm::judge::Eval;
 
 pub struct PositionStats {
     pub piece_count: [Eval; 5],

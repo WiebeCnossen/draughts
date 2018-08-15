@@ -1,9 +1,9 @@
-use algorithm::alphabeta::{makes_cut, makes_cut_parallel};
-use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};
-use algorithm::meta::Meta;
-use algorithm::scope::{Depth, Scope};
-use board::mv::Move;
-use board::position::Position;
+use super::alphabeta::{makes_cut, makes_cut_parallel};
+use super::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};
+use super::meta::Meta;
+use super::scope::{Depth, Scope};
+use crate::board::mv::Move;
+use crate::board::position::Position;
 
 struct MtdState {
     lower: Eval,

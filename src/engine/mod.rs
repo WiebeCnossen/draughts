@@ -4,10 +4,10 @@ pub mod slonenok;
 
 use std::iter::Iterator;
 
-use algorithm::judge::{Eval, ZERO_EVAL};
-use algorithm::meta::Meta;
-use board::mv::Move;
-use board::position::Position;
+use crate::algorithm::judge::{Eval, ZERO_EVAL};
+use crate::algorithm::meta::Meta;
+use crate::board::mv::Move;
+use crate::board::position::Position;
 
 #[derive(Clone)]
 pub struct EngineResult {

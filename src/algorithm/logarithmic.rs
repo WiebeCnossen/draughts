@@ -1,5 +1,5 @@
-use algorithm::judge::Eval;
-use algorithm::scope::{Depth, Scope};
+use super::judge::Eval;
+use super::scope::{Depth, Scope};
 
 #[derive(Clone)]
 pub struct LogarithmicScope {

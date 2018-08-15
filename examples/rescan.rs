@@ -1,17 +1,15 @@
-extern crate draughts;
-
 use std::io::{BufReader, Write};
 use std::process::{Command, Stdio};
 
 use draughts::board::generator::Generator;
 use draughts::board::mv::Move;
 use draughts::board::position::Position;
-use draughts::uci::io::{read_lines, read_stdin, LineReader};
+use draughts::uci::io::{read_lines, read_stdin};
 
 fn main() {
-    let mut child = Command::new("/mnt/c/Users/wiebe/scan_20/scan")
+    let mut child = Command::new("/home/wiebe/draughts/scan/scan")
         .arg("hub")
-        .current_dir("/mnt/c/Users/wiebe/scan_20")
+        .current_dir("/home/wiebe/draughts/scan")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -43,33 +41,28 @@ fn main() {
             break;
         }
         if head == "peek" {
-            stdin.write(b"level 1 1000 0\n").ok();
-            stdin.write(b"analyse\n").ok();
-            let mut last_line = String::new();
-            for line in LineReader::create(&mut stdout, "move") {
-                println!("[scan] {}", line);
-                last_line = line;
-            }
-
-            let move_string = last_line.split(' ').nth(1).unwrap();
+            stdin.write(b"level move-time=1\n").ok();
+            stdin.write(b"go think\n").ok();
+            let line = read_lines(&mut stdout, "done").pop().unwrap();
+            let move_string = line.split(' ').nth(1).unwrap().split('=').nth(1).unwrap();
             suggestion = moves
                 .clone()
                 .into_iter()
                 .find(|m| m.as_full_string() == move_string);
         } else if head == "go" {
-            stdin.write(b"level 1 10000 0\n").ok();
-            stdin.write(b"analyse\n").ok();
-            let line = read_lines(&mut stdout, "move").pop().unwrap();
-            let move_string = line.split(' ').nth(1).unwrap();
+            stdin.write(b"level move-time=10\n").ok();
+            stdin.write(b"go think\n").ok();
+            let line = read_lines(&mut stdout, "done").pop().unwrap();
+            let move_string = line.split(' ').nth(1).unwrap().split('=').nth(1).unwrap();
             suggestion = moves
                 .clone()
                 .into_iter()
                 .find(|m| m.as_full_string() == move_string);
         } else if head == "ponder" {
-            stdin.write(b"level 1 100000 0\n").ok();
-            stdin.write(b"analyse\n").ok();
-            let line = read_lines(&mut stdout, "move").pop().unwrap();
-            let move_string = line.split(' ').nth(1).unwrap();
+            stdin.write(b"level move-time=100\n").ok();
+            stdin.write(b"go think\n").ok();
+            let line = read_lines(&mut stdout, "done").pop().unwrap();
+            let move_string = line.split(' ').nth(1).unwrap().split('=').nth(1).unwrap();
             suggestion = moves
                 .clone()
                 .into_iter()
@@ -98,12 +91,12 @@ fn main() {
             }
             println!("\r\n{}\r\n", current.ascii());
             stdin
-                .write(format!("pos {}\n", current.fen()).as_bytes())
+                .write(format!("pos pos={}\n", current.hfen()).as_bytes())
                 .ok();
-            stdin.write(b"level 1 10000 0\n").ok();
-            stdin.write(b"analyse\n").ok();
-            let line = read_lines(&mut stdout, "move").pop().unwrap();
-            let move_string = line.split(' ').nth(1).unwrap();
+            stdin.write(b"level move-time=1\n").ok();
+            stdin.write(b"go think\n").ok();
+            let line = read_lines(&mut stdout, "done").pop().unwrap();
+            let move_string = line.split(' ').nth(1).unwrap().split('=').nth(1).unwrap();
             suggestion = moves
                 .clone()
                 .into_iter()
@@ -136,12 +129,12 @@ fn main() {
             }
             println!("\r\n{}\r\n{}", current.ascii(), current.sfen());
             stdin
-                .write(format!("pos {}\n", current.fen()).as_bytes())
+                .write(format!("pos pos={}\n", current.hfen()).as_bytes())
                 .ok();
-            stdin.write(b"level 1 10000 0\n").ok();
-            stdin.write(b"analyse\n").ok();
-            let line = read_lines(&mut stdout, "move").pop().unwrap();
-            let move_string = line.split(' ').nth(1).unwrap();
+            stdin.write(b"level move-time=1\n").ok();
+            stdin.write(b"go think\n").ok();
+            let line = read_lines(&mut stdout, "done").pop().unwrap();
+            let move_string = line.split(' ').nth(1).unwrap().split('=').nth(1).unwrap();
             suggestion = moves
                 .clone()
                 .into_iter()

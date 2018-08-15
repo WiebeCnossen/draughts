@@ -1,5 +1,5 @@
-use board::coords::{Coords, MinXY};
-use board::position::Field;
+use super::coords::{Coords, MinXY};
+use super::position::Field;
 
 fn star(mid: Field) -> Option<[Field; 5]> {
     let mid = Coords::from(mid);
@@ -46,10 +46,8 @@ impl Stars {
                             .iter()
                             .position(|&part| field == part)
                             .map(|index| (star, index))
-                    })
-                    .collect()
-            })
-            .collect();
+                    }).collect()
+            }).collect();
         Stars { positions, stars }
     }
 }

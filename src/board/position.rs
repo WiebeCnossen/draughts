@@ -1,5 +1,5 @@
-use board::mv::Move;
-use board::piece::{Color, Piece, BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
+use super::mv::Move;
+use super::piece::{Color, Piece, BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
 
 pub type Field = usize;
 pub fn promote(field: Field, piece: Piece) -> Piece {
@@ -200,6 +200,18 @@ impl Position {
             "w"
         } else {
             "b"
+        });
+        for c in (0..50).map(|i| FEN_CHARS[self.piece_at(i) as Field]) {
+            fen.push(c);
+        }
+        fen
+    }
+
+    pub fn hfen(&self) -> String {
+        let mut fen = String::from(if self.side_to_move() == Color::White {
+            "W"
+        } else {
+            "B"
         });
         for c in (0..50).map(|i| FEN_CHARS[self.piece_at(i) as Field]) {
             fen.push(c);

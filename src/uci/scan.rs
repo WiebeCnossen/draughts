@@ -2,11 +2,11 @@ use std::cmp::max;
 use std::io::{BufReader, Write};
 use std::process::{ChildStdin, ChildStdout, Command, Stdio};
 
-use algorithm::meta::{Meta, Nodes};
-use board::generator::Generator;
-use board::position::Position;
-use engine::{Engine, EngineResult};
-use uci::io::read_stdout;
+use super::io::read_stdout;
+use crate::algorithm::meta::{Meta, Nodes};
+use crate::board::generator::Generator;
+use crate::board::position::Position;
+use crate::engine::{Engine, EngineResult};
 
 pub struct Scan {
     stdin: ChildStdin,
@@ -18,9 +18,9 @@ pub struct Scan {
 
 impl Scan {
     pub fn create(max_nodes: Nodes) -> Scan {
-        let mut child = Command::new("/mnt/c/Users/wiebe/scan_20/scan")
+        let mut child = Command::new("/home/wiebe/draughts/scan/scan")
             .arg("hub")
-            .current_dir("/mnt/c/Users/wiebe/scan_20")
+            .current_dir("/home/wiebe/draughts/scan")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -67,7 +67,8 @@ impl Iterator for Scan {
                     for _ in 0..5 {
                         move_string.remove(0);
                     }
-                    let mv = self.generator
+                    let mv = self
+                        .generator
                         .legal_moves(position)
                         .into_iter()
                         .find(|m| m.as_full_string() == move_string)

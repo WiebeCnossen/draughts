@@ -1,14 +1,14 @@
-use std::cmp::Ordering::{Equal, Greater, Less};
 use std::cmp::min;
+use std::cmp::Ordering::{Equal, Greater, Less};
 
-use algorithm::alphabeta::{makes_cut, makes_cut_parallel};
-use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};
-use algorithm::meta::Meta;
-use algorithm::mtdf::{mtd_f, mtd_f_parallel};
-use algorithm::scope::{Depth, Scope};
-use algorithm::search::SearchResult;
-use board::mv::Move;
-use board::position::Position;
+use super::alphabeta::{makes_cut, makes_cut_parallel};
+use super::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL};
+use super::meta::Meta;
+use super::mtdf::{mtd_f, mtd_f_parallel};
+use super::scope::{Depth, Scope};
+use super::search::SearchResult;
+use crate::board::mv::Move;
+use crate::board::position::Position;
 
 pub struct BnsResult {
     pub lower: Eval,
@@ -38,8 +38,7 @@ impl BnsState {
 
     fn next(&self, better_count: MoveCount, search_result: &SearchResult) -> BnsState {
         let up = better_count > 0;
-        let lower =
-            if up { self.cut } else { self.lower };
+        let lower = if up { self.cut } else { self.lower };
         let upper = if up {
             self.upper
         } else {

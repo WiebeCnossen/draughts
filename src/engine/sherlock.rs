@@ -3,20 +3,20 @@ use std::collections::HashMap;
 use std::iter;
 use std::sync::{Arc, RwLock};
 
-use algorithm::bns::best_node_search_parallel;
-use algorithm::judge::{Eval, Judge, PositionMemory, MAX_EVAL, MIN_EVAL, ZERO_EVAL};
-use algorithm::logarithmic::LogarithmicScope;
-use algorithm::meta::{Meta, Nodes};
-use algorithm::scope::Depth;
-use algorithm::search::SearchResult;
-use board::generator::Generator;
-use board::mv::Move;
-use board::piece::Color::White;
-use board::piece::{BLACK_KING, BLACK_MAN, WHITE_KING, WHITE_MAN};
-use board::position::{Field, Position};
-use board::stars::Stars;
-use board::stats::PositionStats;
-use engine::{Engine, EngineResult};
+use super::{Engine, EngineResult};
+use crate::algorithm::bns::best_node_search_parallel;
+use crate::algorithm::judge::{Eval, Judge, PositionMemory, MAX_EVAL, MIN_EVAL, ZERO_EVAL};
+use crate::algorithm::logarithmic::LogarithmicScope;
+use crate::algorithm::meta::{Meta, Nodes};
+use crate::algorithm::scope::Depth;
+use crate::algorithm::search::SearchResult;
+use crate::board::generator::Generator;
+use crate::board::mv::Move;
+use crate::board::piece::Color::White;
+use crate::board::piece::{BLACK_KING, BLACK_MAN, WHITE_KING, WHITE_MAN};
+use crate::board::position::{Field, Position};
+use crate::board::stars::Stars;
+use crate::board::stats::PositionStats;
 
 const PIECES: [Eval; 5] = [ZERO_EVAL, 500, 1475, -500, -1475];
 const BALANCE: [Eval; 10] = [-54, -52, -48, -42, -10, 10, 42, 48, 52, 54];
@@ -165,8 +165,10 @@ impl SherlockJudge {
     fn drawish(&self, stats: &PositionStats) -> bool {
         let whites = stats.piece_count[WHITE_MAN as usize] + stats.piece_count[WHITE_KING as usize];
         let blacks = stats.piece_count[BLACK_MAN as usize] + stats.piece_count[BLACK_KING as usize];
-        stats.piece_count[WHITE_KING as usize] > 0 && stats.piece_count[BLACK_KING as usize] > 0
-            && whites <= 3 && blacks <= 3
+        stats.piece_count[WHITE_KING as usize] > 0
+            && stats.piece_count[BLACK_KING as usize] > 0
+            && whites <= 3
+            && blacks <= 3
     }
 
     pub fn reset(&mut self) {
@@ -280,7 +282,10 @@ impl Judge for SherlockJudge {
             stars.iter().map(|&star| self.evals[star]).sum()
         };
 
-        let score = beans + structure + (32 - men) * (dev_white - dev_black) / 2 + balance_score
+        let score = beans
+            + structure
+            + (32 - men) * (dev_white - dev_black) / 2
+            + balance_score
             + center_score;
         let scaled = if self.drawish(&stats) {
             score / 100
@@ -353,7 +358,8 @@ impl Sherlock {
 impl Iterator for Sherlock {
     type Item = EngineResult;
     fn next(&mut self) -> Option<EngineResult> {
-        if self.previous.meta.get_nodes() >= self.max_nodes || self.previous.meta.get_depth() > 27
+        if self.previous.meta.get_nodes() >= self.max_nodes
+            || self.previous.meta.get_depth() > 27
             || self.previous.evaluation == MIN_EVAL
             || self.previous.evaluation == MAX_EVAL
         {

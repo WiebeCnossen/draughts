@@ -1,17 +1,17 @@
 use std::iter;
 use std::sync::Arc;
 
-use algorithm::depth::DepthScope;
-use algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL, ZERO_EVAL};
-use algorithm::meta::{Meta, Nodes};
-use algorithm::mtdf::mtd_f_parallel;
-use algorithm::scope::Depth;
-use board::generator::Generator;
-use board::mv::Move;
-use board::piece::Color::White;
-use board::piece::{Piece, BLACK_KING, BLACK_MAN, WHITE_KING, WHITE_MAN};
-use board::position::{Field, Position};
-use engine::{Engine, EngineResult};
+use super::{Engine, EngineResult};
+use crate::algorithm::depth::DepthScope;
+use crate::algorithm::judge::{Eval, Judge, MAX_EVAL, MIN_EVAL, ZERO_EVAL};
+use crate::algorithm::meta::{Meta, Nodes};
+use crate::algorithm::mtdf::mtd_f_parallel;
+use crate::algorithm::scope::Depth;
+use crate::board::generator::Generator;
+use crate::board::mv::Move;
+use crate::board::piece::Color::White;
+use crate::board::piece::{Piece, BLACK_KING, BLACK_MAN, WHITE_KING, WHITE_MAN};
+use crate::board::position::{Field, Position};
 
 #[derive(Clone)]
 struct RandAapJudge {
@@ -102,7 +102,8 @@ impl RandAap {
 impl Iterator for RandAap {
     type Item = EngineResult;
     fn next(&mut self) -> Option<EngineResult> {
-        if self.previous.meta.get_nodes() >= self.max_nodes || self.previous.meta.get_depth() > 63
+        if self.previous.meta.get_nodes() >= self.max_nodes
+            || self.previous.meta.get_depth() > 63
             || self.previous.evaluation == MIN_EVAL
             || self.previous.evaluation == MAX_EVAL
         {
