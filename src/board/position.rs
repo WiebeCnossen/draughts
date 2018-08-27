@@ -249,7 +249,7 @@ impl Position {
         fen
     }
 
-    fn ascii_char(&self, field: usize) -> char {
+    pub fn ascii_char(&self, field: usize) -> char {
         if (field + (field / 10)) % 2 == 0 {
             ' '
         } else {

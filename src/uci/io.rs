@@ -29,19 +29,25 @@ pub fn wipe_line() {
     print!("\r");
 }
 
-pub fn read_lines(reader: &mut BufReader<ChildStdout>, exit: &str) -> Vec<String> {
+pub fn read_lines(
+    reader: &mut BufReader<ChildStdout>,
+    exit: &str,
+    flush: &Fn() -> (),
+    print: &Fn(&str) -> (),
+    wipe: &Fn() -> (),
+) -> Vec<String> {
     let mut result = vec![];
     loop {
         let line = read_stdout(reader);
         result.push(line.clone());
         if result.last().unwrap().starts_with(exit) {
-            println!();
-            println!("[scan] {}", line);
+            flush();
+            print(&line);
+            flush();
             break;
         } else {
-            wipe_line();
-            print!("[scan] {}", line);
-            io::stdout().flush().expect("no flush");
+            wipe();
+            print(&line);
         }
     }
     result
