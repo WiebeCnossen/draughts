@@ -19,7 +19,7 @@ where
     F: Fn(i8) -> Coords,
 {
     let mut result = vec![];
-    for d in 1..len + 1 {
+    for d in 1..=len {
         result.push(Field::from(generator(d)));
     }
     result
