@@ -288,10 +288,9 @@ impl Position {
             return Err("Invalid length".into());
         }
         let mut position = Self::create();
-        let mut i = 0;
         let mut field = 0;
 
-        for c in fen.chars() {
+        for (i, c) in fen.chars().enumerate() {
             if i == 0 {
                 match c {
                     'w' => (),
@@ -339,7 +338,6 @@ impl Position {
                     None => return Err(format!("Invalid piece at {}", i)),
                 }
             }
-            i += 1;
         }
         if field != 50 {
             return Err(format!("Insufficient number of fields: {}", field));
