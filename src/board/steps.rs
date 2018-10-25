@@ -31,19 +31,23 @@ fn paths(field: Field) -> [Box<[Field]>; 4] {
         path(coords.max_x() - coords.x, |d| Coords {
             x: coords.x + d,
             y: coords.y,
-        }).into_boxed_slice(),
+        })
+        .into_boxed_slice(),
         path(coords.max_y() - coords.y, |d| Coords {
             x: coords.x,
             y: coords.y + d,
-        }).into_boxed_slice(),
+        })
+        .into_boxed_slice(),
         path(coords.x - coords.min_x(), |d| Coords {
             x: coords.x - d,
             y: coords.y,
-        }).into_boxed_slice(),
+        })
+        .into_boxed_slice(),
         path(coords.y - coords.min_y(), |d| Coords {
             x: coords.x,
             y: coords.y - d,
-        }).into_boxed_slice(),
+        })
+        .into_boxed_slice(),
     ]
 }
 

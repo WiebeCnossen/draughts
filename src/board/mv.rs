@@ -119,7 +119,8 @@ impl Move {
                     .iter()
                     .take(self.num_taken as usize)
                     .map(|&via| format!("x{}", via + 1)),
-            ).collect()
+            )
+            .collect()
     }
 }
 

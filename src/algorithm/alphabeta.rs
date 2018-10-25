@@ -232,7 +232,8 @@ where
                         &position.go(&mv),
                         &next,
                         -cut + 1,
-                    ).evaluation
+                    )
+                    .evaluation
                 } else {
                     current_score
                 };

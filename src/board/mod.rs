@@ -1,4 +1,5 @@
 mod coords;
+pub mod decimal;
 pub mod generator;
 pub mod mv;
 pub mod piece;

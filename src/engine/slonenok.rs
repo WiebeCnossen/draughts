@@ -330,11 +330,12 @@ impl Judge for SlonenokJudge {
     }
 
     fn quiet_move(&self, position: &Position, mv: &Move) -> bool {
-        mv.num_taken() == 0 && if position.side_to_move() == White {
-            mv.to() >= 10 || position.piece_at(mv.from()) != WHITE_MAN
-        } else {
-            mv.to() <= 39 || position.piece_at(mv.from()) != BLACK_MAN
-        }
+        mv.num_taken() == 0
+            && if position.side_to_move() == White {
+                mv.to() >= 10 || position.piece_at(mv.from()) != WHITE_MAN
+            } else {
+                mv.to() <= 39 || position.piece_at(mv.from()) != BLACK_MAN
+            }
     }
 
     fn display_name(&self) -> &str {

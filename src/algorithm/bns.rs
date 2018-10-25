@@ -216,7 +216,8 @@ where
                 &position.go(mv),
                 scope,
                 -beta,
-            ).evaluation;
+            )
+            .evaluation;
             if score > best.evaluation {
                 best = SearchResult::with_move(*mv, score);
             }

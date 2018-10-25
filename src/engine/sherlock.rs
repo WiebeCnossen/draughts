@@ -134,17 +134,18 @@ impl SherlockJudge {
                             } else {
                                 (if op == bl { 1 } else { 0 }) + (if op == br { 1 } else { 0 })
                             };
-                            evals[star] = sign * match (supporters, blockers, lockers) {
-                                (2, _, 2) => LOCKED,
-                                (_, _, 1) => SEMI_LOCKED,
-                                (0, 2, 0) => HANGING,
-                                (0, 0, _) => ISOLATED,
-                                (1, 2, 0) => SEMI_HANGING,
-                                (2, 0, 0) => BIRDY,
-                                (2, b, 0) => TAIL + EXTRA * b,
-                                (s, b, 0) => EXTRA * (s + b),
-                                _ => 0,
-                            };
+                            evals[star] = sign
+                                * match (supporters, blockers, lockers) {
+                                    (2, _, 2) => LOCKED,
+                                    (_, _, 1) => SEMI_LOCKED,
+                                    (0, 2, 0) => HANGING,
+                                    (0, 0, _) => ISOLATED,
+                                    (1, 2, 0) => SEMI_HANGING,
+                                    (2, 0, 0) => BIRDY,
+                                    (2, b, 0) => TAIL + EXTRA * b,
+                                    (s, b, 0) => EXTRA * (s + b),
+                                    _ => 0,
+                                };
                         }
                     }
                 }
@@ -323,11 +324,12 @@ impl Judge for SherlockJudge {
     }
 
     fn quiet_move(&self, position: &Position, mv: &Move) -> bool {
-        mv.num_taken() == 0 && if position.side_to_move() == White {
-            mv.to() >= 10 || position.piece_at(mv.from()) != WHITE_MAN
-        } else {
-            mv.to() <= 39 || position.piece_at(mv.from()) != BLACK_MAN
-        }
+        mv.num_taken() == 0
+            && if position.side_to_move() == White {
+                mv.to() >= 10 || position.piece_at(mv.from()) != WHITE_MAN
+            } else {
+                mv.to() <= 39 || position.piece_at(mv.from()) != BLACK_MAN
+            }
     }
 
     fn display_name(&self) -> &str {

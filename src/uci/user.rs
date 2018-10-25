@@ -35,9 +35,11 @@ impl Iterator for User {
                         temp = Some(EngineResult::create(mv, 0, Meta::create()));
                         break;
                     }
-                    _ => for mv in self.generator.legal_moves(position) {
-                        println!("Maybe {} ?", mv);
-                    },
+                    _ => {
+                        for mv in self.generator.legal_moves(position) {
+                            println!("Maybe {} ?", mv);
+                        }
+                    }
                 }
             }
             temp

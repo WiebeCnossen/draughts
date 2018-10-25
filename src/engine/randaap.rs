@@ -32,11 +32,12 @@ impl RandAapJudge {
     }
 
     fn evaluate(&self, piece: Piece, field: Field) -> Eval {
-        PIECES[piece as usize] + match piece {
-            WHITE_MAN => FIELDS[field],
-            BLACK_MAN => -FIELDS[49 - field],
-            _ => ZERO_EVAL,
-        }
+        PIECES[piece as usize]
+            + match piece {
+                WHITE_MAN => FIELDS[field],
+                BLACK_MAN => -FIELDS[49 - field],
+                _ => ZERO_EVAL,
+            }
     }
 }
 

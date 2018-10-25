@@ -46,8 +46,10 @@ impl Stars {
                             .iter()
                             .position(|&part| field == part)
                             .map(|index| (star, index))
-                    }).collect()
-            }).collect();
+                    })
+                    .collect()
+            })
+            .collect();
         Stars { positions, stars }
     }
 }

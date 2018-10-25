@@ -328,13 +328,15 @@ impl Position {
                     _ => None,
                 };
                 match pieces {
-                    Some((piece, count)) => for _ in 0..count {
-                        if field == 50 {
-                            return Err(String::from("Too many fields"));
+                    Some((piece, count)) => {
+                        for _ in 0..count {
+                            if field == 50 {
+                                return Err(String::from("Too many fields"));
+                            }
+                            position = position.put_piece(field, piece);
+                            field += 1;
                         }
-                        position = position.put_piece(field, piece);
-                        field += 1;
-                    },
+                    }
                     None => return Err(format!("Invalid piece at {}", i)),
                 }
             }
