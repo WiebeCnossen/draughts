@@ -13,13 +13,20 @@ const BIT_COUNT: [usize; 10] = [10, 12, 12, 12, 12, 12, 12, 12, 12, 10];
 const BIT_START: [usize; 10] = [2, 20, 32, 44, 56, 68, 80, 92, 104, 116];
 const BIT_MASK: [u8; 9] = [0x0, 0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff];
 
+fn endian(i: usize) -> usize {
+    15 - i
+}
+
 pub fn to_decimal(position: &Position) -> DecimalData {
     let sign = if position.side_to_move() == Color::White {
         0
     } else {
         0x80
     };
-    let mut data: DecimalData = [sign, 0, 0x40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01];
+    let mut decimal: DecimalData = DecimalData::default();
+    decimal[endian(0)] = sign;
+    decimal[endian(2)] = 0x40;
+    decimal[endian(15)] = 0x01;
 
     let rows = (0..50)
         .step_by(5)
@@ -29,11 +36,11 @@ pub fn to_decimal(position: &Position) -> DecimalData {
         let bit_start = BIT_START[i];
         let higher_start = bit_start % 8;
         let lower_bits = BIT_COUNT[i] + higher_start - 8;
-        data[bit_start / 8] |= (row >> lower_bits) as u8;
-        data[bit_start / 8 + 1] |= (row << (8 - lower_bits)) as u8;
+        decimal[endian(bit_start / 8)] |= (row >> lower_bits) as u8;
+        decimal[endian(bit_start / 8 + 1)] |= (row << (8 - lower_bits)) as u8;
     }
 
-    data
+    decimal
 }
 
 fn to_decimal_row(position: &Position, start: Field) -> u16 {
@@ -50,7 +57,7 @@ fn to_decimal_row(position: &Position, start: Field) -> u16 {
 
 pub fn to_position(decimal: &DecimalData) -> Position {
     let mut position = Position::create();
-    if decimal[0] >= 0x80 {
+    if decimal[endian(0)] >= 0x80 {
         position = position.toggle_side();
     }
 
@@ -71,24 +78,24 @@ pub fn to_position(decimal: &DecimalData) -> Position {
     position
 }
 
-fn from_decimal_row(data: &DecimalData, i: usize) -> usize {
+fn from_decimal_row(decimal: &DecimalData, i: usize) -> usize {
     let bit_start = BIT_START[i];
     let higher_start = bit_start % 8;
     let higher_bits = 8 - higher_start;
     let lower_bits = BIT_COUNT[i] - higher_bits;
     let lower_left = 8 - lower_bits;
 
-    let higher = ((data[bit_start / 8] & BIT_MASK[higher_bits]) as usize) << lower_bits;
-    let lower = (data[bit_start / 8 + 1] >> lower_left) as usize;
+    let higher = ((decimal[endian(bit_start / 8)] & BIT_MASK[higher_bits]) as usize) << lower_bits;
+    let lower = (decimal[endian(bit_start / 8 + 1)] >> lower_left) as usize;
     higher | lower
 }
 
 #[test]
 fn to_decimal_test() {
     let data = to_decimal(&Position::initial());
-    assert_eq!(0x2au8, data[0]);
-    assert_eq!(0xa0u8, data[1]);
-    assert_eq!(0x1, data[15] & 0x1);
+    assert_eq!(0x2au8, data[endian(0)]);
+    assert_eq!(0xa0u8, data[endian(1)]);
+    assert_eq!(0x1, data[endian(15)] & 0x1);
 }
 
 #[cfg(test)]
