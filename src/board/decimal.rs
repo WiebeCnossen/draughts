@@ -1,3 +1,5 @@
+use decimal::d128;
+
 use super::piece::{Color, BLACK_KING, BLACK_MAN, EMPTY, WHITE_KING, WHITE_MAN};
 use crate::board::position::{Field, Position};
 
@@ -123,4 +125,19 @@ fn moving_roundtrip_test() {
         let p = to_position(&d);
         assert!(position == p);
     }
+}
+
+#[test]
+fn raw_bytes() {
+    let data = d128!(1.0).to_raw_bytes();
+    println!(
+        "{}",
+        data.iter().map(|x| format!("{:x}", x)).collect::<String>()
+    );
+    let data = d128!(-1.0).to_raw_bytes();
+    println!(
+        "{}",
+        data.iter().map(|x| format!("{:x}", x)).collect::<String>()
+    );
+    assert_eq!(0x90u8, data[0]);
 }
