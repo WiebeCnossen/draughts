@@ -5,5 +5,10 @@ version = "0.1.0"
 authors = ["Wiebe Cnossen <wiebe.cnossen@gmail.com>"]
 
 [dev-dependencies]
-decimal = "^2.0.4"
-time = "^0.1"
+criterion = "*"
+decimal = "*"
+time = "*"
+
+[[bench]]
+name = "generator"
+harness = false

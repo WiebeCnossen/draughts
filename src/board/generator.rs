@@ -54,7 +54,7 @@ impl Generator {
         let mut exploded = false;
         for &(via, to) in self.steps.short_jumps(mv.to()) {
             if piece_is(position.piece_at(via), color_to_capture)
-                && position.piece_at(to) == EMPTY
+                && position.is_empty(to)
                 && !mv.goes_via(via)
             {
                 exploded = true;
@@ -76,8 +76,7 @@ impl Generator {
     ) -> bool {
         let mut captures = false;
         for &(via, to) in self.steps.short_jumps(field) {
-            if position.piece_at(to) == EMPTY && piece_is(position.piece_at(via), color_to_capture)
-            {
+            if position.is_empty(to) && piece_is(position.piece_at(via), color_to_capture) {
                 captures = true;
                 let without_man = &position.put_piece(field, EMPTY);
                 self.explode_jump(
@@ -163,7 +162,7 @@ impl Generator {
     }
 
     pub fn legal_moves(&self, position: &Position) -> Vec<Move> {
-        let mut list = Vec::with_capacity(20);
+        let mut list = Vec::with_capacity(31);
         let mut captures = false;
         if position.side_to_move() == White {
             for field in 0..50 {
@@ -175,7 +174,7 @@ impl Generator {
 
                         if !captures {
                             for &step in self.steps.white_steps(field) {
-                                if position.piece_at(step) == EMPTY {
+                                if position.is_empty(step) {
                                     list.push(Move::shift(field, step));
                                 }
                             }
@@ -197,7 +196,7 @@ impl Generator {
 
                         if !captures {
                             for &step in self.steps.black_steps(field) {
-                                if position.piece_at(step) == EMPTY {
+                                if position.is_empty(step) {
                                     list.push(Move::shift(field, step));
                                 }
                             }
@@ -213,6 +212,58 @@ impl Generator {
 
         Generator::trim_list(&mut list);
         list
+    }
+
+    pub fn legal_moves2(&self, position: &Position, list: &mut Vec<Move>) {
+        list.clear();
+        let mut captures = false;
+        if position.side_to_move() == White {
+            for field in 0..50 {
+                match position.piece_at(field) {
+                    WHITE_MAN => {
+                        if self.add_short_jumps(position, field, list, &Black) {
+                            captures = true;
+                        }
+
+                        if !captures {
+                            for &step in self.steps.white_steps(field) {
+                                if position.is_empty(step) {
+                                    list.push(Move::shift(field, step));
+                                }
+                            }
+                        }
+                    }
+                    WHITE_KING => {
+                        self.add_king_moves(position, field, list, &mut captures, &Black);
+                    }
+                    _ => (),
+                }
+            }
+        } else {
+            for field in 0..50 {
+                match position.piece_at(field) {
+                    BLACK_MAN => {
+                        if self.add_short_jumps(position, field, list, &White) {
+                            captures = true;
+                        }
+
+                        if !captures {
+                            for &step in self.steps.black_steps(field) {
+                                if position.is_empty(step) {
+                                    list.push(Move::shift(field, step));
+                                }
+                            }
+                        }
+                    }
+                    BLACK_KING => {
+                        self.add_king_moves(position, field, list, &mut captures, &White);
+                    }
+                    _ => (),
+                }
+            }
+        }
+
+        Generator::trim_list(list);
     }
 }
 

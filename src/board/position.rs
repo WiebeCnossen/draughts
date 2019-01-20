@@ -96,6 +96,10 @@ impl Position {
         }
     }
 
+    pub fn is_empty(&self, field: Field) -> bool {
+        self.empty & BITS[field] != 0
+    }
+
     pub fn piece_at(&self, field: Field) -> Piece {
         if self.empty & BITS[field] != 0 {
             EMPTY
@@ -351,6 +355,12 @@ impl Position {
 use std::fmt;
 
 impl fmt::Display for Position {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.sfen())
+    }
+}
+
+impl fmt::Debug for Position {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.sfen())
     }
