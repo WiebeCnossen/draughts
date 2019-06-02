@@ -268,11 +268,15 @@ impl Generator {
 
     pub fn to_short_string(&self, position: &Position, mv: &Move) -> String {
         let all = self.legal_moves(position);
-        let symbol = if mv.num_taken() == 0 { '-' } else { 'x' };
         if all.len() == 1 {
-            return symbol.to_string();
+            return match mv.num_taken() {
+                0 => "-",
+                num_taken => &CROSSES[..num_taken as usize],
+            }
+            .to_owned();
         }
 
+        let symbol = if mv.num_taken() == 0 { '-' } else { 'x' };
         if all.iter().filter(|lm| lm.to() == mv.to()).count() == 1 {
             return format!("{}{}", symbol, mv.to() + 1);
         }
@@ -289,6 +293,8 @@ impl Generator {
         mv.as_full_string()
     }
 }
+
+const CROSSES: &str = "xxxxxxxxxxxx";
 
 #[cfg(test)]
 fn verify(position: &Position, moves: &[Move]) {
