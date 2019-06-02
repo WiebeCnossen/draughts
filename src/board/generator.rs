@@ -269,6 +269,10 @@ impl Generator {
     pub fn to_short_string(&self, position: &Position, mv: &Move) -> String {
         let all = self.legal_moves(position);
         let symbol = if mv.num_taken() == 0 { '-' } else { 'x' };
+        if all.len() == 1 {
+            return symbol.to_string();
+        }
+
         if all.iter().filter(|lm| lm.to() == mv.to()).count() == 1 {
             return format!("{}{}", symbol, mv.to() + 1);
         }
@@ -515,4 +519,14 @@ fn short_to() {
     let position = Position::initial();
     let mv = Move::shift(30, 25);
     assert_eq!("-26", gen.to_short_string(&position, &mv));
+}
+
+#[test]
+fn short_forced() {
+    let gen = Generator::create();
+    let position = Position::initial()
+        .go(&Move::shift(31, 27))
+        .go(&Move::shift(18, 22));
+    let mv = Move::take_one(27, 18, 22);
+    assert_eq!("x", gen.to_short_string(&position, &mv));
 }
