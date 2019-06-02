@@ -265,6 +265,25 @@ impl Generator {
 
         Generator::trim_list(list);
     }
+
+    pub fn to_short_string(&self, position: &Position, mv: &Move) -> String {
+        let all = self.legal_moves(position);
+        let symbol = if mv.num_taken() == 0 { '-' } else { 'x' };
+        if all.iter().filter(|lm| lm.to() == mv.to()).count() == 1 {
+            return format!("{}{}", symbol, mv.to() + 1);
+        }
+
+        if all.iter().filter(|lm| lm.from() == mv.from()).count() == 1 {
+            return format!("{}{}", mv.from() + 1, symbol);
+        }
+
+        let mv_string = mv.as_string();
+        if all.iter().filter(|lm| lm.as_string() == mv_string).count() == 1 {
+            return mv_string;
+        }
+
+        mv.as_full_string()
+    }
 }
 
 #[cfg(test)]
@@ -480,4 +499,20 @@ fn to_start_field() {
             Move::take(34, 34, &[39, 42, 22, 23]),
         ],
     );
+}
+
+#[test]
+fn short_from() {
+    let gen = Generator::create();
+    let position = Position::initial();
+    let mv = Move::shift(34, 29);
+    assert_eq!("35-", gen.to_short_string(&position, &mv));
+}
+
+#[test]
+fn short_to() {
+    let gen = Generator::create();
+    let position = Position::initial();
+    let mv = Move::shift(30, 25);
+    assert_eq!("-26", gen.to_short_string(&position, &mv));
 }
