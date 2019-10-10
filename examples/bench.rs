@@ -11,7 +11,7 @@ const MAX_NODES: Nodes = 500_000;
 
 const DASH: &str = "--------------------------------";
 
-fn run(engine: &mut Engine<Item = EngineResult>) {
+fn run(engine: &mut dyn Engine<Item = EngineResult>) {
     let start = time::precise_time_ns();
     let mut total_nodes = 0;
     loop {

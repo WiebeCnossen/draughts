@@ -125,9 +125,16 @@ impl Move {
 }
 
 use std::fmt;
+use std::fmt::{Debug, Display, Formatter};
 
-impl fmt::Display for Move {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl Display for Move {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{}", self.as_full_string())
+    }
+}
+
+impl Debug for Move {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{}", self.as_full_string())
     }
 }

@@ -46,7 +46,7 @@ pub fn to_decimal(position: &Position) -> DecimalData {
 fn to_decimal_row(position: &Position, start: Field) -> u16 {
     let (p, pieces) = match start {
         0 => (4, TOP_PLACES),
-        5...40 if start % 5 == 0 => (5, CENTER_PLACES),
+        5..=40 if start % 5 == 0 => (5, CENTER_PLACES),
         45 => (4, BOTTOM_PLACES),
         _ => unreachable!(),
     };
@@ -64,7 +64,7 @@ pub fn to_position(decimal: &DecimalData) -> Position {
     for i in 0..10 {
         let (p, pieces) = match i {
             0 => (4, TOP_PIECES),
-            1...8 => (5, CENTER_PIECES),
+            1..=8 => (5, CENTER_PIECES),
             9 => (4, BOTTOM_PIECES),
             _ => unreachable!(),
         };
@@ -113,7 +113,7 @@ mod test {
         assert!(initial == p);
     }
 
-    fn moving_roundtrip_test(pick: &Fn(&[Move]) -> &Move) {
+    fn moving_roundtrip_test(pick: &dyn Fn(&[Move]) -> &Move) {
         let generator = Generator::create();
         let mut position = Position::initial();
         let mut i = 0;

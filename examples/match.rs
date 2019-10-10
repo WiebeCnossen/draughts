@@ -15,8 +15,8 @@ use draughts::engine::slonenok::Slonenok;
 
 type Score = u8;
 fn game(
-    white: &mut Engine<Item = EngineResult>,
-    black: &mut Engine<Item = EngineResult>,
+    white: &mut dyn Engine<Item = EngineResult>,
+    black: &mut dyn Engine<Item = EngineResult>,
     white_score: Score,
     black_score: Score,
     initial: &Position,

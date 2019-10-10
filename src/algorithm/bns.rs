@@ -119,7 +119,7 @@ fn down() {
 }
 
 pub fn best_node_search<TScope>(
-    judge: &mut Judge,
+    judge: &mut dyn Judge,
     position: &Position,
     depth: Depth,
     initial: &SearchResult,

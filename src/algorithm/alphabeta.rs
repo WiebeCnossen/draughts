@@ -9,7 +9,7 @@ use super::search::SearchResult;
 use crate::board::position::Position;
 
 pub fn makes_cut<TScope>(
-    judge: &mut Judge,
+    judge: &mut dyn Judge,
     meta: &mut Meta,
     position: &Position,
     scope: &TScope,

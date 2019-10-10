@@ -57,7 +57,12 @@ impl MtdResult {
     }
 }
 
-pub fn mtd_f<TScope>(judge: &mut Judge, position: &Position, depth: Depth, guess: Eval) -> MtdResult
+pub fn mtd_f<TScope>(
+    judge: &mut dyn Judge,
+    position: &Position,
+    depth: Depth,
+    guess: Eval,
+) -> MtdResult
 where
     TScope: Scope,
 {
