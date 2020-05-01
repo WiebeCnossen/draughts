@@ -526,6 +526,20 @@ fn ambiguous_capture() {
 }
 
 #[test]
+fn no_double_jump() {
+    let position = Position::parse("w 5/5/5/5/3be/5/2le/2w2/2le/5")
+        .ok()
+        .unwrap();
+    verify(
+        &position,
+        &vec![
+            Move::take(37, 19, &[23, 33, 42, 43]),
+            Move::take(37, 37, &[32, 33, 42, 43]),
+        ],
+    );
+}
+
+#[test]
 fn short_from() {
     let gen = Generator::create();
     let position = Position::initial();
