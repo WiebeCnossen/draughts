@@ -512,6 +512,20 @@ fn to_start_field() {
 }
 
 #[test]
+fn ambiguous_capture() {
+    let position = Position::parse("b 3B1/5/5/5/5/ewebe/5/eh2/w4/5")
+        .ok()
+        .unwrap();
+    verify(
+        &position,
+        &vec![
+            Move::take(3, 32, &[26, 36, 37]),
+            Move::take(3, 32, &[26, 37, 40]),
+        ],
+    );
+}
+
+#[test]
 fn short_from() {
     let gen = Generator::create();
     let position = Position::initial();
