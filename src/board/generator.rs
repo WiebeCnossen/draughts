@@ -512,6 +512,34 @@ fn to_start_field() {
 }
 
 #[test]
+fn ambiguous_capture() {
+    let position = Position::parse("b 3B1/5/5/5/5/ewebe/5/eh2/w4/5")
+        .ok()
+        .unwrap();
+    verify(
+        &position,
+        &vec![
+            Move::take(3, 32, &[26, 36, 37]),
+            Move::take(3, 32, &[26, 37, 40]),
+        ],
+    );
+}
+
+#[test]
+fn no_double_jump() {
+    let position = Position::parse("w 5/5/5/5/3be/5/2le/2w2/2le/5")
+        .ok()
+        .unwrap();
+    verify(
+        &position,
+        &vec![
+            Move::take(37, 19, &[23, 33, 42, 43]),
+            Move::take(37, 37, &[32, 33, 42, 43]),
+        ],
+    );
+}
+
+#[test]
 fn short_from() {
     let gen = Generator::create();
     let position = Position::initial();
