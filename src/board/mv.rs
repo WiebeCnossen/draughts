@@ -40,7 +40,7 @@ impl Move {
     pub fn take(from: Field, to: Field, via: &[Field]) -> Move {
         let mut taken = [NULL_FIELD; MAX_TAKEN];
         let mut temp = via.to_vec();
-        temp.sort();
+        temp.sort_unstable();
         for (i, &v) in temp.iter().enumerate() {
             taken[i] = v;
         }

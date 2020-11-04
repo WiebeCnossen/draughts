@@ -32,9 +32,9 @@ pub fn wipe_line() {
 pub fn read_lines(
     reader: &mut BufReader<ChildStdout>,
     exit: &str,
-    flush: &dyn Fn() -> (),
-    print: &dyn Fn(&str) -> (),
-    wipe: &dyn Fn() -> (),
+    flush: &dyn Fn(),
+    print: &dyn Fn(&str),
+    wipe: &dyn Fn(),
 ) -> Vec<String> {
     let mut result = vec![];
     loop {
