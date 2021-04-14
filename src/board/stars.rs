@@ -1,4 +1,4 @@
-use super::coords::{Coords, MinXY};
+use super::coords::{Coords, MinXy};
 use super::position::Field;
 
 fn star(mid: Field) -> Option<[Field; 5]> {

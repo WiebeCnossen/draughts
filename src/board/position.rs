@@ -289,7 +289,7 @@ impl Position {
                 n => fen.push_str(format!("{}", n).as_str()),
             }
             0
-        };
+        }
         for i in 1..51 {
             match self.piece_at(i - 1) as Field {
                 0 => num_empty += 1,

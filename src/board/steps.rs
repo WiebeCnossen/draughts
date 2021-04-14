@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use super::coords::{Coords, MinXY};
+use super::coords::{Coords, MinXy};
 use super::position::Field;
 
 fn all<F, G>(generator: F) -> Vec<G>

@@ -8,7 +8,7 @@ pub struct Coords {
     pub y: Coord,
 }
 
-pub trait MinXY {
+pub trait MinXy {
     fn min_x(&self) -> Coord;
     fn max_x(&self) -> Coord;
     fn min_y(&self) -> Coord;
@@ -32,7 +32,7 @@ fn max_y(x: Coord) -> Coord {
     }
 }
 
-impl MinXY for Coords {
+impl MinXy for Coords {
     fn min_x(&self) -> Coord {
         min_x(self.y)
     }
